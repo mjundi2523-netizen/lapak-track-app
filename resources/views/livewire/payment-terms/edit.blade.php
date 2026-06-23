@@ -1,0 +1,26 @@
+<div>
+    <x-header title="Edit Aturan Bayar" separator />
+
+    <x-card>
+        <x-form wire:submit="save">
+            <x-input label="Nama Aturan" wire:model="term_name" required />
+
+            <x-select label="Frekuensi" wire:model="frequency" :options="[
+                ['value' => 'daily', 'label' => 'Harian'],
+                ['value' => 'weekly', 'label' => 'Mingguan'],
+                ['value' => 'monthly', 'label' => 'Bulanan'],
+                ['value' => 'annual', 'label' => 'Tahunan'],
+            ]" option-value="value" option-label="label" required />
+
+            <x-input label="Setiap (interval)" wire:model="interval_count" type="number" min="1"
+                hint="Mis. Bulanan + 3 = ditagih tiap 3 bulan" required />
+
+            <x-input label="Harga" wire:model="price" type="number" required />
+
+            <x-slot:actions>
+                <x-button label="Batal" link="{{ route('payment-terms.index') }}" class="btn-ghost" />
+                <x-button label="Simpan" type="submit" class="btn-primary" spinner="save" />
+            </x-slot:actions>
+        </x-form>
+    </x-card>
+</div>

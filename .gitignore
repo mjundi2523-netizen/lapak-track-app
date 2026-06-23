@@ -1,0 +1,47 @@
+# Dependencies
+/vendor
+/node_modules
+
+# Environment / secrets
+.env
+.env.backup
+.env.production
+auth.json
+
+# Build artifacts
+/public/build
+/public/hot
+/public/storage
+
+# Published vendor assets (Filament tidak dipakai)
+/public/css/filament
+/public/js/filament
+/public/fonts/filament
+/public/vendor
+
+# Logs & caches
+/.phpunit.cache
+.phpunit.result.cache
+npm-debug.log
+yarn-error.log
+error.log
+
+# Local SQLite (proyek pakai MySQL)
+*.sqlite
+*.sqlite-journal
+
+# Skrip diagnostik / sekali pakai (lokal saja)
+/check_*.php
+/get_*.php
+/fix_seeder.php
+/regen_bills.php
+/test_*.php
+
+# IDE / OS
+/.idea
+/.vscode
+/.fleet
+/.nova
+/.zed
+.DS_Store
+Thumbs.db
