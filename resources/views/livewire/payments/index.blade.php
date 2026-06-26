@@ -15,6 +15,7 @@
         <x-table :headers="[
             ['key' => 'bill_id', 'label' => 'No. Bayar'],
             ['key' => 'dealer', 'label' => 'Pedagang'],
+            ['key' => 'jenis', 'label' => 'Jenis'],
             ['key' => 'paid_amount', 'label' => 'Jumlah'],
             ['key' => 'payment_date', 'label' => 'Tanggal'],
             ['key' => 'payment_method', 'label' => 'Metode'],
@@ -30,6 +31,35 @@
 
             @scope('cell_dealer', $row)
                 {{ $row->dealerBill?->dealerStall?->dealer?->name ?? '-' }}
+            @endscope
+
+            @scope('cell_jenis', $row)
+                @if($row->dealerBill)
+                    <div class="flex flex-col gap-1">
+                        <x-badge :value="match($row->dealerBill->bill_type) {
+                            'MTR' => 'Sewa',
+                            'MAT' => 'Sewa + Add-on',
+                            'AAT' => 'Add-on',
+                            'ATR' => 'Add-on (jadwal)',
+                            default => $row->dealerBill->bill_type,
+                        }" :class="match($row->dealerBill->bill_type) {
+                            'MTR' => 'badge-primary badge-soft',
+                            'MAT' => 'badge-secondary badge-soft',
+                            'AAT' => 'badge-info badge-soft',
+                            'ATR' => 'badge-accent badge-soft',
+                            default => 'badge-ghost',
+                        }" />
+                        <x-badge :value="match($row->dealerBill->frequency) {
+                            'daily' => 'Harian',
+                            'weekly' => 'Mingguan',
+                            'monthly' => 'Bulanan',
+                            'annual' => 'Tahunan',
+                            default => $row->dealerBill->frequency ?? '-',
+                        }" class="badge-ghost badge-sm" />
+                    </div>
+                @else
+                    -
+                @endif
             @endscope
 
             @scope('cell_paid_amount', $row)

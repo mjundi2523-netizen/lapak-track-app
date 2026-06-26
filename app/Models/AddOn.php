@@ -15,6 +15,8 @@ class AddOn extends Model
         'add_on',
         'price',
         'frequency',
+        'is_rent_date',
+        'start_date',
         'created_by',
         'modified_by',
     ];
@@ -23,6 +25,8 @@ class AddOn extends Model
     {
         return [
             'price' => 'integer',
+            'is_rent_date' => 'boolean',
+            'start_date' => 'date',
         ];
     }
 

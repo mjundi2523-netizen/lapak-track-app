@@ -12,6 +12,15 @@
                 ['value' => 'annual', 'label' => 'Tahunan'],
             ]" option-value="value" option-label="label" required />
 
+            <x-checkbox label="Ikut tanggal sewa"
+                hint="Penagihan mengikuti tanggal mulai sewa lapak. Lepas centang untuk atur tanggal mulai sendiri."
+                wire:model.live="is_rent_date" />
+
+            @if(! $is_rent_date)
+                <x-input label="Tanggal Mulai Penagihan" wire:model="start_date" type="date" required
+                    hint="Add-on ditagih mulai tanggal ini, lalu berulang sesuai frekuensi." />
+            @endif
+
             <x-slot:actions>
                 <x-button label="Batal" link="{{ route('add-ons.index') }}" class="btn-ghost" />
                 <x-button label="Simpan" type="submit" class="btn-primary" spinner="save" />

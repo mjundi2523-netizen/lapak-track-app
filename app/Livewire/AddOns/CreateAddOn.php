@@ -6,7 +6,6 @@ use App\Models\AddOn;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Mary\Traits\Toast;
 
@@ -15,14 +14,27 @@ class CreateAddOn extends Component
 {
     use Toast;
 
-    #[Validate('required|string|max:255')]
     public string $add_on = '';
 
-    #[Validate('required|integer|min:0')]
     public int $price = 0;
 
-    #[Validate('required|in:daily,weekly,monthly,annual')]
     public string $frequency = 'monthly';
+
+    public bool $is_rent_date = true;
+
+    public ?string $start_date = null;
+
+    protected function rules(): array
+    {
+        return [
+            'add_on' => 'required|string|max:255',
+            'price' => 'required|integer|min:0',
+            'frequency' => 'required|in:daily,weekly,monthly,annual',
+            'is_rent_date' => 'boolean',
+            // start_date wajib hanya saat jadwal lepas (tidak ikut tanggal sewa).
+            'start_date' => 'exclude_if:is_rent_date,true|required|date',
+        ];
+    }
 
     public function save(): void
     {
@@ -33,6 +45,8 @@ class CreateAddOn extends Component
                 'add_on' => $this->add_on,
                 'price' => $this->price,
                 'frequency' => $this->frequency,
+                'is_rent_date' => $this->is_rent_date,
+                'start_date' => $this->is_rent_date ? null : $this->start_date,
                 'created_by' => Auth::id(),
             ]);
         });

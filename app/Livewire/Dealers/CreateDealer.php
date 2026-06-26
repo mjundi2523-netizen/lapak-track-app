@@ -9,7 +9,6 @@ use App\Services\BillGenerationService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Mary\Traits\Toast;
@@ -20,21 +19,11 @@ class CreateDealer extends Component
     use Toast;
     use WithFileUploads;
 
-    #[Validate('required|string|max:255|unique:dealer,nik')]
     public string $nik = '';
-
-    #[Validate('required|string|max:255')]
     public string $name = '';
-
-    #[Validate('required|date')]
     public string $birth_date = '';
-
-    #[Validate('required|string|max:255')]
     public string $address = '';
-
-    #[Validate('required|string|max:255')]
     public string $phone_number_1 = '';
-
     public ?string $phone_number_2 = null;
     public ?string $product_type = null;
     public ?string $status = 'active';
@@ -42,13 +31,28 @@ class CreateDealer extends Component
     public $scan_id_file = null;
     public ?string $scan_id = null;
 
-    #[Validate('required|integer|exists:stall,sid')]
-    public ?int $selected_stall = null;
-
-    #[Validate('required|date')]
+    public array $selected_stalls = [];
     public string $rent_start_date = '';
-
     public ?string $rent_end_date = null;
+
+    protected function rules(): array
+    {
+        return [
+            'nik' => 'required|string|max:255|unique:dealer,nik',
+            'name' => 'required|string|max:255',
+            'birth_date' => 'required|date',
+            'address' => 'required|string|max:255',
+            'phone_number_1' => 'required|string|max:255',
+            'phone_number_2' => 'nullable|string|max:255',
+            'product_type' => 'nullable|string|max:255',
+            'status' => 'required|in:active,inactive',
+            'scan_id_file' => 'nullable|file|max:5120',
+            'selected_stalls' => 'required|array|min:1',
+            'selected_stalls.*' => 'integer|exists:stall,sid',
+            'rent_start_date' => 'required|date',
+            'rent_end_date' => 'nullable|date|after_or_equal:rent_start_date',
+        ];
+    }
 
     public function save(BillGenerationService $billService): void
     {
@@ -72,17 +76,19 @@ class CreateDealer extends Component
                 'created_by' => Auth::id(),
             ]);
 
-            $ds = DealerStall::create([
-                'did' => $dealer->did,
-                'sid' => $this->selected_stall,
-                'rent_start_date' => $this->rent_start_date,
-                'rent_end_date' => $this->rent_end_date,
-                'deleted' => false,
-                'created_by' => Auth::id(),
-            ]);
+            // Buat satu rental (dealer_stall) per lapak yang dipilih, lalu generate tagihannya.
+            foreach ($this->selected_stalls as $sid) {
+                $ds = DealerStall::create([
+                    'did' => $dealer->did,
+                    'sid' => $sid,
+                    'rent_start_date' => $this->rent_start_date,
+                    'rent_end_date' => $this->rent_end_date,
+                    'deleted' => false,
+                    'created_by' => Auth::id(),
+                ]);
 
-            // Generate bills for this dealer-stall
-            $billService->generateBillsForDealerStall($ds);
+                $billService->ensureBillsUpToDate($ds);
+            }
         });
 
         $this->success('Pedagang berhasil ditambahkan.');
@@ -92,7 +98,9 @@ class CreateDealer extends Component
     public function render()
     {
         return view('livewire.dealers.create', [
+            // Hanya lapak aktif yang belum tersewa.
             'stalls' => Stall::where('is_active', true)
+                ->whereDoesntHave('activeRentals')
                 ->orderBy('block')
                 ->get(),
         ]);

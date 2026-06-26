@@ -4,6 +4,7 @@ namespace App\Livewire\Bills;
 
 use App\Models\DealerBill;
 use App\Models\DealerPayment;
+use App\Services\BillGenerationService;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -17,6 +18,11 @@ class IndexBills extends Component
 
     public string $search = '';
     public string $statusFilter = '';
+
+    public function mount(BillGenerationService $bills): void
+    {
+        $bills->ensureAllActive();
+    }
 
     public function render()
     {

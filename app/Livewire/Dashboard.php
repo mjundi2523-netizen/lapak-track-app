@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Models\Dealer;
 use App\Models\DealerBill;
 use App\Models\Stall;
+use App\Services\BillGenerationService;
 use Illuminate\Support\Carbon;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -12,6 +13,12 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class Dashboard extends Component
 {
+    public function mount(BillGenerationService $bills): void
+    {
+        // Lazy roll-forward: pastikan tagihan periode berjalan sudah ada saat dashboard dibuka.
+        $bills->ensureAllActive();
+    }
+
     public function render()
     {
         $stallActive = Stall::where('is_active', true)->count();

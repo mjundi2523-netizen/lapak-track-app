@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 class DealerBill extends Model
 {
@@ -13,6 +14,9 @@ class DealerBill extends Model
 
     protected $fillable = [
         'bill_id',
+        'bill_type',
+        'frequency',
+        'aoid',
         'dsid',
         'total_amount',
         'due_date',
@@ -38,6 +42,11 @@ class DealerBill extends Model
         return $this->belongsTo(DealerStall::class, 'dsid', 'dsid');
     }
 
+    public function addOn(): BelongsTo
+    {
+        return $this->belongsTo(AddOn::class, 'aoid', 'aoid');
+    }
+
     public function payments(): HasMany
     {
         return $this->hasMany(DealerPayment::class, 'dbid', 'dbid');
@@ -59,22 +68,47 @@ class DealerBill extends Model
     }
 
     /**
-     * Recalculate billing status based on actual payments.
+     * Total dibayar (tidak termasuk yang di-void).
+     */
+    public function paidAmount(): float
+    {
+        return (float) $this->payments()->where('is_voided', false)->sum('paid_amount');
+    }
+
+    /**
+     * Sisa yang harus dibayar.
+     */
+    public function outstanding(): float
+    {
+        return max((float) $this->total_amount - $this->paidAmount(), 0);
+    }
+
+    /**
+     * Status 4-state yang diturunkan murni dari pembayaran & jatuh tempo:
+     *  paid        -> sudah lunas
+     *  installment -> dibayar sebagian
+     *  unpaid      -> belum bayar & sudah jatuh tempo
+     *  pending     -> belum bayar & belum jatuh tempo
+     */
+    public static function deriveStatus(float $paid, float $total, $dueDate): string
+    {
+        if ($paid >= $total) {
+            return 'paid';
+        }
+
+        if ($paid > 0) {
+            return 'installment';
+        }
+
+        return Carbon::parse($dueDate)->startOfDay()->lte(Carbon::today()) ? 'unpaid' : 'pending';
+    }
+
+    /**
+     * Hitung ulang & simpan billing_status dari pembayaran aktual.
      */
     public function recalculateBillingStatus(): void
     {
-        $totalPaid = $this->payments()
-            ->where('is_voided', false)
-            ->sum('paid_amount');
-
-        if ($totalPaid >= $this->total_amount) {
-            $this->billing_status = 'paid';
-        } elseif ($totalPaid > 0) {
-            $this->billing_status = 'installment';
-        } elseif ($this->billing_status !== 'pending') {
-            $this->billing_status = 'unpaid';
-        }
-
+        $this->billing_status = self::deriveStatus($this->paidAmount(), (float) $this->total_amount, $this->due_date);
         $this->save();
     }
 }

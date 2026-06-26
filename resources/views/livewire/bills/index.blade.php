@@ -15,10 +15,12 @@
     <x-card>
         <x-table :headers="[
             ['key' => 'bill_id', 'label' => 'No. Tagihan'],
+            ['key' => 'jenis', 'label' => 'Jenis'],
             ['key' => 'dealer', 'label' => 'Pedagang'],
             ['key' => 'stall', 'label' => 'Lapak'],
             ['key' => 'total_amount', 'label' => 'Jumlah'],
             ['key' => 'paid', 'label' => 'Terbayar'],
+            ['key' => 'sisa', 'label' => 'Sisa'],
             ['key' => 'due_date', 'label' => 'Jatuh Tempo'],
             ['key' => 'billing_status', 'label' => 'Status'],
             ['key' => 'actions', 'label' => ''],
@@ -28,6 +30,31 @@
         ]">
             @scope('cell_bill_id', $row)
                 {{ $row->bill_id ?? '-' }}
+            @endscope
+
+            @scope('cell_jenis', $row)
+                <div class="flex flex-col gap-1">
+                    <x-badge :value="match($row->bill_type) {
+                        'MTR' => 'Sewa',
+                        'MAT' => 'Sewa + Add-on',
+                        'AAT' => 'Add-on',
+                        'ATR' => 'Add-on (jadwal)',
+                        default => $row->bill_type,
+                    }" :class="match($row->bill_type) {
+                        'MTR' => 'badge-primary badge-soft',
+                        'MAT' => 'badge-secondary badge-soft',
+                        'AAT' => 'badge-info badge-soft',
+                        'ATR' => 'badge-accent badge-soft',
+                        default => 'badge-ghost',
+                    }" />
+                    <x-badge :value="match($row->frequency) {
+                        'daily' => 'Harian',
+                        'weekly' => 'Mingguan',
+                        'monthly' => 'Bulanan',
+                        'annual' => 'Tahunan',
+                        default => $row->frequency ?? '-',
+                    }" class="badge-ghost badge-sm" />
+                </div>
             @endscope
 
             @scope('cell_dealer', $row)
@@ -44,6 +71,13 @@
 
             @scope('cell_paid', $row)
                 Rp {{ number_format($paidTotals[$row->dbid] ?? 0, 0, ',', '.') }}
+            @endscope
+
+            @scope('cell_sisa', $row)
+                @php($sisa = max($row->total_amount - ($paidTotals[$row->dbid] ?? 0), 0))
+                <span @class(['font-medium', 'text-error' => $sisa > 0, 'text-success' => $sisa <= 0])>
+                    Rp {{ number_format($sisa, 0, ',', '.') }}
+                </span>
             @endscope
 
             @scope('cell_billing_status', $row)

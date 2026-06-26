@@ -2,100 +2,211 @@
 
 namespace App\Services;
 
-use App\Models\AddOn;
 use App\Models\DealerBill;
 use App\Models\DealerStall;
-use Carbon\Carbon;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class BillGenerationService
 {
-    protected BillIdGenerator $billIdGenerator;
+    /** Pengaman agar tidak pernah membuat tagihan tak terhingga dalam 1 panggilan per stream. */
+    protected const MAX_PERIODS_PER_RUN = 1000;
 
-    public function __construct(BillIdGenerator $billIdGenerator)
-    {
-        $this->billIdGenerator = $billIdGenerator;
-    }
+    public function __construct(protected BillIdGenerator $billIdGenerator) {}
 
     /**
-     * Generate bills for a dealer-stall assignment.
-     * Creates:
-     *  - One MTR (main stall rent) bill for the base rental amount
-     *  - ATR (add-on transaction) bills grouped by frequency
+     * Pastikan semua tagihan untuk satu rental sudah dibuat sampai hari ini (lazy roll-forward).
+     * Idempoten: cursor tiap stream = max(period_end) tagihan yang sudah ada.
+     *
+     * Tipe tagihan:
+     *  - MTR: sewa saja (rent-anchored, frekuensi = payment_term, tanpa add-on sefrekuensi)
+     *  - MAT: sewa + add-on(is_rent_date=true) frekuensi sama (digabung 1 baris)
+     *  - AAT: add-on(is_rent_date=true) saja, frekuensi != sewa (digabung per frekuensi)
+     *  - ATR: add-on(is_rent_date=false), per-add-on, anchor = start_date sendiri
+     *
+     * Stream rent-anchored di-key per FREKUENSI (selalu 1 stream/frekuensi, anti-collision cursor).
+     * is_rent_date=true berarti add-on mengikuti jadwal sewa sepenuhnya (anchor + periode).
      */
-    public function generateBillsForDealerStall(DealerStall $ds): void
+    public function ensureBillsUpToDate(DealerStall $ds): void
     {
-        $ds->load(['stall.paymentTerm', 'stall.addOns']);
-
-        $stall = $ds->stall;
-        $paymentTerm = $stall->paymentTerm;
-        $userId = Auth::id() ?? 1;
-
-        if (! $paymentTerm) {
+        if ($ds->deleted) {
             return;
         }
 
-        $now = Carbon::now();
-        $periodStart = $ds->rent_start_date ? Carbon::parse($ds->rent_start_date) : $now;
-        $periodEnd = $ds->rent_end_date ? Carbon::parse($ds->rent_end_date) : $periodStart->copy()->addYear();
+        $ds->loadMissing(['stall.paymentTerm', 'stall.addOns']);
+        $stall = $ds->stall;
 
-        DB::transaction(function () use ($ds, $stall, $paymentTerm, $userId, $now, $periodStart, $periodEnd) {
-            // Generate MTR (main stall rent) bill
-            $billId = $this->billIdGenerator->generate('dealer_bills', 'MTR', $now);
+        if (! $stall) {
+            return;
+        }
 
-            DealerBill::create([
-                'bill_id' => $billId,
-                'dsid' => $ds->dsid,
-                'total_amount' => $paymentTerm->price,
-                'due_date' => $periodEnd,
-                'billing_status' => 'unpaid',
-                'period_start' => $periodStart,
-                'period_end' => $periodEnd,
-                'created_by' => $userId,
-            ]);
+        $rentStart = Carbon::parse($ds->rent_start_date)->startOfDay();
+        $today = Carbon::today();
+        $horizon = $ds->rent_end_date
+            ? Carbon::parse($ds->rent_end_date)->startOfDay()->min($today)
+            : $today;
 
-            // Generate ATR (add-on) bills grouped by frequency
-            $addOns = $stall->addOns;
+        if ($rentStart->gt($horizon)) {
+            return;
+        }
 
-            if ($addOns->isEmpty()) {
-                return;
+        $userId = Auth::id() ?? $ds->created_by ?? 1;
+
+        DB::transaction(function () use ($ds, $stall, $rentStart, $horizon, $userId) {
+            $term = $stall->paymentTerm;
+            $rentFreq = $term && $term->price > 0 ? $term->frequency : null;
+            $rentInterval = $term ? max(1, (int) ($term->interval_count ?? 1)) : 1;
+
+            // --- Stream rent-anchored, dikelompokkan per frekuensi ---
+            // streams[freq] = ['rent' => int, 'addon' => int]
+            $streams = [];
+
+            if ($rentFreq) {
+                $streams[$rentFreq] = ['rent' => (int) $term->price, 'addon' => 0];
             }
 
-            $groupedByFrequency = $addOns->groupBy('frequency');
+            foreach ($stall->addOns as $addOn) {
+                if ((int) $addOn->price <= 0 || ! $addOn->is_rent_date) {
+                    continue;
+                }
+                $f = $addOn->frequency;
+                $streams[$f] ??= ['rent' => 0, 'addon' => 0];
+                $streams[$f]['addon'] += (int) $addOn->price;
+            }
 
-            foreach ($groupedByFrequency as $frequency => $group) {
-                $totalForFrequency = $group->sum('price');
+            foreach ($streams as $frequency => $parts) {
+                $amount = $parts['rent'] + $parts['addon'];
+                if ($amount <= 0) {
+                    continue;
+                }
 
-                $dueDate = $this->calculateDueDate($periodStart, $frequency);
+                $type = match (true) {
+                    $parts['rent'] > 0 && $parts['addon'] > 0 => 'MAT',
+                    $parts['rent'] > 0 => 'MTR',
+                    default => 'AAT',
+                };
+                // Periode rent memakai interval_count payment_term; stream add-on murni = 1.
+                $interval = $parts['rent'] > 0 ? $rentInterval : 1;
 
-                $billId = $this->billIdGenerator->generate('dealer_bills', 'ATR', $now);
+                $this->generateStream(
+                    $ds, $type, $frequency, $interval, $amount,
+                    $rentStart, $rentStart, $horizon, $userId, null
+                );
+            }
 
-                DealerBill::create([
-                    'bill_id' => $billId,
-                    'dsid' => $ds->dsid,
-                    'total_amount' => $totalForFrequency,
-                    'due_date' => $dueDate,
-                    'billing_status' => 'unpaid',
-                    'period_start' => $periodStart,
-                    'period_end' => $periodEnd,
-                    'created_by' => $userId,
-                ]);
+            // --- Stream ATR: add-on jadwal-sendiri (is_rent_date=false), per add-on ---
+            foreach ($stall->addOns as $addOn) {
+                if ((int) $addOn->price <= 0 || $addOn->is_rent_date) {
+                    continue;
+                }
+
+                $anchor = $addOn->start_date
+                    ? Carbon::parse($addOn->start_date)->startOfDay()
+                    : $rentStart->copy();
+
+                $this->generateStream(
+                    $ds, 'ATR', $addOn->frequency, 1, (int) $addOn->price,
+                    $anchor, $rentStart, $horizon, $userId, $addOn->aoid
+                );
             }
         });
     }
 
     /**
-     * Calculate due date based on frequency from the period start.
+     * Jalankan catch-up untuk semua rental aktif (dipakai lazy saat halaman dibuka / via command).
      */
-    protected function calculateDueDate(Carbon $startDate, string $frequency): Carbon
+    public function ensureAllActive(): int
+    {
+        $before = DealerBill::count();
+
+        DealerStall::where('deleted', false)
+            ->with(['stall.paymentTerm', 'stall.addOns'])
+            ->get()
+            ->each(fn (DealerStall $ds) => $this->ensureBillsUpToDate($ds));
+
+        // Refresh status tersimpan: tagihan 'pending' yang sudah lewat jatuh tempo jadi 'unpaid'.
+        DealerBill::where('billing_status', 'pending')
+            ->whereDate('due_date', '<=', Carbon::today())
+            ->update(['billing_status' => 'unpaid']);
+
+        return DealerBill::count() - $before;
+    }
+
+    /**
+     * Generate tagihan satu stream dari cursor (period_end terakhir) sampai periode berjalan.
+     *
+     * Kunci cursor:
+     *  - ATR (aoid != null): (dsid, aoid)
+     *  - rent-anchored (aoid null): (dsid, frequency, aoid IS NULL) — 1 stream/frekuensi
+     *
+     * $anchor = fase awal siklus (rent_start untuk rent-anchored, start_date untuk ATR).
+     * $rentStart = batas bawah; periode yang berakhir sebelum/di rentStart di-skip.
+     */
+    protected function generateStream(
+        DealerStall $ds,
+        string $type,
+        string $frequency,
+        int $interval,
+        int $amount,
+        Carbon $anchor,
+        Carbon $rentStart,
+        Carbon $horizon,
+        int $userId,
+        ?int $aoid
+    ): void {
+        $cursor = DealerBill::where('dsid', $ds->dsid)
+            ->when($aoid !== null,
+                fn ($q) => $q->where('aoid', $aoid),
+                fn ($q) => $q->whereNull('aoid')->where('frequency', $frequency)
+            );
+
+        $lastEnd = $cursor->max('period_end');
+
+        $periodStart = $lastEnd ? Carbon::parse($lastEnd)->startOfDay() : $anchor->copy();
+
+        $guard = 0;
+
+        while ($periodStart->lte($horizon) && $guard < self::MAX_PERIODS_PER_RUN) {
+            $guard++;
+
+            $periodEnd = $this->advance($periodStart->copy(), $frequency, $interval);
+
+            // Skip periode yang seluruhnya sebelum sewa mulai (anchor bisa < rent_start untuk ATR).
+            if ($periodEnd->lte($rentStart)) {
+                $periodStart = $periodEnd->copy();
+                continue;
+            }
+
+            $dueDate = $periodEnd->copy();
+            $status = DealerBill::deriveStatus(0, $amount, $dueDate);
+
+            DealerBill::create([
+                'bill_id' => $this->billIdGenerator->generate('dealer_bills', $type, Carbon::now()),
+                'bill_type' => $type,
+                'frequency' => $frequency,
+                'aoid' => $aoid,
+                'dsid' => $ds->dsid,
+                'total_amount' => $amount,
+                'due_date' => $dueDate,
+                'billing_status' => $status,
+                'period_start' => $periodStart->copy(),
+                'period_end' => $periodEnd->copy(),
+                'created_by' => $userId,
+            ]);
+
+            $periodStart = $periodEnd->copy();
+        }
+    }
+
+    protected function advance(Carbon $date, string $frequency, int $interval): Carbon
     {
         return match ($frequency) {
-            'daily' => $startDate->copy()->addDay(),
-            'weekly' => $startDate->copy()->addWeek(),
-            'monthly' => $startDate->copy()->addMonth(),
-            'annual' => $startDate->copy()->addYear(),
-            default => $startDate->copy()->addMonth(),
+            'daily' => $date->addDays($interval),
+            'weekly' => $date->addWeeks($interval),
+            'monthly' => $date->addMonths($interval),
+            'annual' => $date->addYears($interval),
+            default => $date->addMonths($interval),
         };
     }
 }

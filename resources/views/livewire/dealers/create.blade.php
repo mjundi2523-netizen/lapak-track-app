@@ -22,10 +22,18 @@
             <hr class="my-4" />
 
             <h3 class="font-bold text-lg mb-2">Lapak</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <x-select label="Pilih Lapak" wire:model="selected_stall" :options="$stalls->map(fn($s) => ['value' => $s->sid, 'label' => $s->block])->toArray()" option-value="value" option-label="label" required />
+            <x-choices-offline
+                label="Pilih Lapak (bisa lebih dari satu)"
+                wire:model="selected_stalls"
+                :options="$stalls"
+                option-value="sid"
+                option-label="block"
+                searchable
+                hint="Hanya lapak aktif yang belum tersewa yang muncul." />
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                 <x-input label="Tanggal Mulai Sewa" wire:model="rent_start_date" type="date" required />
-                <x-input label="Tanggal Akhir Sewa" wire:model="rent_end_date" type="date" />
+                <x-input label="Tanggal Akhir Sewa (opsional)" wire:model="rent_end_date" type="date" />
             </div>
 
             <x-slot:actions>
