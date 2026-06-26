@@ -70,14 +70,19 @@
             @endscope
 
             @scope('cell_paid', $row)
-                Rp {{ number_format($paidTotals[$row->dbid] ?? 0, 0, ',', '.') }}
+                @php($paid = $row->payments->sum('paid_amount'))
+                Rp {{ number_format($paid, 0, ',', '.') }}
             @endscope
 
             @scope('cell_sisa', $row)
-                @php($sisa = max($row->total_amount - ($paidTotals[$row->dbid] ?? 0), 0))
+                @php($sisa = max($row->total_amount - $row->payments->sum('paid_amount'), 0))
                 <span @class(['font-medium', 'text-error' => $sisa > 0, 'text-success' => $sisa <= 0])>
                     Rp {{ number_format($sisa, 0, ',', '.') }}
                 </span>
+            @endscope
+
+            @scope('cell_due_date', $row)
+                {{ $row->due_date?->format('d-m-Y') ?? '-' }}
             @endscope
 
             @scope('cell_billing_status', $row)

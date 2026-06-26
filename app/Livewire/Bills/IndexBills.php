@@ -3,7 +3,6 @@
 namespace App\Livewire\Bills;
 
 use App\Models\DealerBill;
-use App\Models\DealerPayment;
 use App\Services\BillGenerationService;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -41,17 +40,11 @@ class IndexBills extends Component
 
         $bills = $query->paginate(10);
 
-        // Batched paid-totals query
-        $billIds = $bills->pluck('dbid')->toArray();
-        $paidTotals = DealerPayment::selectRaw('dbid, SUM(paid_amount) as total')
-            ->whereIn('dbid', $billIds)
-            ->where('is_voided', false)
-            ->groupBy('dbid')
-            ->pluck('total', 'dbid');
-
+        // Terbayar/Sisa dihitung langsung dari relasi `payments` (sudah di-eager-load
+        // & difilter is_voided=false) — sumber yang sama dengan halaman detail,
+        // jadi nilainya dijamin konsisten.
         return view('livewire.bills.index', [
             'bills' => $bills,
-            'paidTotals' => $paidTotals,
         ]);
     }
 }
