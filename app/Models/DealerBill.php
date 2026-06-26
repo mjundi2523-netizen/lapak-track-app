@@ -68,6 +68,52 @@ class DealerBill extends Model
     }
 
     /**
+     * Rincian komponen tagihan, direkonstruksi dari konfigurasi lapak saat ini
+     * (mengikuti logika BillGenerationService). Mengembalikan array berisi
+     * ['label' => string, 'amount' => int].
+     *
+     * Catatan: bila konfigurasi sewa/add-on berubah setelah tagihan dibuat,
+     * jumlah rincian bisa berbeda dari `total_amount` tersimpan.
+     */
+    public function breakdown(): array
+    {
+        // ATR: satu add-on spesifik (jadwal sendiri).
+        if ($this->bill_type === 'ATR') {
+            $addOn = $this->addOn;
+
+            return $addOn
+                ? [['label' => $addOn->add_on, 'amount' => (int) $addOn->price]]
+                : [];
+        }
+
+        $stall = $this->dealerStall?->stall;
+        if (! $stall) {
+            return [];
+        }
+
+        $items = [];
+
+        // Komponen sewa (MTR/MAT).
+        if (in_array($this->bill_type, ['MTR', 'MAT'], true)) {
+            $term = $stall->paymentTerm;
+            if ($term && (int) $term->price > 0) {
+                $items[] = ['label' => 'Sewa Lapak', 'amount' => (int) $term->price];
+            }
+        }
+
+        // Add-on ikut-tanggal-sewa, frekuensi sama (MAT/AAT).
+        if (in_array($this->bill_type, ['MAT', 'AAT'], true)) {
+            foreach ($stall->addOns as $addOn) {
+                if ($addOn->is_rent_date && (int) $addOn->price > 0 && $addOn->frequency === $this->frequency) {
+                    $items[] = ['label' => $addOn->add_on, 'amount' => (int) $addOn->price];
+                }
+            }
+        }
+
+        return $items;
+    }
+
+    /**
      * Total dibayar (tidak termasuk yang di-void).
      */
     public function paidAmount(): float

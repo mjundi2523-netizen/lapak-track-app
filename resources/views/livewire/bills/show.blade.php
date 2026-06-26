@@ -32,6 +32,39 @@
         </div>
     </x-card>
 
+    @php
+        $breakdown = $dealerBill->breakdown();
+        $breakdownTotal = collect($breakdown)->sum('amount');
+    @endphp
+
+    <x-card title="Rincian Tagihan" class="mt-4">
+        @if(count($breakdown) > 0)
+            <x-table :headers="[
+                ['key' => 'label', 'label' => 'Komponen'],
+                ['key' => 'amount', 'label' => 'Jumlah', 'class' => 'text-right'],
+            ]" :rows="$breakdown">
+                @scope('cell_amount', $row)
+                    <div class="text-right">Rp {{ number_format($row['amount'], 0, ',', '.') }}</div>
+                @endscope
+            </x-table>
+
+            <div class="flex justify-between border-t mt-2 pt-2 font-semibold">
+                <span>Total</span>
+                <span>Rp {{ number_format($breakdownTotal, 0, ',', '.') }}</span>
+            </div>
+
+            @if($breakdownTotal !== (int) $dealerBill->total_amount)
+                <x-alert icon="o-exclamation-triangle" class="alert-warning mt-3">
+                    Rincian dihitung dari konfigurasi sewa/add-on saat ini dan tidak cocok dengan
+                    total tersimpan (Rp {{ number_format($dealerBill->total_amount, 0, ',', '.') }}).
+                    Kemungkinan konfigurasi lapak berubah setelah tagihan dibuat.
+                </x-alert>
+            @endif
+        @else
+            <p class="text-base-content/60">Rincian tidak tersedia untuk tagihan ini.</p>
+        @endif
+    </x-card>
+
     <x-card title="Riwayat Pembayaran" class="mt-4">
         @if($dealerBill->payments->count() > 0)
             <x-table :headers="[

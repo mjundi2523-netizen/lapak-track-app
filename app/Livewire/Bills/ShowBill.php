@@ -29,7 +29,9 @@ class ShowBill extends Component
     {
         $this->dealerBill->load([
             'dealerStall.dealer',
-            'dealerStall.stall',
+            'dealerStall.stall.paymentTerm',
+            'dealerStall.stall.addOns',
+            'addOn',
             'payments' => fn ($q) => $q->orderBy('payment_date', 'desc'),
             'payments.voidedBy',
             'payments.createdBy',
