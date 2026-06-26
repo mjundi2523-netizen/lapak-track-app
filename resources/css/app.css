@@ -14,6 +14,54 @@
     display: none !important;
 }
 
+/* Pagination global (lihat resources/views/vendor/livewire/tailwind.blade.php). */
+.lt-page,
+.lt-page-arrow {
+    height: 34px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #fff;
+    color: #3f3f46;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+.lt-page {
+    min-width: 34px;
+    padding: 0 8px;
+    font-size: 13px;
+    font-weight: 600;
+}
+.lt-page-arrow {
+    width: 34px;
+    font-size: 16px;
+}
+.lt-page:hover,
+.lt-page-arrow:hover {
+    background: #f7f8fb;
+}
+.lt-page-active,
+.lt-page-active:hover {
+    border-color: var(--lt-p);
+    background: var(--lt-p);
+    color: #fff;
+    cursor: default;
+}
+.lt-page-disabled,
+.lt-page-disabled:hover {
+    opacity: 0.4;
+    cursor: default;
+    background: #fff;
+}
+.lt-page-ellipsis {
+    min-width: 20px;
+    text-align: center;
+    color: #9aa3b2;
+    font-size: 13px;
+}
+
 /* Tailwind v4 mengabaikan folder yang di-gitignore (vendor), jadi komponen MaryUI
    harus didaftarkan manual agar kelas-kelasnya tidak ke-purge. */
 @source "../../vendor/robsontenorio/mary/src/**/*.php";
