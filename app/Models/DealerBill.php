@@ -77,8 +77,12 @@ class DealerBill extends Model
      */
     public function breakdown(): array
     {
-        // ATR: satu add-on spesifik (jadwal sendiri).
-        if ($this->bill_type === 'ATR') {
+        // Rincian ditentukan oleh stream `(aoid, frequency)` — sama seperti
+        // pengelompokan BillGenerationService — BUKAN oleh label `bill_type`
+        // (label hanya turunan dari jumlah komponen: MTR/ATR/MAT/AAT).
+
+        // Stream jadwal-sendiri (aoid terisi): satu add-on spesifik.
+        if ($this->aoid !== null) {
             $addOn = $this->addOn;
 
             return $addOn
@@ -86,6 +90,8 @@ class DealerBill extends Model
                 : [];
         }
 
+        // Stream rent-anchored (aoid NULL): gabungan sewa + add-on
+        // (`is_rent_date=true`) yang frekuensinya sama dengan tagihan ini.
         $stall = $this->dealerStall?->stall;
         if (! $stall) {
             return [];
@@ -93,20 +99,14 @@ class DealerBill extends Model
 
         $items = [];
 
-        // Komponen sewa (MTR/MAT).
-        if (in_array($this->bill_type, ['MTR', 'MAT'], true)) {
-            $term = $stall->paymentTerm;
-            if ($term && (int) $term->price > 0) {
-                $items[] = ['label' => 'Sewa Lapak', 'amount' => (int) $term->price];
-            }
+        $term = $stall->paymentTerm;
+        if ($term && (int) $term->price > 0 && $term->frequency === $this->frequency) {
+            $items[] = ['label' => 'Sewa Lapak', 'amount' => (int) $term->price];
         }
 
-        // Add-on ikut-tanggal-sewa, frekuensi sama (MAT/AAT).
-        if (in_array($this->bill_type, ['MAT', 'AAT'], true)) {
-            foreach ($stall->addOns as $addOn) {
-                if ($addOn->is_rent_date && (int) $addOn->price > 0 && $addOn->frequency === $this->frequency) {
-                    $items[] = ['label' => $addOn->add_on, 'amount' => (int) $addOn->price];
-                }
+        foreach ($stall->addOns as $addOn) {
+            if ($addOn->is_rent_date && (int) $addOn->price > 0 && $addOn->frequency === $this->frequency) {
+                $items[] = ['label' => $addOn->add_on, 'amount' => (int) $addOn->price];
             }
         }
 
