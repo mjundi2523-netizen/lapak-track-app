@@ -7,41 +7,76 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
 </head>
-<body class="min-h-screen bg-base-200">
-    <x-nav sticky full-width>
-        <x-slot:brand>
-            <div class="flex items-center gap-2">
-                <x-icon name="o-square-3-stack-3d" class="w-7 h-7 text-primary" />
-                <span class="font-bold text-lg">LapakTrack</span>
-            </div>
-        </x-slot:brand>
-
-        <x-slot:actions>
-            <x-dropdown>
-                <x-slot:trigger>
-                    <x-button label="{{ Auth::user()->name }}" icon-right="o-chevron-down" class="btn-ghost btn-sm" />
-                </x-slot:trigger>
-                <x-menu-item title="Profil" icon="o-user" link="{{ route('profile.edit') }}" />
-                <x-menu-separator />
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <x-menu-item title="Keluar" icon="o-arrow-right-on-rectangle"
-                        onclick="event.preventDefault(); this.closest('form').submit();" />
-                </form>
-            </x-dropdown>
-        </x-slot:actions>
-    </x-nav>
-
-    <div class="flex">
-        {{-- Sidebar --}}
-        <aside class="w-64 min-h-screen bg-base-100 border-r border-base-300">
+<body class="min-h-screen" style="background:color-mix(in srgb, var(--lt-p) 5%, #f4f4f6); color:#18181b; -webkit-font-smoothing:antialiased;">
+    <div x-data="{ collapsed: false, userMenu: false }" class="flex min-h-screen">
+        {{-- Sidebar (dark) --}}
+        <aside
+            :class="collapsed ? 'w-[76px]' : 'w-64'"
+            class="shrink-0 flex flex-col sticky top-0 h-screen z-20 overflow-hidden transition-all duration-200"
+            style="background:#1b2433; box-shadow:6px 0 24px rgba(27,36,51,0.16);">
             @include('layouts.sidebar')
         </aside>
 
-        {{-- Main Content --}}
-        <main class="flex-1 p-6">
-            {{ $slot }}
-        </main>
+        {{-- Right column --}}
+        <div class="flex-1 min-w-0 flex flex-col">
+            {{-- Topbar --}}
+            <header class="sticky top-0 z-30 bg-white flex items-center justify-between px-7"
+                    style="height:68px; border-bottom:1px solid #eceef2;">
+                <div class="flex items-center gap-4">
+                    <button @click="collapsed = !collapsed"
+                            class="w-[38px] h-[38px] inline-flex items-center justify-center rounded-[9px] text-[#52525b] hover:bg-base-200 transition">
+                        <x-icon name="o-bars-3" class="w-[22px] h-[22px]" />
+                    </button>
+                    <div class="hidden md:flex items-center gap-2.5 h-10 px-3 rounded-[10px] min-w-[280px]"
+                         style="border:1px solid #e6e8ee; background:#f7f8fb;">
+                        <x-icon name="o-magnifying-glass" class="w-[17px] h-[17px] text-[#9aa3b2]" />
+                        <input placeholder="Cari..." class="flex-1 border-none outline-none bg-transparent text-sm text-[#27272a]" />
+                        <span class="text-xs text-[#9aa3b2] rounded-md px-1.5 py-px bg-white" style="border:1px solid #e0e3ea;">⌘K</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2 relative">
+                    <button class="relative w-10 h-10 inline-flex items-center justify-center rounded-[10px] text-[#52525b] hover:bg-base-200 transition">
+                        <x-icon name="o-bell" class="w-[21px] h-[21px]" />
+                        <span class="absolute top-[7px] right-2 w-2 h-2 rounded-full bg-[#ef4444]" style="border:2px solid #fff;"></span>
+                    </button>
+
+                    <button @click="userMenu = !userMenu" @click.outside="userMenu = false"
+                            class="flex items-center gap-2 rounded-[10px] py-1.5 pl-1.5 pr-2 hover:bg-base-200 transition">
+                        <div class="w-9 h-9 rounded-full text-white flex items-center justify-center text-[13px] font-bold"
+                             style="background:var(--lt-p);">
+                            {{ strtoupper(\Illuminate\Support\Str::substr(Auth::user()->name, 0, 2)) }}
+                        </div>
+                        <x-icon name="o-chevron-down" class="w-4 h-4 text-[#71717a]" />
+                    </button>
+
+                    <div x-show="userMenu" x-cloak x-transition.opacity
+                         class="absolute right-0 top-[52px] bg-white rounded-xl p-1.5 min-w-[190px] z-40"
+                         style="border:1px solid #e5e7eb; box-shadow:0 12px 28px rgba(0,0,0,0.12);">
+                        <div class="px-3 pt-2.5 pb-2 mb-1" style="border-bottom:1px solid #f0f0f1;">
+                            <div class="text-sm font-semibold text-[#18181b]">{{ Auth::user()->name }}</div>
+                            <div class="text-xs text-[#9aa3b2]">{{ Auth::user()->email }}</div>
+                        </div>
+                        <a href="{{ route('profile.edit') }}" wire:navigate
+                           class="flex items-center gap-2.5 px-3 py-2.5 text-sm text-[#3f3f46] rounded-lg hover:bg-base-200 transition">
+                            <x-icon name="o-user" class="w-[18px] h-[18px]" /> Profil
+                        </a>
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit"
+                                    class="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-[#dc2626] rounded-lg hover:bg-red-50 transition">
+                                <x-icon name="o-arrow-right-on-rectangle" class="w-[18px] h-[18px]" /> Keluar
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </header>
+
+            {{-- Main --}}
+            <main class="flex-1 min-w-0 p-7" style="background:#eef1f6;">
+                {{ $slot }}
+            </main>
+        </div>
     </div>
 
     <x-toast />

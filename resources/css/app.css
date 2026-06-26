@@ -4,6 +4,16 @@
     themes: light --default, dark --prefersdark;
 }
 
+/* Warna primer LapakTrack (dipakai sidebar gelap, kartu hero, aksen dashboard). */
+:root {
+    --lt-p: #4f39f6;
+}
+
+/* Cegah kedip elemen Alpine x-show sebelum Alpine siap. */
+[x-cloak] {
+    display: none !important;
+}
+
 /* Tailwind v4 mengabaikan folder yang di-gitignore (vendor), jadi komponen MaryUI
    harus didaftarkan manual agar kelas-kelasnya tidak ke-purge. */
 @source "../../vendor/robsontenorio/mary/src/**/*.php";
