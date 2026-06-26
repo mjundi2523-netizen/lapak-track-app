@@ -29,7 +29,7 @@
             </div>
 
             <x-input label="Jumlah Bayar" wire:model="paid_amount" type="number" step="0.01" required />
-            <x-input label="Tanggal Bayar" wire:model="payment_date" type="date" required />
+            <x-input label="Tanggal Bayar" wire:model="payment_date" type="date" :max="now()->format('Y-m-d')" required />
             <x-select label="Metode" wire:model="payment_method" :options="[
                 ['value' => 'tunai', 'label' => 'Tunai'],
                 ['value' => 'transfer', 'label' => 'Transfer'],

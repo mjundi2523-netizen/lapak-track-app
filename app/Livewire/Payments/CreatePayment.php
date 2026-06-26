@@ -25,7 +25,7 @@ class CreatePayment extends Component
     #[Validate('required|numeric|min:0.01')]
     public float $paid_amount = 0;
 
-    #[Validate('required|date')]
+    #[Validate('required|date|before_or_equal:today')]
     public string $payment_date = '';
 
     #[Validate('required|in:tunai,transfer,lainnya')]
