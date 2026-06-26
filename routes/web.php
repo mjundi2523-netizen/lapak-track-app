@@ -29,6 +29,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/lapak', App\Livewire\Stalls\IndexStalls::class)->name('stalls.index');
     Route::get('/lapak/create', App\Livewire\Stalls\CreateStall::class)->name('stalls.create');
     Route::get('/lapak/{stall}/edit', App\Livewire\Stalls\EditStall::class)->name('stalls.edit');
+    Route::get('/lapak/{stall}', App\Livewire\Stalls\ShowStall::class)->name('stalls.show');
 
     // Dealers
     Route::get('/pedagang', App\Livewire\Dealers\IndexDealers::class)->name('dealers.index');

@@ -24,11 +24,13 @@
 
             @scope('cell_actions', $row)
                 <div class="flex gap-1">
-                    <x-button icon="o-pencil" link="{{ route('stalls.edit', $row) }}" class="btn-sm btn-ghost" />
+                    <x-button icon="o-eye" link="{{ route('stalls.show', $row) }}" class="btn-sm btn-ghost" tooltip="Detail" />
+                    <x-button icon="o-pencil" link="{{ route('stalls.edit', $row) }}" class="btn-sm btn-ghost" tooltip="Edit" />
                     <x-button
-                        :icon="$row->is_active ? 'o-eye-slash' : 'o-eye'"
+                        :icon="$row->is_active ? 'o-pause-circle' : 'o-play-circle'"
+                        :tooltip="$row->is_active ? 'Nonaktifkan' : 'Aktifkan'"
                         wire:click="toggleActive({{ $row->sid }})"
-                        class="btn-sm btn-ghost"
+                        class="btn-sm btn-ghost {{ $row->is_active ? 'text-warning' : 'text-success' }}"
                     />
                 </div>
             @endscope
