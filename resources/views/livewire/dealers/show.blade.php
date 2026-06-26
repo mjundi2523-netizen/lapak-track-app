@@ -29,14 +29,14 @@
                 <div><span class="font-semibold">Akhir Sewa:</span> {{ $ds->rent_end_date ?? '-' }}</div>
             </div>
 
-            @if($ds->dealerBills->count() > 0)
+            @if($ds->bills->count() > 0)
                 <h4 class="font-semibold mb-2">Tagihan</h4>
                 <x-table :headers="[
                     ['key' => 'bill_id', 'label' => 'No. Tagihan'],
                     ['key' => 'total_amount', 'label' => 'Jumlah'],
                     ['key' => 'due_date', 'label' => 'Jatuh Tempo'],
                     ['key' => 'billing_status', 'label' => 'Status'],
-                ]" :rows="$ds->dealerBills" striped>
+                ]" :rows="$ds->bills" striped>
                     @scope('cell_total_amount', $row)
                         Rp {{ number_format($row->total_amount, 0, ',', '.') }}
                     @endscope

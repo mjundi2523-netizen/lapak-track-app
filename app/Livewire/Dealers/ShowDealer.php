@@ -25,7 +25,7 @@ class ShowDealer extends Component
             'dealerStalls' => fn ($q) => $q->where('deleted', false),
             'dealerStalls.stall.paymentTerm',
             'dealerStalls.stall.addOns',
-            'dealerStalls.dealerBills',
+            'dealerStalls.bills',
         ]);
 
         return view('livewire.dealers.show');
