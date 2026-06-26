@@ -63,7 +63,7 @@ class BillGenerationService
             $streams = [];
 
             if ($rentFreq) {
-                $streams[$rentFreq] = ['rent' => (int) $term->price, 'addon' => 0];
+                $streams[$rentFreq] = ['rent' => (int) $term->price, 'addon' => 0, 'addon_count' => 0];
             }
 
             foreach ($stall->addOns as $addOn) {
@@ -71,8 +71,9 @@ class BillGenerationService
                     continue;
                 }
                 $f = $addOn->frequency;
-                $streams[$f] ??= ['rent' => 0, 'addon' => 0];
+                $streams[$f] ??= ['rent' => 0, 'addon' => 0, 'addon_count' => 0];
                 $streams[$f]['addon'] += (int) $addOn->price;
+                $streams[$f]['addon_count']++;
             }
 
             foreach ($streams as $frequency => $parts) {
@@ -82,9 +83,10 @@ class BillGenerationService
                 }
 
                 $type = match (true) {
-                    $parts['rent'] > 0 && $parts['addon'] > 0 => 'MAT',
-                    $parts['rent'] > 0 => 'MTR',
-                    default => 'AAT',
+                    $parts['rent'] > 0 && $parts['addon'] > 0 => 'MAT',   // sewa + add-on(s)
+                    $parts['rent'] > 0                         => 'MTR',   // sewa saja
+                    ($parts['addon_count'] ?? 0) > 1          => 'AAT',   // add-on + add-on
+                    default                                    => 'ATR',   // 1 add-on saja
                 };
                 // Periode rent memakai interval_count payment_term; stream add-on murni = 1.
                 $interval = $parts['rent'] > 0 ? $rentInterval : 1;
