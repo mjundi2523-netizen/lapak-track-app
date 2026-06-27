@@ -1,118 +1,93 @@
+@php
+    $typePill = [
+        'MTR' => ['Sewa',           '#ede9fe', '#6d28d9'],
+        'MAT' => ['Sewa + Add-on',  '#fce7f3', '#be185d'],
+        'AAT' => ['Add-on',         '#dbeafe', '#1d4ed8'],
+        'ATR' => ['Add-on (jadwal)','#cffafe', '#0e7490'],
+    ];
+    $freqLabel = ['daily' => 'Harian', 'weekly' => 'Mingguan', 'monthly' => 'Bulanan', 'annual' => 'Tahunan'];
+    $statusMap = [
+        'unpaid'      => ['Belum Bayar', '#fee2e2', '#b91c1c'],
+        'installment' => ['Cicilan',     '#dbeafe', '#1d4ed8'],
+        'pending'     => ['Pending',     '#fef9c3', '#a16207'],
+        'paid'        => ['Lunas',       '#dcfce7', '#15803d'],
+    ];
+@endphp
+
 <div>
-    <x-header title="Tagihan" separator progress-indicator>
-        <x-slot:actions>
-            <x-input placeholder="Cari..." wire:model.live.debounce="search" clearable />
-            <x-select wire:model.live="statusFilter" :options="[
-                ['value' => '', 'label' => 'Semua Status'],
-                ['value' => 'unpaid', 'label' => 'Belum Bayar'],
-                ['value' => 'installment', 'label' => 'Cicilan'],
-                ['value' => 'paid', 'label' => 'Lunas'],
-                ['value' => 'pending', 'label' => 'Pending'],
-            ]" option-value="value" option-label="label" class="w-40" />
-        </x-slot:actions>
-    </x-header>
+    <x-index-header title="Tagihan">
+        <x-input placeholder="Cari..." wire:model.live.debounce="search" clearable />
+        <x-select wire:model.live="statusFilter" :options="[
+            ['value' => '', 'label' => 'Semua Status'],
+            ['value' => 'unpaid', 'label' => 'Belum Bayar'],
+            ['value' => 'installment', 'label' => 'Cicilan'],
+            ['value' => 'paid', 'label' => 'Lunas'],
+            ['value' => 'pending', 'label' => 'Pending'],
+        ]" option-value="value" option-label="label" class="w-40" />
+    </x-index-header>
 
-    <x-card>
-        <x-table :headers="[
-            ['key' => 'bill_id', 'label' => 'No. Tagihan'],
-            ['key' => 'jenis', 'label' => 'Jenis'],
-            ['key' => 'dealer', 'label' => 'Pedagang'],
-            ['key' => 'stall', 'label' => 'Lapak'],
-            ['key' => 'total_amount', 'label' => 'Jumlah'],
-            ['key' => 'paid', 'label' => 'Terbayar'],
-            ['key' => 'sisa', 'label' => 'Sisa'],
-            ['key' => 'due_date', 'label' => 'Jatuh Tempo'],
-            ['key' => 'billing_status', 'label' => 'Status'],
-            ['key' => 'actions', 'label' => ''],
-        ]" :rows="$bills" striped
-        :row-decoration="[
-            'bg-error/10' => fn($row) => $row->billing_status === 'unpaid' && $row->due_date < now(),
-        ]">
-            @scope('cell_bill_id', $row)
-                {{ $row->bill_id ?? '-' }}
-            @endscope
-
-            @scope('cell_jenis', $row)
-                <div class="flex flex-col gap-1">
-                    <x-badge :value="match($row->bill_type) {
-                        'MTR' => 'Sewa',
-                        'MAT' => 'Sewa + Add-on',
-                        'AAT' => 'Add-on',
-                        'ATR' => 'Add-on (jadwal)',
-                        default => $row->bill_type,
-                    }" :class="match($row->bill_type) {
-                        'MTR' => 'badge-primary badge-soft',
-                        'MAT' => 'badge-secondary badge-soft',
-                        'AAT' => 'badge-info badge-soft',
-                        'ATR' => 'badge-accent badge-soft',
-                        default => 'badge-ghost',
-                    }" />
-                    <x-badge :value="match($row->frequency) {
-                        'daily' => 'Harian',
-                        'weekly' => 'Mingguan',
-                        'monthly' => 'Bulanan',
-                        'annual' => 'Tahunan',
-                        default => $row->frequency ?? '-',
-                    }" class="badge-ghost badge-sm" />
-                </div>
-            @endscope
-
-            @scope('cell_dealer', $row)
-                {{ $row->dealerStall?->dealer?->name ?? '-' }}
-            @endscope
-
-            @scope('cell_stall', $row)
-                {{ $row->dealerStall?->stall?->block ?? '-' }}
-            @endscope
-
-            @scope('cell_total_amount', $row)
-                Rp {{ number_format($row->total_amount, 0, ',', '.') }}
-            @endscope
-
-            @scope('cell_paid', $row)
-                @php($paid = $row->payments->sum('paid_amount'))
-                Rp {{ number_format($paid, 0, ',', '.') }}
-            @endscope
-
-            @scope('cell_sisa', $row)
-                @php($sisa = max($row->total_amount - $row->payments->sum('paid_amount'), 0))
-                <span @class(['font-medium', 'text-error' => $sisa > 0, 'text-success' => $sisa <= 0])>
-                    Rp {{ number_format($sisa, 0, ',', '.') }}
-                </span>
-            @endscope
-
-            @scope('cell_due_date', $row)
-                {{ $row->due_date?->format('d-m-Y') ?? '-' }}
-            @endscope
-
-            @scope('cell_billing_status', $row)
-                <x-badge :value="match($row->billing_status) {
-                    'paid' => 'Lunas',
-                    'installment' => 'Cicilan',
-                    'unpaid' => 'Belum Bayar',
-                    'pending' => 'Pending',
-                    default => $row->billing_status,
-                }" :class="match($row->billing_status) {
-                    'paid' => 'badge-success',
-                    'installment' => 'badge-warning',
-                    'unpaid' => 'badge-error',
-                    'pending' => 'badge-ghost',
-                    default => 'badge-ghost',
-                }" />
-            @endscope
-
-            @scope('cell_actions', $row)
-                <div class="flex gap-1">
-                    <x-button icon="o-eye" link="{{ route('bills.show', $row) }}" class="btn-sm btn-ghost" />
-                    @if($row->billing_status !== 'paid')
-                        <x-button icon="o-credit-card" link="{{ route('payments.create', ['bill' => $row->dbid]) }}" class="btn-sm btn-ghost text-success" />
-                    @endif
-                </div>
-            @endscope
-        </x-table>
-
-        <div class="mt-4">
-            {{ $bills->links() }}
-        </div>
-    </x-card>
+    <div class="lt-card-table">
+        <table class="lt-table">
+            <thead>
+                <tr>
+                    <th class="lt-th">No. Tagihan</th>
+                    <th class="lt-th">Jenis</th>
+                    <th class="lt-th">Pedagang</th>
+                    <th class="lt-th">Lapak</th>
+                    <th class="lt-th text-right">Jumlah</th>
+                    <th class="lt-th text-right">Terbayar</th>
+                    <th class="lt-th text-right">Sisa</th>
+                    <th class="lt-th">Jatuh Tempo</th>
+                    <th class="lt-th">Status</th>
+                    <th class="lt-th"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($bills as $row)
+                    @php
+                        $t = $typePill[$row->bill_type] ?? null;
+                        $st = $statusMap[$row->billing_status] ?? [$row->billing_status, '#f1f1f3', '#52525b'];
+                        $paid = $row->payments->sum('paid_amount');
+                        $sisa = max($row->total_amount - $paid, 0);
+                        $overdue = $row->billing_status === 'unpaid' && $row->due_date < now();
+                    @endphp
+                    <tr class="lt-row {{ $overdue ? 'lt-row-danger' : '' }}">
+                        <td class="lt-td font-semibold text-[#18181b]">{{ $row->bill_id ?? '-' }}</td>
+                        <td class="lt-td">
+                            @if($t)
+                                <div class="flex flex-col items-start gap-1">
+                                    <span class="lt-pill" style="background:{{ $t[1] }}; color:{{ $t[2] }};">{{ $t[0] }}</span>
+                                    <span class="lt-pill" style="background:#f1f1f3; color:#52525b; font-size:11px;">{{ $freqLabel[$row->frequency] ?? $row->frequency ?? '-' }}</span>
+                                </div>
+                            @else
+                                -
+                            @endif
+                        </td>
+                        <td class="lt-td">{{ $row->dealerStall?->dealer?->name ?? '-' }}</td>
+                        <td class="lt-td">{{ $row->dealerStall?->stall?->block ?? '-' }}</td>
+                        <td class="lt-td text-right">Rp {{ number_format($row->total_amount, 0, ',', '.') }}</td>
+                        <td class="lt-td text-right text-[#71717a]">Rp {{ number_format($paid, 0, ',', '.') }}</td>
+                        <td class="lt-td text-right">
+                            <span class="font-medium {{ $sisa > 0 ? 'text-error' : 'text-success' }}">Rp {{ number_format($sisa, 0, ',', '.') }}</span>
+                        </td>
+                        <td class="lt-td">{{ $row->due_date?->format('d-m-Y') ?? '-' }}</td>
+                        <td class="lt-td">
+                            <span class="lt-pill" style="background:{{ $st[1] }}; color:{{ $st[2] }};">{{ $st[0] }}</span>
+                        </td>
+                        <td class="lt-td">
+                            <div class="flex gap-1 justify-end">
+                                <a href="{{ route('bills.show', $row) }}" wire:navigate class="lt-act" title="Detail"><x-icon name="o-eye" class="w-[18px] h-[18px]" /></a>
+                                @if($row->billing_status !== 'paid')
+                                    <a href="{{ route('payments.create', ['bill' => $row->dbid]) }}" wire:navigate class="lt-act text-success" title="Bayar"><x-icon name="o-credit-card" class="w-[18px] h-[18px]" /></a>
+                                @endif
+                            </div>
+                        </td>
+                    </tr>
+                @empty
+                    <tr><td colspan="10" class="lt-td text-center text-[#9aa3b2] py-8">Tidak ada data.</td></tr>
+                @endforelse
+            </tbody>
+        </table>
+        <div class="lt-table-foot">{{ $bills->links() }}</div>
+    </div>
 </div>

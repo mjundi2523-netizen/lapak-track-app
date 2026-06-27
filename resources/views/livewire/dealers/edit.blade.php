@@ -1,7 +1,7 @@
 <div>
-    <x-header title="Edit Pedagang" separator />
+    <x-page-heading title="Edit Pedagang" />
 
-    <x-card>
+    <x-card class="max-w-[820px]">
         <x-form wire:submit="save">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <x-input label="NIK" wire:model="nik" required />

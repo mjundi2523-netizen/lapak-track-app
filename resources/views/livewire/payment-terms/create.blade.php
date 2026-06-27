@@ -1,9 +1,9 @@
 <div>
-    <x-header title="Tambah Aturan Bayar" separator />
+    <x-page-heading title="Tambah Aturan Bayar" />
 
-    <x-card>
+    <x-card class="max-w-[680px]">
         <x-form wire:submit="save">
-            <x-input label="Nama Aturan" wire:model="term_name" required />
+            <x-input label="Nama Aturan" wire:model="term_name" placeholder="Mis. Sewa Bulanan" required />
 
             <x-select label="Frekuensi" wire:model="frequency" :options="[
                 ['value' => 'daily', 'label' => 'Harian'],

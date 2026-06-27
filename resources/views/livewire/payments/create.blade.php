@@ -1,7 +1,7 @@
 <div>
-    <x-header title="Catat Pembayaran" separator />
+    <x-page-heading title="Catat Pembayaran" />
 
-    <x-card>
+    <x-card class="max-w-[680px]">
         <x-form wire:submit="save">
             {{-- Bill Selection --}}
             <div class="mb-4">

@@ -1,7 +1,7 @@
 <div>
-    <x-header title="Edit Biaya Lain-lain" separator />
+    <x-page-heading title="Edit Biaya Lain-lain" />
 
-    <x-card>
+    <x-card class="max-w-[680px]">
         <x-form wire:submit="save">
             <x-input label="Nama Biaya" wire:model="add_on" required />
             <x-input label="Harga" wire:model="price" type="number" required />

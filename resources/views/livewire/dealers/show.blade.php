@@ -1,62 +1,98 @@
-<div>
-    <x-header title="Detail Pedagang" separator>
-        <x-slot:actions>
-            <x-button label="Edit" link="{{ route('dealers.edit', $dealer) }}" class="btn-primary" icon="o-pencil" />
-            <x-button label="Kembali" link="{{ route('dealers.index') }}" class="btn-ghost" icon="o-arrow-left" />
-        </x-slot:actions>
-    </x-header>
+@php
+    $rp0 = fn ($v) => 'Rp ' . number_format((float) $v, 0, ',', '.');
+    $statusMap = [
+        'unpaid'      => ['Belum Bayar', '#fee2e2', '#b91c1c'],
+        'installment' => ['Cicilan',     '#dbeafe', '#1d4ed8'],
+        'pending'     => ['Pending',     '#fef9c3', '#a16207'],
+        'paid'        => ['Lunas',       '#dcfce7', '#15803d'],
+    ];
+@endphp
 
-    <x-card title="Informasi Pedagang">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div>
+    {{-- Heading --}}
+    <div class="flex items-center justify-between gap-4 mb-5 pb-4" style="border-bottom:1px solid #e5e7eb;">
+        <div>
+            <h1 class="text-[26px] font-bold tracking-tight text-[#1b2433] m-0 mb-1.5">Detail Pedagang</h1>
+            <div class="text-[13px] text-[#9aa3b2]">Beranda&nbsp;/&nbsp;Pedagang&nbsp;/&nbsp;{{ $dealer->name }}</div>
+        </div>
+        <div class="flex gap-2.5">
+            <a href="{{ route('dealers.edit', $dealer) }}" wire:navigate
+               class="inline-flex items-center gap-1.5 h-10 px-4 rounded-[9px] text-sm font-semibold text-white transition hover:brightness-95"
+               style="background:var(--lt-p);">
+                <x-icon name="o-pencil-square" class="w-4 h-4" /> Edit
+            </a>
+            <a href="{{ route('dealers.index') }}" wire:navigate
+               class="inline-flex items-center gap-1.5 h-10 px-4 rounded-[9px] text-sm font-medium text-[#3f3f46] bg-white transition hover:bg-base-200"
+               style="border:1px solid #e5e7eb;">
+                <x-icon name="o-arrow-left" class="w-4 h-4" /> Kembali
+            </a>
+        </div>
+    </div>
+
+    {{-- Informasi Pedagang --}}
+    <div class="bg-white rounded-2xl overflow-hidden mb-5" style="border:1px solid #eceef2; box-shadow:0 1px 2px rgba(16,12,40,0.04);">
+        <div class="px-6 py-4 text-base font-bold text-[#1b2433]" style="border-bottom:1px solid #eef0f4;">Informasi Pedagang</div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-[18px] p-6 text-sm">
             <div><span class="font-semibold">NIK:</span> {{ $dealer->nik }}</div>
             <div><span class="font-semibold">Nama:</span> {{ $dealer->name }}</div>
             <div><span class="font-semibold">Tanggal Lahir:</span> {{ $dealer->birth_date?->format('d-m-Y') ?? '-' }}</div>
-            <div><span class="font-semibold">Alamat:</span> {{ $dealer->address }}</div>
-            <div><span class="font-semibold">Telepon 1:</span> {{ $dealer->phone_number_1 }}</div>
-            <div><span class="font-semibold">Telepon 2:</span> {{ $dealer->phone_number_2 ?? '-' }}</div>
-            <div><span class="font-semibold">Jenis Dagangan:</span> {{ $dealer->product_type ?? '-' }}</div>
+            <div><span class="font-semibold">Alamat:</span> {{ $dealer->address ?: '-' }}</div>
+            <div><span class="font-semibold">Telepon 1:</span> {{ $dealer->phone_number_1 ?: '-' }}</div>
+            <div><span class="font-semibold">Telepon 2:</span> {{ $dealer->phone_number_2 ?: '-' }}</div>
+            <div><span class="font-semibold">Jenis Dagangan:</span> {{ $dealer->product_type ?: '-' }}</div>
             <div>
                 <span class="font-semibold">Status:</span>
-                <x-badge :value="$dealer->status === 'active' ? 'Aktif' : 'Nonaktif'" :class="$dealer->status === 'active' ? 'badge-success' : 'badge-ghost'" />
+                @if($dealer->status === 'active')
+                    <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold" style="background:#dcfce7; color:#15803d;">Aktif</span>
+                @else
+                    <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold" style="background:#f1f1f3; color:#52525b;">Nonaktif</span>
+                @endif
             </div>
         </div>
-    </x-card>
+    </div>
 
+    {{-- Per-lapak --}}
     @foreach($dealer->dealerStalls as $ds)
-        <x-card :title="'Lapak: ' . $ds->stall->block" class="mt-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div><span class="font-semibold">Mulai Sewa:</span> {{ $ds->rent_start_date }}</div>
-                <div><span class="font-semibold">Akhir Sewa:</span> {{ $ds->rent_end_date ?? '-' }}</div>
-            </div>
+        <div class="bg-white rounded-2xl overflow-hidden mb-4" style="border:1px solid #eceef2; box-shadow:0 1px 2px rgba(16,12,40,0.04);">
+            <div class="px-6 py-4 text-base font-bold text-[#1b2433]" style="border-bottom:1px solid #eef0f4;">Lapak: {{ $ds->stall?->block ?? '-' }}</div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-[18px] mb-[18px] text-sm">
+                    <div><span class="font-semibold">Mulai Sewa:</span> {{ $ds->rent_start_date?->format('d-m-Y') ?? '-' }}</div>
+                    <div><span class="font-semibold">Akhir Sewa:</span> {{ $ds->rent_end_date?->format('d-m-Y') ?? '-' }}</div>
+                </div>
 
-            @if($ds->bills->count() > 0)
-                <h4 class="font-semibold mb-2">Tagihan</h4>
-                <x-table :headers="[
-                    ['key' => 'bill_id', 'label' => 'No. Tagihan'],
-                    ['key' => 'total_amount', 'label' => 'Jumlah'],
-                    ['key' => 'due_date', 'label' => 'Jatuh Tempo'],
-                    ['key' => 'billing_status', 'label' => 'Status'],
-                ]" :rows="$ds->bills" striped>
-                    @scope('cell_total_amount', $row)
-                        Rp {{ number_format($row->total_amount, 0, ',', '.') }}
-                    @endscope
-                    @scope('cell_billing_status', $row)
-                        <x-badge :value="match($row->billing_status) {
-                            'paid' => 'Lunas',
-                            'installment' => 'Cicilan',
-                            'unpaid' => 'Belum Bayar',
-                            'pending' => 'Pending',
-                            default => $row->billing_status,
-                        }" :class="match($row->billing_status) {
-                            'paid' => 'badge-success',
-                            'installment' => 'badge-warning',
-                            'unpaid' => 'badge-error',
-                            'pending' => 'badge-ghost',
-                            default => 'badge-ghost',
-                        }" />
-                    @endscope
-                </x-table>
-            @endif
-        </x-card>
+                @if($ds->bills->count() > 0)
+                    <h4 class="text-sm font-semibold m-0 mb-2.5 text-[#1b2433]">Tagihan</h4>
+                    <div class="rounded-[10px] overflow-hidden" style="border:1px solid #f0f0f1;">
+                        <table class="w-full border-collapse">
+                            <thead>
+                                <tr style="background:#fafafa;">
+                                    <th class="text-left px-4 py-2.5 text-[11px] font-bold text-[#a1a1aa] uppercase tracking-[0.04em]">No. Tagihan</th>
+                                    <th class="text-right px-4 py-2.5 text-[11px] font-bold text-[#a1a1aa] uppercase tracking-[0.04em]">Jumlah</th>
+                                    <th class="text-left px-4 py-2.5 text-[11px] font-bold text-[#a1a1aa] uppercase tracking-[0.04em]">Jatuh Tempo</th>
+                                    <th class="text-left px-4 py-2.5 text-[11px] font-bold text-[#a1a1aa] uppercase tracking-[0.04em]">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($ds->bills as $b)
+                                    @php $st = $statusMap[$b->billing_status] ?? [$b->billing_status, '#f1f1f3', '#52525b']; @endphp
+                                    <tr class="cursor-pointer transition-colors hover:bg-[#fafafa]"
+                                        onclick="window.location='{{ route('bills.show', $b) }}'">
+                                        <td class="px-4 py-3 text-sm font-semibold text-[#18181b]" style="border-top:1px solid #f4f4f5;">{{ $b->bill_id ?? '-' }}</td>
+                                        <td class="px-4 py-3 text-sm text-[#27272a] text-right" style="border-top:1px solid #f4f4f5;">{{ $rp0($b->total_amount) }}</td>
+                                        <td class="px-4 py-3 text-sm text-[#27272a]" style="border-top:1px solid #f4f4f5;">{{ $b->due_date?->format('d-m-Y') ?? '-' }}</td>
+                                        <td class="px-4 py-3" style="border-top:1px solid #f4f4f5;">
+                                            <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold" style="background:{{ $st[1] }}; color:{{ $st[2] }};">{{ $st[0] }}</span>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @else
+                    <p class="text-sm text-[#71717a] m-0">Belum ada tagihan untuk lapak ini.</p>
+                @endif
+            </div>
+        </div>
     @endforeach
 </div>

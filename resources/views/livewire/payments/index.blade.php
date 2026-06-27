@@ -1,92 +1,77 @@
+@php
+    $typePill = [
+        'MTR' => ['Sewa',          '#ede9fe', '#6d28d9'],
+        'MAT' => ['Sewa + Add-on', '#fce7f3', '#be185d'],
+        'AAT' => ['Add-on',        '#dbeafe', '#1d4ed8'],
+        'ATR' => ['Add-on (jadwal)','#cffafe', '#0e7490'],
+    ];
+    $freqLabel = ['daily' => 'Harian', 'weekly' => 'Mingguan', 'monthly' => 'Bulanan', 'annual' => 'Tahunan'];
+@endphp
+
 <div>
-    <x-header title="Pembayaran" separator progress-indicator>
-        <x-slot:actions>
-            <x-input placeholder="Cari..." wire:model.live.debounce="search" clearable />
-            <x-select wire:model.live="voidedFilter" :options="[
-                ['value' => '', 'label' => 'Semua'],
-                ['value' => 'active', 'label' => 'Aktif'],
-                ['value' => 'voided', 'label' => 'Dibatalkan'],
-            ]" option-value="value" option-label="label" class="w-40" />
-            <x-button label="Tambah" link="{{ route('payments.create') }}" class="btn-primary" icon="o-plus" />
-        </x-slot:actions>
-    </x-header>
+    <x-index-header title="Pembayaran">
+        <x-input placeholder="Cari..." wire:model.live.debounce="search" clearable />
+        <x-select wire:model.live="voidedFilter" :options="[
+            ['value' => '', 'label' => 'Semua'],
+            ['value' => 'active', 'label' => 'Aktif'],
+            ['value' => 'voided', 'label' => 'Dibatalkan'],
+        ]" option-value="value" option-label="label" class="w-40" />
+        <x-button label="Tambah" link="{{ route('payments.create') }}" class="btn-primary" icon="o-plus" />
+    </x-index-header>
 
-    <x-card>
-        <x-table :headers="[
-            ['key' => 'bill_id', 'label' => 'No. Bayar'],
-            ['key' => 'dealer', 'label' => 'Pedagang'],
-            ['key' => 'jenis', 'label' => 'Jenis'],
-            ['key' => 'paid_amount', 'label' => 'Jumlah'],
-            ['key' => 'payment_date', 'label' => 'Tanggal'],
-            ['key' => 'payment_method', 'label' => 'Metode'],
-            ['key' => 'status', 'label' => 'Status'],
-            ['key' => 'actions', 'label' => ''],
-        ]" :rows="$payments" striped
-        :row-decoration="[
-            'bg-error/20' => fn($row) => $row->is_voided,
-        ]">
-            @scope('cell_bill_id', $row)
-                {{ $row->bill_id ?? '-' }}
-            @endscope
-
-            @scope('cell_dealer', $row)
-                {{ $row->dealerBill?->dealerStall?->dealer?->name ?? '-' }}
-            @endscope
-
-            @scope('cell_jenis', $row)
-                @if($row->dealerBill)
-                    <div class="flex flex-col gap-1">
-                        <x-badge :value="match($row->dealerBill->bill_type) {
-                            'MTR' => 'Sewa',
-                            'MAT' => 'Sewa + Add-on',
-                            'AAT' => 'Add-on',
-                            'ATR' => 'Add-on (jadwal)',
-                            default => $row->dealerBill->bill_type,
-                        }" :class="match($row->dealerBill->bill_type) {
-                            'MTR' => 'badge-primary badge-soft',
-                            'MAT' => 'badge-secondary badge-soft',
-                            'AAT' => 'badge-info badge-soft',
-                            'ATR' => 'badge-accent badge-soft',
-                            default => 'badge-ghost',
-                        }" />
-                        <x-badge :value="match($row->dealerBill->frequency) {
-                            'daily' => 'Harian',
-                            'weekly' => 'Mingguan',
-                            'monthly' => 'Bulanan',
-                            'annual' => 'Tahunan',
-                            default => $row->dealerBill->frequency ?? '-',
-                        }" class="badge-ghost badge-sm" />
-                    </div>
-                @else
-                    -
-                @endif
-            @endscope
-
-            @scope('cell_paid_amount', $row)
-                Rp {{ number_format($row->paid_amount, 2, ',', '.') }}
-            @endscope
-
-            @scope('cell_payment_method', $row)
-                {{ ucfirst($row->payment_method) }}
-            @endscope
-
-            @scope('cell_status', $row)
-                @if($row->is_voided)
-                    <x-badge value="Dibatalkan" class="badge-error" />
-                @else
-                    <x-badge value="Aktif" class="badge-success" />
-                @endif
-            @endscope
-
-            @scope('cell_actions', $row)
-                @if(!$row->is_voided)
-                    <x-button icon="o-x-mark" link="{{ route('payments.void', $row) }}" class="btn-sm btn-ghost text-error" />
-                @endif
-            @endscope
-        </x-table>
-
-        <div class="mt-4">
-            {{ $payments->links() }}
-        </div>
-    </x-card>
+    <div class="lt-card-table">
+        <table class="lt-table">
+            <thead>
+                <tr>
+                    <th class="lt-th">No. Bayar</th>
+                    <th class="lt-th">Pedagang</th>
+                    <th class="lt-th">Jenis</th>
+                    <th class="lt-th text-right">Jumlah</th>
+                    <th class="lt-th">Tanggal</th>
+                    <th class="lt-th">Metode</th>
+                    <th class="lt-th">Status</th>
+                    <th class="lt-th"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($payments as $row)
+                    @php $t = $typePill[$row->dealerBill?->bill_type] ?? null; @endphp
+                    <tr class="lt-row {{ $row->is_voided ? 'lt-row-danger' : '' }}">
+                        <td class="lt-td font-semibold text-[#18181b]">{{ $row->bill_id ?? '-' }}</td>
+                        <td class="lt-td">{{ $row->dealerBill?->dealerStall?->dealer?->name ?? '-' }}</td>
+                        <td class="lt-td">
+                            @if($t)
+                                <div class="flex flex-col items-start gap-1">
+                                    <span class="lt-pill" style="background:{{ $t[1] }}; color:{{ $t[2] }};">{{ $t[0] }}</span>
+                                    <span class="lt-pill" style="background:#f1f1f3; color:#52525b; font-size:11px;">{{ $freqLabel[$row->dealerBill->frequency] ?? $row->dealerBill->frequency ?? '-' }}</span>
+                                </div>
+                            @else
+                                -
+                            @endif
+                        </td>
+                        <td class="lt-td text-right">Rp {{ number_format($row->paid_amount, 2, ',', '.') }}</td>
+                        <td class="lt-td">{{ $row->payment_date?->format('d-m-Y') ?? '-' }}</td>
+                        <td class="lt-td">{{ ucfirst($row->payment_method) }}</td>
+                        <td class="lt-td">
+                            @if($row->is_voided)
+                                <span class="lt-pill" style="background:#fee2e2; color:#b91c1c;">Dibatalkan</span>
+                            @else
+                                <span class="lt-pill" style="background:#dcfce7; color:#15803d;">Aktif</span>
+                            @endif
+                        </td>
+                        <td class="lt-td">
+                            <div class="flex gap-1 justify-end">
+                                @if(!$row->is_voided)
+                                    <a href="{{ route('payments.void', $row) }}" wire:navigate class="lt-act text-error" title="Batalkan"><x-icon name="o-x-mark" class="w-[18px] h-[18px]" /></a>
+                                @endif
+                            </div>
+                        </td>
+                    </tr>
+                @empty
+                    <tr><td colspan="8" class="lt-td text-center text-[#9aa3b2] py-8">Tidak ada data.</td></tr>
+                @endforelse
+            </tbody>
+        </table>
+        <div class="lt-table-foot">{{ $payments->links() }}</div>
+    </div>
 </div>

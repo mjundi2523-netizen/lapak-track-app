@@ -1,7 +1,7 @@
 <div>
-    <x-header title="Tambah Lapak" separator />
+    <x-page-heading title="Tambah Lapak" />
 
-    <x-card>
+    <x-card class="max-w-[680px]">
         <x-form wire:submit="save">
             <x-input label="Blok" wire:model="block" required placeholder="Contoh: A-01" />
             <x-input label="Deskripsi" wire:model="description" />

@@ -1,7 +1,7 @@
 <div>
-    <x-header title="Edit Lapak" separator />
+    <x-page-heading title="Edit Lapak" />
 
-    <x-card>
+    <x-card class="max-w-[680px]">
         <x-form wire:submit="save">
             <x-input label="Blok" wire:model="block" required />
             <x-input label="Deskripsi" wire:model="description" />
