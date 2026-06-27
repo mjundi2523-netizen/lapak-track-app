@@ -46,7 +46,6 @@ error.log
 .DS_Store
 Thumbs.db
 
-# AI Docs
+# AI Docs (CLAUDE.md sengaja TETAP di-track)
 /.qoder
 /.claude
-CLAUDE.md
