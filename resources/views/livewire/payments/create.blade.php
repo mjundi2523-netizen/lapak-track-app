@@ -28,7 +28,17 @@
                 @endif
             </div>
 
-            <x-input label="Jumlah Bayar" wire:model="paid_amount" type="number" step="0.01" required />
+            <div>
+                <x-input label="Jumlah Bayar" wire:model="paid_amount" type="number" step="0.01" min="0.01"
+                    :max="$remaining"
+                    hint="{{ $remaining !== null ? 'Sisa tagihan: Rp ' . number_format($remaining, 0, ',', '.') . ' (nominal tidak boleh lebih)' : '' }}"
+                    required />
+                @if($remaining !== null && $remaining > 0)
+                    <button type="button" wire:click="payFull" class="text-sm font-semibold mt-1" style="color:var(--lt-p);">
+                        Bayar penuh (Rp {{ number_format($remaining, 0, ',', '.') }})
+                    </button>
+                @endif
+            </div>
             <x-input label="Tanggal Bayar" wire:model="payment_date" type="date" :max="now()->format('Y-m-d')" required />
             <x-select label="Metode" wire:model="payment_method" :options="[
                 ['value' => 'tunai', 'label' => 'Tunai'],

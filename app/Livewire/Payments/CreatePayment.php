@@ -55,18 +55,55 @@ class CreatePayment extends Component
         $this->selectedDbid = null;
     }
 
+    /** Sisa tagihan terpilih = total - Σ pembayaran non-void. */
+    protected function remainingFor(DealerBill $bill): float
+    {
+        $paid = (float) $bill->payments()->where('is_voided', false)->sum('paid_amount');
+
+        return max((float) $bill->total_amount - $paid, 0);
+    }
+
+    /** Isi nominal dengan sisa tagihan (bayar lunas). */
+    public function payFull(): void
+    {
+        if (! $this->selectedDbid) {
+            return;
+        }
+
+        $bill = DealerBill::find($this->selectedDbid);
+        if ($bill) {
+            $this->paid_amount = $this->remainingFor($bill);
+        }
+    }
+
     public function save(BillIdGenerator $generator): void
     {
         $this->validate();
 
         if (! $this->selectedDbid) {
             $this->error('Pilih tagihan terlebih dahulu.');
+
             return;
         }
 
-        DB::transaction(function () use ($generator) {
-            $bill = DealerBill::findOrFail($this->selectedDbid);
+        $bill = DealerBill::findOrFail($this->selectedDbid);
 
+        // Tidak bisa membayar tagihan yang sudah lunas / dibatalkan.
+        if (in_array($bill->billing_status, ['paid', 'cancelled'], true)) {
+            $this->addError('paid_amount', 'Tagihan ini sudah lunas atau dibatalkan, tidak bisa dibayar.');
+
+            return;
+        }
+
+        // Blocking: nominal tidak boleh melebihi sisa tagihan.
+        $remaining = $this->remainingFor($bill);
+        if ($this->paid_amount > $remaining + 0.001) {
+            $this->addError('paid_amount', 'Nominal melebihi sisa tagihan. Maksimal Rp ' . number_format($remaining, 0, ',', '.') . '.');
+
+            return;
+        }
+
+        DB::transaction(function () use ($generator, $bill) {
             $billId = $generator->generate('dealer_payment', 'PMT', Carbon::parse($this->payment_date));
 
             DealerPayment::create([
@@ -89,9 +126,13 @@ class CreatePayment extends Component
     public function render()
     {
         $selectedBill = null;
+        $remaining = null;
         if ($this->selectedDbid) {
             $selectedBill = DealerBill::with(['dealerStall.dealer', 'dealerStall.stall', 'payments' => fn ($q) => $q->where('is_voided', false)])
                 ->find($this->selectedDbid);
+            if ($selectedBill) {
+                $remaining = max((float) $selectedBill->total_amount - (float) $selectedBill->payments->sum('paid_amount'), 0);
+            }
         }
 
         $billResults = DealerBill::query()
@@ -107,6 +148,7 @@ class CreatePayment extends Component
 
         return view('livewire.payments.create', [
             'selectedBill' => $selectedBill,
+            'remaining' => $remaining,
             'billResults' => $billResults,
         ]);
     }
