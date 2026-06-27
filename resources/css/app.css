@@ -14,6 +14,20 @@
     display: none !important;
 }
 
+/* MaryUI membocorkan atribut class (mis. mb-4) ke <input> dalam selain ke
+   wrapper .input. Margin pada <input> (flex-item, align-items:center) menggeser
+   placeholder ke atas. Netralkan margin di input dalam; margin tetap di wrapper. */
+.input input {
+    margin: 0;
+}
+
+/* daisyUI memaksa height:100% pada <input>; untuk file input itu membuat tombol +
+   nama file menempel ke atas. Pakai height:auto agar di-tengahkan oleh .input
+   (align-items:center pada wrapper). */
+.input input[type="file"] {
+    height: auto;
+}
+
 /* Kelas komponen kustom dibungkus @layer components agar utility Tailwind
    (mis. text-success/text-error pada ikon aksi) tetap menang saat digabung. */
 @layer components {

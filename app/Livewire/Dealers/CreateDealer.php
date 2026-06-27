@@ -35,6 +35,9 @@ class CreateDealer extends Component
     public string $rent_start_date = '';
     public ?string $rent_end_date = null;
 
+    public bool $showStallModal = false;
+    public string $stallSearch = '';
+
     protected function rules(): array
     {
         return [
@@ -54,9 +57,31 @@ class CreateDealer extends Component
         ];
     }
 
+    public function toggleStall(int $sid): void
+    {
+        if (in_array($sid, $this->selected_stalls, true)) {
+            $this->selected_stalls = array_values(array_diff($this->selected_stalls, [$sid]));
+        } else {
+            $this->selected_stalls[] = $sid;
+        }
+    }
+
     public function save(BillGenerationService $billService): void
     {
         $this->validate();
+
+        // Tolak lapak yang sudah tersewa (jaga-jaga jika dipilih lewat manipulasi state).
+        $occupied = Stall::whereIn('sid', $this->selected_stalls)
+            ->whereHas('activeRentals')
+            ->pluck('sid')
+            ->all();
+
+        if ($occupied) {
+            $this->addError('selected_stalls', 'Ada lapak yang sudah tersewa, silakan pilih ulang.');
+            $this->selected_stalls = array_values(array_diff($this->selected_stalls, $occupied));
+
+            return;
+        }
 
         if ($this->scan_id_file) {
             $this->scan_id = $this->scan_id_file->store('scan-ids', 'public');
@@ -97,10 +122,20 @@ class CreateDealer extends Component
 
     public function render()
     {
+        // Semua lapak aktif (tersewa & kosong) untuk modal pemilihan.
+        $stalls = Stall::query()
+            ->where('is_active', true)
+            ->with(['paymentTerm', 'addOns'])
+            ->withCount('activeRentals')
+            ->when($this->stallSearch !== '', fn ($q) => $q->where('block', 'like', '%' . $this->stallSearch . '%'))
+            ->orderBy('block')
+            ->get();
+
         return view('livewire.dealers.create', [
-            // Hanya lapak aktif yang belum tersewa.
-            'stalls' => Stall::where('is_active', true)
-                ->whereDoesntHave('activeRentals')
+            'stalls' => $stalls,
+            // Detail lapak terpilih untuk ringkasan di form.
+            'selectedStallDetails' => Stall::whereIn('sid', $this->selected_stalls)
+                ->with('paymentTerm')
                 ->orderBy('block')
                 ->get(),
         ]);
