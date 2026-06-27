@@ -1,25 +1,30 @@
 <x-guest-layout>
-    <h2 class="text-xl font-bold mb-1">Daftar</h2>
-    <p class="text-sm text-base-content/60 mb-4">Buat akun baru.</p>
+    <h2 class="text-xl font-bold text-[#18181b] mb-1">Daftar</h2>
+    <p class="text-sm text-[#71717a] mb-5">Buat akun baru.</p>
 
-    <form method="POST" action="{{ route('register') }}" class="space-y-4">
+    <form method="POST" action="{{ route('register') }}">
         @csrf
 
-        <x-input label="Nama" name="name" value="{{ old('name') }}" icon="o-user" required autofocus />
+        <x-auth-input name="name" label="Nama" icon="o-user"
+            :value="old('name')" autofocus autocomplete="name" />
 
-        <x-input label="Email" name="email" type="email" value="{{ old('email') }}"
-            icon="o-envelope" required />
+        <x-auth-input name="email" label="Email" type="email" icon="o-envelope"
+            :value="old('email')" autocomplete="username" />
 
-        <x-input label="Password" name="password" type="password" icon="o-key" required />
+        <x-auth-input name="password" label="Password" type="password" icon="o-key"
+            autocomplete="new-password" />
 
-        <x-input label="Konfirmasi Password" name="password_confirmation" type="password"
-            icon="o-key" required />
+        <x-auth-input name="password_confirmation" label="Konfirmasi Password" type="password" icon="o-key"
+            autocomplete="new-password" />
 
-        <x-button label="Daftar" type="submit" class="btn-primary w-full" />
+        <button type="submit"
+            class="w-full h-11 mt-1 bg-[var(--lt-p)] text-white rounded-[10px] text-[15px] font-semibold hover:brightness-95 transition">
+            Daftar
+        </button>
 
-        <p class="text-center text-sm text-base-content/60">
+        <p class="text-center text-sm text-[#71717a] mt-[18px]">
             Sudah punya akun?
-            <a href="{{ route('login') }}" class="link link-primary">Masuk</a>
+            <a href="{{ route('login') }}" class="text-[var(--lt-p)] font-medium hover:underline">Masuk</a>
         </p>
     </form>
 </x-guest-layout>

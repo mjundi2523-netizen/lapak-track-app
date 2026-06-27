@@ -45,6 +45,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/pembayaran', App\Livewire\Payments\IndexPayments::class)->name('payments.index');
     Route::get('/pembayaran/create', App\Livewire\Payments\CreatePayment::class)->name('payments.create');
     Route::get('/pembayaran/{payment}/void', App\Livewire\Payments\VoidPayment::class)->name('payments.void');
+    Route::get('/pembayaran/{payment}', App\Livewire\Payments\ShowPayment::class)->name('payments.show');
 });
 
 require __DIR__.'/auth.php';
