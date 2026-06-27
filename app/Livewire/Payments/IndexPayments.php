@@ -18,13 +18,35 @@ class IndexPayments extends Component
     public string $search = '';
     public string $voidedFilter = '';
 
+    // Modal kwitansi
+    public bool $showReceipt = false;
+    public ?int $receiptId = null;
+
     public function mount(BillGenerationService $bills): void
     {
         $bills->ensureAllActive();
     }
 
+    public function openReceipt(int $dpid): void
+    {
+        $this->receiptId = $dpid;
+        $this->showReceipt = true;
+    }
+
+    public function closeReceipt(): void
+    {
+        $this->showReceipt = false;
+        $this->receiptId = null;
+    }
+
     public function render()
     {
+        $receiptPayment = $this->showReceipt && $this->receiptId
+            ? DealerPayment::with(['dealerBill.dealerStall.dealer', 'dealerBill.dealerStall.stall'])
+                ->where('is_voided', false)
+                ->find($this->receiptId)
+            : null;
+
         $payments = DealerPayment::query()
             ->with(['dealerBill.dealerStall.dealer', 'dealerBill.dealerStall.stall'])
             ->when($this->search, fn ($q) => $q
@@ -38,6 +60,7 @@ class IndexPayments extends Component
 
         return view('livewire.payments.index', [
             'payments' => $payments,
+            'receiptPayment' => $receiptPayment,
         ]);
     }
 }
