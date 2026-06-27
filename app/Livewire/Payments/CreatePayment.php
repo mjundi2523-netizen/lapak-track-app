@@ -96,7 +96,7 @@ class CreatePayment extends Component
 
         $billResults = DealerBill::query()
             ->with(['dealerStall.dealer', 'dealerStall.stall'])
-            ->where('billing_status', '!=', 'paid')
+            ->whereNotIn('billing_status', ['paid', 'cancelled'])
             ->when($this->billSearch, fn ($q) => $q
                 ->where('bill_id', 'like', "%{$this->billSearch}%")
                 ->orWhereHas('dealerStall.dealer', fn ($q2) => $q2->where('name', 'like', "%{$this->billSearch}%"))

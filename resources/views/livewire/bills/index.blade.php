@@ -11,6 +11,7 @@
         'installment' => ['Cicilan',     '#dbeafe', '#1d4ed8'],
         'pending'     => ['Pending',     '#fef9c3', '#a16207'],
         'paid'        => ['Lunas',       '#dcfce7', '#15803d'],
+        'cancelled'   => ['Dibatalkan',  '#f1f1f3', '#52525b'],
     ];
 @endphp
 
@@ -23,6 +24,7 @@
             ['value' => 'installment', 'label' => 'Cicilan'],
             ['value' => 'paid', 'label' => 'Lunas'],
             ['value' => 'pending', 'label' => 'Pending'],
+            ['value' => 'cancelled', 'label' => 'Dibatalkan'],
         ]" option-value="value" option-label="label" class="w-40" />
     </x-index-header>
 
@@ -77,7 +79,7 @@
                         <td class="lt-td">
                             <div class="flex gap-1 justify-end">
                                 <a href="{{ route('bills.show', $row) }}" wire:navigate class="lt-act" title="Detail"><x-icon name="o-eye" class="w-[18px] h-[18px]" /></a>
-                                @if($row->billing_status !== 'paid')
+                                @if(! in_array($row->billing_status, ['paid', 'cancelled']))
                                     <a href="{{ route('payments.create', ['bill' => $row->dbid]) }}" wire:navigate class="lt-act text-success" title="Bayar"><x-icon name="o-credit-card" class="w-[18px] h-[18px]" /></a>
                                 @endif
                             </div>

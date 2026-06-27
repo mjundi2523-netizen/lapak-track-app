@@ -1,10 +1,12 @@
 @php
     $rp0 = fn ($v) => 'Rp ' . number_format((float) $v, 0, ',', '.');
+    $today = \Illuminate\Support\Carbon::today();
     $statusMap = [
         'unpaid'      => ['Belum Bayar', '#fee2e2', '#b91c1c'],
         'installment' => ['Cicilan',     '#dbeafe', '#1d4ed8'],
         'pending'     => ['Pending',     '#fef9c3', '#a16207'],
         'paid'        => ['Lunas',       '#dcfce7', '#15803d'],
+        'cancelled'   => ['Dibatalkan',  '#f1f1f3', '#52525b'],
     ];
 @endphp
 
@@ -53,8 +55,23 @@
 
     {{-- Per-lapak --}}
     @foreach($dealer->dealerStalls as $ds)
+        {{-- "Sudah diakhiri" begitu rent_end_date di-set (tombol Akhiri Sewa jadi non-aktif). --}}
+        @php $ended = (bool) $ds->rent_end_date; @endphp
         <div class="bg-white rounded-2xl overflow-hidden mb-4" style="border:1px solid #eceef2; box-shadow:0 1px 2px rgba(16,12,40,0.04);">
-            <div class="px-6 py-4 text-base font-bold text-[#1b2433]" style="border-bottom:1px solid #eef0f4;">Lapak: {{ $ds->stall?->block ?? '-' }}</div>
+            <div class="flex items-center justify-between gap-3 px-6 py-4" style="border-bottom:1px solid #eef0f4;">
+                <span class="text-base font-bold text-[#1b2433]">Lapak: {{ $ds->stall?->block ?? '-' }}</span>
+                @if($ended)
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold" style="background:#f1f1f3; color:#52525b;">
+                        <x-icon name="o-check-circle" class="w-4 h-4" /> Sewa berakhir {{ $ds->rent_end_date->format('d-m-Y') }}
+                    </span>
+                @else
+                    <button type="button" wire:click="startEnd({{ $ds->dsid }})"
+                            class="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-[9px] text-sm font-semibold transition hover:brightness-95"
+                            style="background:#fee2e2; color:#b91c1c;">
+                        <x-icon name="o-x-circle" class="w-4 h-4" /> Akhiri Sewa
+                    </button>
+                @endif
+            </div>
             <div class="p-6">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-[18px] mb-[18px] text-sm">
                     <div><span class="font-semibold">Mulai Sewa:</span> {{ $ds->rent_start_date?->format('d-m-Y') ?? '-' }}</div>
@@ -95,4 +112,30 @@
             </div>
         </div>
     @endforeach
+
+    {{-- Modal: Akhiri Sewa --}}
+    <x-modal wire:model="endModal" title="Akhiri Sewa Lapak" separator persistent>
+        <div class="space-y-4">
+            <p class="text-sm text-[#52525b]">
+                Mengakhiri sewa lapak <span class="font-semibold">{{ $endBlock }}</span>.
+                Setelah tanggal berakhir, lapak otomatis menjadi kosong dan tidak ada tagihan baru.
+            </p>
+
+            <x-input type="date" label="Tanggal Berakhir Sewa" wire:model="endDate" />
+
+            <div>
+                <div class="text-sm font-semibold text-[#1b2433] mb-2">Tagihan yang belum dibayar (tunggakan)</div>
+                <x-radio wire:model="arrearAction" :options="[
+                    ['id' => 'keep', 'name' => 'Biarkan jadi utang (tetap tercatat & bisa ditagih)'],
+                    ['id' => 'cancel', 'name' => 'Batalkan (ditandai Dibatalkan)'],
+                ]" />
+            </div>
+        </div>
+
+        <x-slot:actions>
+            <x-button label="Batal" @click="$wire.endModal = false" class="btn-ghost" />
+            <x-button label="Akhiri Sewa" wire:click="endRental" spinner="endRental"
+                      class="text-white border-0" style="background:var(--lt-p);" />
+        </x-slot:actions>
+    </x-modal>
 </div>

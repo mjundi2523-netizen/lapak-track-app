@@ -154,6 +154,11 @@ class DealerBill extends Model
      */
     public function recalculateBillingStatus(): void
     {
+        // Tagihan yang dibatalkan adalah status terminal — jangan dihidupkan kembali.
+        if ($this->billing_status === 'cancelled') {
+            return;
+        }
+
         $this->billing_status = self::deriveStatus($this->paidAmount(), (float) $this->total_amount, $this->due_date);
         $this->save();
     }

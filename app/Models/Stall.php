@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 class Stall extends Model
 {
@@ -43,9 +44,23 @@ class Stall extends Model
         return $this->hasMany(DealerStall::class, 'sid', 'sid');
     }
 
+    /**
+     * Rental yang sedang MENGISI lapak (occupancy): rental tidak dihapus DAN
+     * hari ini berada di dalam window sewa (rent_start <= hari ini <= rent_end / ongoing).
+     * Catatan: `deleted` = aktif/tidak-aktif record rental (terpisah dari occupancy).
+     */
     public function activeRentals(): HasMany
     {
-        return $this->hasMany(DealerStall::class, 'sid', 'sid')->where('deleted', false);
+        $today = Carbon::today()->toDateString();
+
+        // Eksklusif di ujung: pada hari rent_end_date lapak sudah dianggap kosong.
+        return $this->hasMany(DealerStall::class, 'sid', 'sid')
+            ->where('deleted', false)
+            ->whereDate('rent_start_date', '<=', $today)
+            ->where(function ($q) use ($today) {
+                $q->whereNull('rent_end_date')
+                    ->orWhereDate('rent_end_date', '>', $today);
+            });
     }
 
     public function createdBy(): BelongsTo

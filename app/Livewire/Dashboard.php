@@ -38,9 +38,13 @@ class Dashboard extends Component
         $monthStart = Carbon::today()->startOfMonth();
         $monthEnd = Carbon::today()->endOfMonth();
 
-        $heroTotal = (float) DealerBill::whereBetween('due_date', [$monthStart, $monthEnd])->sum('total_amount');
+        $heroTotal = (float) DealerBill::whereBetween('due_date', [$monthStart, $monthEnd])
+            ->where('billing_status', '!=', 'cancelled')
+            ->sum('total_amount');
         $heroPaid = (float) DealerPayment::where('is_voided', false)
-            ->whereHas('dealerBill', fn ($q) => $q->whereBetween('due_date', [$monthStart, $monthEnd]))
+            ->whereHas('dealerBill', fn ($q) => $q
+                ->whereBetween('due_date', [$monthStart, $monthEnd])
+                ->where('billing_status', '!=', 'cancelled'))
             ->sum('paid_amount');
         $heroUnpaid = max($heroTotal - $heroPaid, 0);
 
@@ -49,7 +53,7 @@ class Dashboard extends Component
         // --- Jatuh tempo & terlambat (paginated, badge = count asli) ---
         $overdueQuery = DealerBill::with(['dealerStall.dealer', 'dealerStall.stall'])
             ->whereDate('due_date', '<=', Carbon::today())
-            ->where('billing_status', '!=', 'paid')
+            ->whereNotIn('billing_status', ['paid', 'cancelled'])
             ->orderBy('due_date');
 
         $overdueTotal = $overdueQuery->count();
@@ -97,9 +101,11 @@ class Dashboard extends Component
 
         $billed = DealerBill::selectRaw("DATE_FORMAT(due_date, '%Y-%m') ym, SUM(total_amount) t")
             ->whereBetween('due_date', [$first, $rangeEnd])
+            ->where('billing_status', '!=', 'cancelled')
             ->groupBy('ym')->pluck('t', 'ym');
 
         $paid = DealerPayment::where('is_voided', false)
+            ->whereHas('dealerBill', fn ($q) => $q->where('billing_status', '!=', 'cancelled'))
             ->selectRaw("DATE_FORMAT(payment_date, '%Y-%m') ym, SUM(paid_amount) t")
             ->whereBetween('payment_date', [$first, $rangeEnd])
             ->groupBy('ym')->pluck('t', 'ym');
