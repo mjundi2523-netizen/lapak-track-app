@@ -45,3 +45,8 @@ error.log
 /.zed
 .DS_Store
 Thumbs.db
+
+# AI Docs
+/.qoder
+/.claude
+CLAUDE.md
