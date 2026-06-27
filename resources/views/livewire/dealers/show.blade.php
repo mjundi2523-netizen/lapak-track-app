@@ -18,6 +18,11 @@
             <div class="text-[13px] text-[#9aa3b2]">Beranda&nbsp;/&nbsp;Pedagang&nbsp;/&nbsp;{{ $dealer->name }}</div>
         </div>
         <div class="flex gap-2.5">
+            <button type="button" wire:click="openLetter"
+                    class="inline-flex items-center gap-1.5 h-10 px-4 rounded-[9px] text-sm font-semibold text-[#3f3f46] bg-white transition hover:bg-base-200"
+                    style="border:1px solid #e5e7eb;">
+                <x-icon name="o-printer" class="w-4 h-4" /> Cetak Surat
+            </button>
             <a href="{{ route('dealers.edit', $dealer) }}" wire:navigate
                class="inline-flex items-center gap-1.5 h-10 px-4 rounded-[9px] text-sm font-semibold text-white transition hover:brightness-95"
                style="background:var(--lt-p);">
@@ -138,4 +143,9 @@
                       class="text-white border-0" style="background:var(--lt-p);" />
         </x-slot:actions>
     </x-modal>
+
+    {{-- Modal: Cetak Surat Pedagang --}}
+    @if($showLetter)
+        @include('dealers._letter', ['dealer' => $dealer])
+    @endif
 </div>

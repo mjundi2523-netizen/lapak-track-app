@@ -15,6 +15,9 @@
                     ['value' => 'active', 'label' => 'Aktif'],
                     ['value' => 'inactive', 'label' => 'Nonaktif'],
                 ]" option-value="value" option-label="label" />
+                <x-input label="No. Surat Pedagang" wire:model="letter_no"
+                    placeholder="mis. A-004 / PSR-N / VI / 2026"
+                    hint="Untuk surat/kartu pedagang (opsional)" />
             </div>
 
             <x-input label="Scan KTP" wire:model="scan_id_file" type="file" accept="image/*,.pdf" />

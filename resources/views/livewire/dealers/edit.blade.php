@@ -18,6 +18,10 @@
                     :hint="$hasActiveRental ? 'Masih ada sewa aktif — akhiri sewa dulu untuk menonaktifkan.' : null" />
             </div>
 
+            <x-input label="No. Surat Pedagang" wire:model="letter_no"
+                placeholder="mis. A-004 / PSR-N / VI / 2026"
+                hint="Untuk surat/kartu pedagang (opsional)" />
+
             <x-input label="Scan KTP" wire:model="scan_id_file" type="file" accept="image/*,.pdf" />
 
             @if($scan_id)

@@ -22,6 +22,7 @@ class Dealer extends Model
         'product_type',
         'status',
         'scan_id',
+        'letter_no',
         'created_by',
         'modified_by',
     ];

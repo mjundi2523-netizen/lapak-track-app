@@ -27,9 +27,22 @@ class ShowDealer extends Component
     public string $endDate = '';
     public string $arrearAction = 'keep'; // keep | cancel
 
+    // --- State modal "Cetak Surat Pedagang" ---
+    public bool $showLetter = false;
+
     public function mount(Dealer $dealer): void
     {
         $this->dealer = $dealer;
+    }
+
+    public function openLetter(): void
+    {
+        $this->showLetter = true;
+    }
+
+    public function closeLetter(): void
+    {
+        $this->showLetter = false;
     }
 
     public function startEnd(int $dsid): void

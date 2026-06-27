@@ -1,5 +1,5 @@
 {{-- Overlay modal kwitansi. Komponen pemanggil wajib punya method closeReceipt(). --}}
-<div wire:click="closeReceipt"
+<div class="lt-print-overlay" wire:click="closeReceipt"
      style="position:fixed;inset:0;z-index:60;background:rgba(15,18,28,0.55);display:flex;align-items:center;justify-content:center;padding:24px;overflow:auto;">
     <div onclick="event.stopPropagation()" style="width:540px;max-width:100%;">
         @include('payments._receipt-card', ['payment' => $payment])

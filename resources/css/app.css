@@ -162,12 +162,27 @@
 @source "../views/**/*.blade.php";
 @source "../../app/Livewire/**/*.php";
 
-/* Cetak kwitansi: saat print hanya #lt-receipt (kartu struk di modal Pembayaran)
-   yang tampil; sisanya disembunyikan. Dipicu tombol Cetak (window.print()). */
+/* Cetak (kwitansi #lt-receipt & surat #lt-letter): hanya isi modal bertanda
+   .lt-print-overlay yang tampil. Pakai display:none (bukan visibility) agar tinggi
+   mengkerut jadi 1 halaman & overlay 'fixed' tidak berulang di tiap halaman.
+   Surat dipetakan ke named-page landscape; kwitansi pakai portrait default. */
+@page lt-landscape { size: A4 landscape; margin: 9mm; }
+
 @media print {
-    body * { visibility: hidden !important; }
-    #lt-receipt, #lt-receipt * { visibility: visible !important; }
-    #lt-receipt { position: fixed !important; left: 0; top: 0; width: 100%; box-shadow: none !important; }
+    body :not(:has(.lt-print-overlay)):not(.lt-print-overlay):not(.lt-print-overlay *) {
+        display: none !important;
+    }
+    .lt-print-overlay {
+        position: static !important;
+        inset: auto !important;
+        background: none !important;
+        padding: 0 !important;
+        overflow: visible !important;
+        display: block !important;
+    }
+    .lt-print-overlay > * { width: 100% !important; max-width: none !important; }
     .no-print { display: none !important; }
-    @page { margin: 14mm; }
+    #lt-receipt, #lt-letter { box-shadow: none !important; }
+    #lt-letter { page: lt-landscape; }
+    @page { margin: 12mm; }
 }

@@ -30,6 +30,7 @@ class EditDealer extends Component
     public ?string $phone_number_2 = null;
     public ?string $product_type = null;
     public string $status = 'active';
+    public ?string $letter_no = null;
 
     public $scan_id_file = null;
     public ?string $scan_id = null;
@@ -53,6 +54,7 @@ class EditDealer extends Component
         $this->phone_number_2 = $dealer->phone_number_2;
         $this->product_type = $dealer->product_type;
         $this->status = $dealer->status;
+        $this->letter_no = $dealer->letter_no;
         $this->scan_id = $dealer->scan_id;
         $this->rent_start_date = Carbon::today()->toDateString();
     }
@@ -68,6 +70,7 @@ class EditDealer extends Component
             'phone_number_2' => 'nullable|string|max:255',
             'product_type' => 'nullable|string|max:255',
             'status' => 'required|in:active,inactive',
+            'letter_no' => 'nullable|string|max:100',
             'scan_id_file' => 'nullable|file|max:5120',
             'selected_stalls' => 'array',
             'selected_stalls.*' => 'integer|exists:stall,sid',
@@ -131,6 +134,7 @@ class EditDealer extends Component
                 'phone_number_2' => $this->phone_number_2,
                 'product_type' => $this->product_type,
                 'status' => $this->status,
+                'letter_no' => $this->letter_no,
                 'scan_id' => $this->scan_id,
                 'modified_by' => Auth::id(),
             ]);

@@ -27,6 +27,7 @@ class CreateDealer extends Component
     public ?string $phone_number_2 = null;
     public ?string $product_type = null;
     public ?string $status = 'active';
+    public ?string $letter_no = null;
 
     public $scan_id_file = null;
     public ?string $scan_id = null;
@@ -49,6 +50,7 @@ class CreateDealer extends Component
             'phone_number_2' => 'nullable|string|max:255',
             'product_type' => 'nullable|string|max:255',
             'status' => 'required|in:active,inactive',
+            'letter_no' => 'nullable|string|max:100',
             'scan_id_file' => 'nullable|file|max:5120',
             'selected_stalls' => 'required|array|min:1',
             'selected_stalls.*' => 'integer|exists:stall,sid',
@@ -97,6 +99,7 @@ class CreateDealer extends Component
                 'phone_number_2' => $this->phone_number_2,
                 'product_type' => $this->product_type,
                 'status' => $this->status ?? 'active',
+                'letter_no' => $this->letter_no,
                 'scan_id' => $this->scan_id,
                 'created_by' => Auth::id(),
             ]);
