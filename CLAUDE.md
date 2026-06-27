@@ -6,25 +6,70 @@
 
 ## Aturan keamanan repo (KRITIS)
 - **JANGAN PERNAH menjalankan `git clean -fd`** (atau varian destruktif lain) di repo ini.
-- Repo **belum punya commit apa pun** untuk source rebuild — semua perubahan masih *uncommitted/untracked*. `git clean` sebelumnya sudah pernah menghapus brief MVP yang terupdate. Semua yang ada di working tree adalah satu-satunya salinan.
+- Repo sudah punya **1 base commit** (`LapakTrack — Laravel + Livewire/MaryUI app (clean history)`) dan sudah di-push (history bersih, `.env` tak ter-track, APP_KEY sudah dirotasi). **TAPI** seluruh kerja mesin billing + skema add-on fleksibel masih *uncommitted* di working tree — itu satu-satunya salinan. `git clean` sebelumnya pernah menghapus brief MVP yang terupdate.
 - Sebelum operasi git destruktif apa pun (reset --hard, checkout --, clean), berhenti dan konfirmasi ke user.
 
-## Status proyek (per 2026-06-23)
+## Status proyek (per 2026-06-27)
 - Semua source code sempat terhapus; DB MySQL `lapak_track` utuh + datanya.
-- Rebuild ikut spec `.qoder/specs/Rebuild_Lost_Source_Files_task-61c.md`. **Task 1–6 sudah selesai**, Task 7–12 belum.
+- Rebuild ikut spec `.qoder/specs/Rebuild_Lost_Source_Files_task-61c.md`. **Task 1–8, 10, 12 selesai.** Skip 9 (Filament) & 11 (seeder).
+- Mesin billing tuntas: lazy roll-forward 4 tipe tagihan (MTR/MAT/AAT/ATR), skema add-on dengan anchor fleksibel (`is_rent_date`/`start_date`). Data sudah di-regen penuh. Lihat bagian "Mesin billing" di bawah. **Belum di-commit.**
 - ERD lama (`terms_add_ons`) **sudah usang**. Schema asli sekarang: add-ons menempel ke **stall** lewat pivot `stall_add_ons`, bukan ke payment_terms. `bill_id` sudah ditambahkan ke `dealer_bills` & `dealer_payment`.
 
 ## Konvensi schema
 - Custom PK per tabel (`ptid`, `aoid`, `sid`, `did`, `dsid`, `dbid`, `dpid`).
-- `billing_status` enum: `paid | installment | unpaid | pending`.
+- `billing_status` enum: `paid | installment | unpaid | pending | cancelled`. `cancelled` = status terminal (tunggakan yang dibatalkan saat sewa diakhiri); `recalculateBillingStatus()` tidak menyentuhnya, dan dikecualikan dari hitungan/notifikasi/pemilih bayar. Ditambah 2026-06-27.
 - `frequency` enum: `daily | weekly | monthly | annual`.
 - `payment_terms.interval_count` (unsigned, default 1) = pengali periode: "setiap {interval_count} {frequency}". Ditambah 2026-06-23.
+- `dealer_bills.bill_type` enum: `MTR | MAT | AAT | ATR` (lihat "Mesin billing"). `dealer_bills.aoid` (nullable, FK→`add_ons`) terisi hanya untuk ATR.
+- `add_ons.is_rent_date` (bool, default true) + `add_ons.start_date` (date, nullable) — anchor penagihan add-on. Ditambah 2026-06-27.
 - Bill (`dealer_bills`) milik **dealer_stall** (rental), bukan langsung milik dealer.
 
 ## Rencana eksekusi MVP
 Lihat `.qoder/specs/LapakTrack_MVP_Plan.md` — logika billing (lazy roll-forward), status otomatis, notifikasi in-app, + checklist Task 7–12 & revisi Task 4/6.
 - **Selesai:** Task 7 (layout+dashboard), 8 (auth), 10 (frontend), 12 (verifikasi). **Skip:** 9 (Filament), 11 (seeder).
-- **Belum:** revisi mesin billing (lazy per-periode), `recalculateBillingStatus` 4-status, `CreateDealer` multi-lapak.
+- **Selesai juga:** revisi mesin billing (lazy roll-forward, cursor `max(period_end)` per stream), `DealerBill::deriveStatus()` 4-status, `CreateDealer` multi-lapak, command `bills:generate`, catch-up di `mount()` Dashboard/Tagihan/Pembayaran.
+
+## Mesin billing (cara kerja sekarang)
+- Tagihan dibuat per-periode secara **lazy** saat halaman dibuka (idempoten). Konvensi: `period_end = start + interval`, `due_date = period_end`.
+- **4 tipe tagihan** (`dealer_bills.bill_type`) — label turunan dari **jumlah komponen**, bukan dari `is_rent_date`:
+  - `MTR` = sewa saja (berdiri sendiri)
+  - `ATR` = 1 add-on saja (berdiri sendiri) — berlaku baik `is_rent_date=true` maupun `false`
+  - `MAT` = sewa + ≥1 add-on(`is_rent_date=true`) frekuensi sama, digabung 1 baris
+  - `AAT` = ≥2 add-on(`is_rent_date=true`) frekuensi sama tanpa sewa, digabung 1 baris
+- **Cursor stream (kunci idempotensi):**
+  - MTR/MAT/AAT/ATR-tanpa-aoid (rent-anchored, `is_rent_date=true`): key = `(dsid, frequency, aoid IS NULL)` → 1 stream per frekuensi.
+  - ATR-dengan-aoid (`is_rent_date=false`): key = `(dsid, aoid)`, anchor = `start_date` (periode sebelum `rent_start` di-skip/clamp).
+  - `bill_type` adalah label saja, **bukan** bagian kunci cursor → transisi MTR↔MAT↔AAT mulus saat add-on ditambah/dihapus tanpa dobel tagihan.
+- `add_ons` punya `is_rent_date` (bool, default true) + `start_date` (date, nullable). UI Create/Edit AddOn: checkbox "Ikut tanggal sewa"; field `start_date` muncul hanya saat tidak diceklis.
+- Add-on "tiap 1 Jan": cukup set `is_rent_date=false, start_date=1 Jan` — tidak ada special-case di engine.
+- Status diturunkan murni dari bayar vs `due_date`. `pending→unpaid` otomatis saat due lewat.
+- **Data sekarang:** MTR 42 / MAT 191 / AAT 3 / ATR 763 (regen penuh, payments di-reset).
+- **Perubahan ini BELUM di-commit.**
+
+## Occupancy & berhenti sewa
+- **`stall.is_active`** = lapak ada tapi (sementara) tak bisa dipakai; bisa diaktifkan lagi. **Beda** dari occupancy.
+- **Occupancy (terisi/kosong)** = `Stall::activeRentals` → ada `dealer_stall` dengan `deleted=false` DAN `rent_start_date <= hari ini < rent_end_date` (atau `rent_end_date` NULL). **Eksklusif di ujung**: pada hari `rent_end_date` lapak sudah dianggap kosong. Dipakai dashboard, lapak tersedia di `CreateDealer`/`EditDealer`, tenant di `ShowStall`.
+- **`dealer_stall.deleted`** = soft-delete record rental (mis. **salah input**), **terpisah** dari occupancy. **TODO (belum dibuat):** aksi "Hapus rental (salah input)" di `ShowDealer` yang set `deleted=true`. Saat ini kolom dorman (tidak ada penulis `deleted=true`); hanya `CreateDealer` set `false`.
+- **"Akhiri Sewa"** (`ShowDealer` → modal): set `rent_end_date` (lapak otomatis kosong saat tanggal lewat) + `ensureBillsUpToDate` (tagihan final) + pilihan tunggakan: **biarkan jadi utang** atau **`cancel`** (unpaid/pending → `cancelled`). Status pedagang **tidak** diubah otomatis (manual). Begitu `rent_end_date` di-set, tombol jadi badge "Sewa berakhir" non-aktif.
+- **`Dealer::activeRentals`** = rental `deleted=false` & belum berakhir (`rent_end` NULL / `> hari ini`, eksklusif). Aturan terkait:
+  - Pedagang dengan sewa aktif **tidak bisa dinonaktifkan** (`EditDealer` blokir + pesan).
+  - `EditDealer`: kalau punya sewa aktif → daftar lapak **readonly**; kalau tidak → boleh **pilih lapak lagi** (buat rental baru + generate tagihan).
+
+## Surat/Kartu Pedagang (cetak)
+- Tombol **Cetak Surat** di `ShowDealer` → modal `ShowDealer::openLetter()` menampilkan **Kartu Pedagang "PASAR SWASTA NUSANTARA"** (acuan: lampiran PDF hal.1, PT. Bintang Inter Nusantara). Partial `resources/views/dealers/_letter.blade.php` (`#lt-letter`).
+- Layout 2 kolom landscape: kiri = data diri (No., 10 field, ttd pedagang + pas foto), kanan = **11 peraturan** + ttd "M. FARHAN YAKOB / Direktur Utama". Print scoped sendiri (`<style>@media print … @page A4 landscape`) — tak ubah app.css, tak bentrok dgn print kwitansi (portrait).
+- Field surat dari data pedagang + **rental aktif pertama** (fallback rental terbaru): Kios=block, Ukuran=stall.description, Masa Berlaku=rent_start s/d rent_end. Warga Negara "INDONESIA" & Status "Sewa/Kontrak" hardcoded. Tempat lahir belum ada di schema (hanya tgl).
+- **No. surat = input bebas** `dealer.letter_no` (kolom ditambah 2026-06-27, di form Create/Edit), fallback auto `{block}/PSR-N/{romawi-bulan}/{tahun}` bila kosong.
+- **Print fix (penting):** elemen `position:fixed` + halaman panjang → dulu tercetak berulang (8 halaman). Sekarang print pakai `body :not(:has(#lt-letter))… { display:none }` (mengkerutkan tinggi jadi 1 halaman) + overlay dijadikan `static`. Pola `:has()` butuh engine Chromium (print preview Edge/Chrome OK). **TODO:** kwitansi (`#lt-receipt`, masih `position:fixed` di app.css) berpotensi bug sama — terapkan pola serupa bila perlu.
+
+## Pembayaran: aturan nominal
+- **Blocking lebih-bayar**: `CreatePayment` menolak `paid_amount > sisa` (`sisa = total − Σ non-void`) + menolak tagihan `paid`/`cancelled`. Server-side (`addError`), plus `max` & tombol "Bayar penuh" (`payFull()`) di form. Belum ada konsep saldo/lebih-bayar — jangan diakali lewat over-payment.
+
+## Pembayaran: detail & kwitansi
+- **Detail** (`payments.show` → `ShowPayment`, `/pembayaran/{payment}`): Informasi Pembayaran (+ blok pembatalan bila void) & Tagihan Terkait (jenis, status, periode, total/terbayar/sisa, link ke `bills.show`). Aksi "Detail" (ikon mata) di index.
+- Tiap pembayaran (non-void) punya tombol **Cetak** di index & halaman detail → `openReceipt()` membuka **modal** struk (bukan tab baru). Modal = partial `payments/_receipt-modal.blade.php` (dipakai index & detail), komponen pemanggil wajib punya `closeReceipt()`.
+- Kartu struk = partial `resources/views/payments/_receipt-card.blade.php` (desain "TANDA TERIMA" dari Claude Design: serif + border ganda + `#lt-receipt`). Tombol Cetak panggil `window.print()`.
+- Print di-scope lewat `@media print` global di `resources/css/app.css`: semua di-hide kecuali `#lt-receipt` (+ `.no-print` untuk tombol). Angka→kata via `App\Support\Terbilang`. Penanda tangan = user login, kota default "Bekasi" (hardcoded di partial — jadikan setting bila perlu).
 
 ## Menjalankan app (Laragon/lokal)
 - `php artisan serve` → http://127.0.0.1:8000 ; `npm run build` (atau `npm run dev`) untuk aset.
