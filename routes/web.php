@@ -46,6 +46,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/pembayaran/create', App\Livewire\Payments\CreatePayment::class)->name('payments.create');
     Route::get('/pembayaran/{payment}/void', App\Livewire\Payments\VoidPayment::class)->name('payments.void');
     Route::get('/pembayaran/{payment}', App\Livewire\Payments\ShowPayment::class)->name('payments.show');
+
+    // Kategori Pengeluaran (master)
+    Route::get('/kategori-pengeluaran', App\Livewire\ExpenseCategories\IndexExpenseCategories::class)->name('expense-categories.index');
+    Route::get('/kategori-pengeluaran/create', App\Livewire\ExpenseCategories\CreateExpenseCategory::class)->name('expense-categories.create');
+    Route::get('/kategori-pengeluaran/{expenseCategory}/edit', App\Livewire\ExpenseCategories\EditExpenseCategory::class)->name('expense-categories.edit');
+
+    // Pengeluaran
+    Route::get('/pengeluaran', App\Livewire\Expenses\IndexExpenses::class)->name('expenses.index');
+    Route::get('/pengeluaran/create', App\Livewire\Expenses\CreateExpense::class)->name('expenses.create');
+    Route::get('/pengeluaran/{expense}/void', App\Livewire\Expenses\VoidExpense::class)->name('expenses.void');
+
+    // Laporan
+    Route::get('/laporan/arus-kas', App\Livewire\Reports\CashFlow::class)->name('reports.cash-flow');
 });
 
 require __DIR__.'/auth.php';

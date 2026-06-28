@@ -39,6 +39,22 @@
         </div>
     </div>
 
+    {{-- Pengeluaran & Laba bersih bulan ini --}}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+        <div class="relative overflow-hidden rounded-[14px] px-6 py-[22px] text-white min-h-[110px]"
+             style="background:linear-gradient(135deg,#ef4444,#f97316); box-shadow:0 10px 24px rgba(239,68,68,0.22);">
+            <div class="text-sm font-medium opacity-90 mb-3 relative z-10">Pengeluaran Bulan Ini</div>
+            <div class="text-[30px] font-bold leading-none relative z-10">{{ $rp($heroExpense) }}</div>
+            <span class="absolute right-[22px] -bottom-2.5 text-[80px] font-extrabold leading-none" style="color:rgba(255,255,255,0.15);">Rp</span>
+        </div>
+        <div class="relative overflow-hidden rounded-[14px] px-6 py-[22px] text-white min-h-[110px]"
+             style="background:linear-gradient(135deg, {{ $heroNet >= 0 ? '#0f766e,#14b8a6' : '#b91c1c,#ef4444' }}); box-shadow:0 10px 24px rgba(15,118,110,0.22);">
+            <div class="text-sm font-medium opacity-90 mb-3 relative z-10">Laba Bersih Bulan Ini <span class="opacity-75">(terbayar − pengeluaran)</span></div>
+            <div class="text-[30px] font-bold leading-none relative z-10">{{ $rp($heroNet) }}</div>
+            <span class="absolute right-[22px] -bottom-2.5 text-[80px] font-extrabold leading-none" style="color:rgba(255,255,255,0.15);">Rp</span>
+        </div>
+    </div>
+
     {{-- Two-column grid --}}
     <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_340px] gap-5 items-start">
         {{-- Left column --}}
@@ -52,6 +68,7 @@
                 <div class="flex gap-5 px-6 pt-3.5 pb-0.5">
                     <div class="flex items-center gap-[7px] text-[13px] text-[#52525b]"><span class="w-[9px] h-[9px] rounded-full" style="background:#6366f1;"></span>Tagihan</div>
                     <div class="flex items-center gap-[7px] text-[13px] text-[#52525b]"><span class="w-[9px] h-[9px] rounded-full" style="background:#14a07a;"></span>Terbayar</div>
+                    <div class="flex items-center gap-[7px] text-[13px] text-[#52525b]"><span class="w-[9px] h-[9px] rounded-full" style="background:#ef4444;"></span>Pengeluaran</div>
                 </div>
                 <div class="px-4 pt-1 pb-[18px]">
                     <svg viewBox="0 0 {{ $chart['w'] }} {{ $chart['h'] }}" width="100%" style="display:block; overflow:visible;">
@@ -73,6 +90,7 @@
                         <polygon points="{{ $areaStr($chart['b'], $chart['baseY']) }}" fill="url(#lt_gB)" stroke="none"></polygon>
                         <polyline points="{{ $ptsStr($chart['a']) }}" fill="none" stroke="#6366f1" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></polyline>
                         <polyline points="{{ $ptsStr($chart['b']) }}" fill="none" stroke="#14a07a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></polyline>
+                        <polyline points="{{ $ptsStr($chart['c']) }}" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-dasharray="5 4" stroke-linecap="round" stroke-linejoin="round"></polyline>
                         @foreach($chart['xlabels'] as $xl)
                             <text x="{{ $xl['x'] }}" y="294" text-anchor="middle" font-size="11" fill="#9aa3b2" font-family="sans-serif">{{ $xl['label'] }}</text>
                         @endforeach

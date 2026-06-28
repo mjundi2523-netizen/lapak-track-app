@@ -8,10 +8,15 @@
             ['label' => 'Aturan Bayar',   'icon' => 'o-banknotes',          'route' => 'payment-terms.index',  'active' => 'payment-terms.*'],
             ['label' => 'Biaya Lain-lain','icon' => 'o-plus-circle',        'route' => 'add-ons.index',        'active' => 'add-ons.*'],
             ['label' => 'Lapak',          'icon' => 'o-building-storefront','route' => 'stalls.index',         'active' => 'stalls.*'],
+            ['label' => 'Kategori Pengeluaran','icon' => 'o-tag',          'route' => 'expense-categories.index', 'active' => 'expense-categories.*'],
         ],
         'Transaksi' => [
             ['label' => 'Tagihan',        'icon' => 'o-document-text',      'route' => 'bills.index',          'active' => 'bills.*'],
             ['label' => 'Pembayaran',     'icon' => 'o-credit-card',        'route' => 'payments.index',       'active' => 'payments.*'],
+            ['label' => 'Pengeluaran',    'icon' => 'o-arrow-trending-down','route' => 'expenses.index',       'active' => 'expenses.*'],
+        ],
+        'Laporan' => [
+            ['label' => 'Arus Kas',       'icon' => 'o-chart-bar',          'route' => 'reports.cash-flow',    'active' => 'reports.*'],
         ],
     ];
 @endphp

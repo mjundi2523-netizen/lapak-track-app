@@ -71,6 +71,13 @@ Lihat `.qoder/specs/LapakTrack_MVP_Plan.md` — logika billing (lazy roll-forwar
 - Tombol **Cetak Surat** di `ShowDealer` (`openLetter`) → modal partial `resources/views/dealers/_letter.blade.php` (`#lt-letter`), berisi Kartu Pedagang "PASAR SWASTA NUSANTARA" (data diri + 11 peraturan + ttd), acuan lampiran PDF hal.1. **Sudah dibuat user — jangan diubah tanpa diminta.**
 - Print di-scope lewat `@media print` di `app.css` (`body :not(:has(.lt-print-overlay))… display:none`; `#lt-letter` named-page **landscape**, kwitansi portrait). No. surat dari `dealer.letter_no` (fallback auto).
 
+## Pengeluaran & Laporan (ditambah 2026-06-29)
+- **`expense_categories`** (ecid, name) = master kategori. CRUD di Master Data (`expense-categories.*`).
+- **`expenses`** (xpid, ecid, title, amount, expense_date, payment_method, note, **void: is_voided/voided_reason/voided_at/voided_by**). **Create + Void, tanpa Edit** (pola sama `dealer_payment`). Menu Transaksi → "Pengeluaran" (`expenses.*`): Index filter (cari/kategori/rentang tanggal/status) + kartu total + Void.
+- **Laporan Arus Kas** (`reports.cash-flow`, grup Laporan): pilih tahun → tabel bulanan **Pemasukan** (Σ `dealer_payment` non-void by `payment_date`) vs **Pengeluaran** (Σ `expenses` non-void by `expense_date`) vs **Laba/Rugi** + rincian per kategori. Pemasukan mencakup tagihan sewa & eksternal (pembayaran seragam).
+- **Dashboard**: kartu "Pengeluaran Bulan Ini" + "Laba Bersih" (terbayar − pengeluaran) + garis pengeluaran (merah putus-putus) di chart.
+- Pengeluaran rutin = manual (belum auto-generate). Foto/nota belum ada (kolom `proof_path` bisa ditambah nanti).
+
 ## Pembayaran: aturan nominal
 - **Blocking lebih-bayar**: `CreatePayment` menolak `paid_amount > sisa` (`sisa = total − Σ non-void`) + menolak tagihan `paid`/`cancelled`. Server-side (`addError`), plus `max` & tombol "Bayar penuh" (`payFull()`) di form. Belum ada konsep saldo/lebih-bayar — jangan diakali lewat over-payment.
 

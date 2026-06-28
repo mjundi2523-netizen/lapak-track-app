@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Models\Dealer;
 use App\Models\DealerBill;
 use App\Models\DealerPayment;
+use App\Models\Expense;
 use App\Models\Stall;
 use App\Services\BillGenerationService;
 use Illuminate\Support\Carbon;
@@ -50,6 +51,12 @@ class Dashboard extends Component
 
         $totalPemasukan = (float) DealerPayment::where('is_voided', false)->sum('paid_amount');
 
+        // Pengeluaran bulan ini & laba bersih (terbayar - pengeluaran).
+        $heroExpense = (float) Expense::where('is_voided', false)
+            ->whereBetween('expense_date', [$monthStart, $monthEnd])
+            ->sum('amount');
+        $heroNet = $heroPaid - $heroExpense;
+
         // --- Jatuh tempo & terlambat (paginated, badge = count asli) ---
         $overdueQuery = DealerBill::with(['dealerStall.dealer', 'dealerStall.stall', 'externalDealer.dealer'])
             ->whereDate('due_date', '<=', Carbon::today())
@@ -81,6 +88,8 @@ class Dashboard extends Component
             'heroTotal' => $heroTotal,
             'heroPaid' => $heroPaid,
             'heroUnpaid' => $heroUnpaid,
+            'heroExpense' => $heroExpense,
+            'heroNet' => $heroNet,
             'totalPemasukan' => $totalPemasukan,
             'overdue' => $overdue,
             'overdueTotal' => $overdueTotal,
@@ -110,12 +119,18 @@ class Dashboard extends Component
             ->whereBetween('payment_date', [$first, $rangeEnd])
             ->groupBy('ym')->pluck('t', 'ym');
 
-        $a = $b = $labels = [];
+        $spent = Expense::where('is_voided', false)
+            ->selectRaw("DATE_FORMAT(expense_date, '%Y-%m') ym, SUM(amount) t")
+            ->whereBetween('expense_date', [$first, $rangeEnd])
+            ->groupBy('ym')->pluck('t', 'ym');
+
+        $a = $b = $c = $labels = [];
         for ($i = 0; $i < $count; $i++) {
             $m = $first->copy()->addMonths($i);
             $ym = $m->format('Y-m');
             $a[] = (float) ($billed[$ym] ?? 0);
             $b[] = (float) ($paid[$ym] ?? 0);
+            $c[] = (float) ($spent[$ym] ?? 0);
             $labels[] = $m->format('M');
         }
 
@@ -125,16 +140,17 @@ class Dashboard extends Component
         $plotW = $w - $padL - $padR;
         $plotH = $h - $padTop - $padBottom;
         $n = $count;
-        $max = max(max($a), max($b), 1);
+        $max = max(max($a), max($b), max($c), 1);
         $max *= 1.12; // headroom
 
         $x = fn ($i) => $padL + ($n > 1 ? $i * $plotW / ($n - 1) : 0);
         $y = fn ($v) => $padTop + $plotH * (1 - $v / $max);
 
-        $ptsA = $ptsB = [];
+        $ptsA = $ptsB = $ptsC = [];
         for ($i = 0; $i < $n; $i++) {
             $ptsA[] = [round($x($i), 1), round($y($a[$i]), 1)];
             $ptsB[] = [round($x($i), 1), round($y($b[$i]), 1)];
+            $ptsC[] = [round($x($i), 1), round($y($c[$i]), 1)];
         }
 
         $grid = [];
@@ -152,7 +168,7 @@ class Dashboard extends Component
 
         return [
             'w' => $w, 'h' => $h, 'baseY' => $baseY,
-            'a' => $ptsA, 'b' => $ptsB,
+            'a' => $ptsA, 'b' => $ptsB, 'c' => $ptsC,
             'grid' => $grid, 'xlabels' => $xlabels,
         ];
     }
