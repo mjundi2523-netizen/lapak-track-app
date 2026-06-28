@@ -24,6 +24,8 @@ class EditStall extends Component
 
     public ?string $description = null;
 
+    public ?string $size = null;
+
     #[Validate('nullable|exists:payment_terms,ptid')]
     public ?int $ptid = null;
 
@@ -35,6 +37,7 @@ class EditStall extends Component
         $this->stall = $stall;
         $this->block = $stall->block;
         $this->description = $stall->description;
+        $this->size = $stall->size;
         $this->ptid = $stall->ptid;
         $this->is_active = $stall->is_active;
         $this->selectedAddOns = $stall->addOns->pluck('aoid')->toArray();
@@ -51,6 +54,7 @@ class EditStall extends Component
             $this->stall->update([
                 'block' => $this->block,
                 'description' => $this->description,
+                'size' => $this->size,
                 'ptid' => $this->ptid,
                 'is_active' => $this->is_active,
                 'modified_by' => Auth::id(),

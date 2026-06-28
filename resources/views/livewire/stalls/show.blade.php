@@ -47,8 +47,11 @@
                             <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold" style="background:#f1f1f3; color:#52525b;">Nonaktif</span>
                         @endif
                     </div>
-                    <div class="text-sm"><span class="font-semibold">Deskripsi:</span> {{ $stall->description ?: '-' }}</div>
+                    <div class="text-sm"><span class="font-semibold">Ukuran:</span> {{ $stall->size ?: '-' }}</div>
                     <div class="text-sm"><span class="font-semibold">Aturan Bayar:</span> {{ $stall->paymentTerm?->term_name ?? '-' }}</div>
+                    @if($stall->description)
+                        <div class="text-sm sm:col-span-2"><span class="font-semibold">Deskripsi:</span> {{ $stall->description }}</div>
+                    @endif
                 </div>
             </div>
 

@@ -16,6 +16,7 @@ class Stall extends Model
     protected $fillable = [
         'block',
         'description',
+        'size',
         'ptid',
         'is_active',
         'created_by',

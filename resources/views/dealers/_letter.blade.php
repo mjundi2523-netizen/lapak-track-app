@@ -24,7 +24,7 @@
         'N I K'           => $dealer->nik,
         'Warga Negara'    => 'INDONESIA',
         'Kios / Los Nomor' => $stall?->block ?? '-',
-        'Ukuran'          => $stall?->description ?: '-',
+        'Ukuran'          => $stall?->size ?: '-',
         'Status Bangunan' => 'Sewa/Kontrak',
         'Jenis Usaha'     => $dealer->product_type ?: '-',
         'Masa Berlaku'    => $masaBerlaku,

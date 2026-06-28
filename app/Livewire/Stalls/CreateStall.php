@@ -22,6 +22,8 @@ class CreateStall extends Component
 
     public ?string $description = null;
 
+    public ?string $size = null;
+
     #[Validate('nullable|exists:payment_terms,ptid')]
     public ?int $ptid = null;
 
@@ -35,6 +37,7 @@ class CreateStall extends Component
             $stall = Stall::create([
                 'block' => $this->block,
                 'description' => $this->description,
+                'size' => $this->size,
                 'ptid' => $this->ptid,
                 'is_active' => true,
                 'created_by' => Auth::id(),
