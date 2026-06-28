@@ -11,12 +11,13 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Livewire\WithPagination;
 use Mary\Traits\Toast;
 
 #[Layout('layouts.app')]
 class ShowDealer extends Component
 {
-    use Toast;
+    use Toast, WithPagination;
 
     public Dealer $dealer;
 
@@ -150,9 +151,17 @@ class ShowDealer extends Component
             'dealerStalls' => fn ($q) => $q->where('deleted', false),
             'dealerStalls.stall.paymentTerm',
             'dealerStalls.stall.addOns',
-            'dealerStalls.bills',
         ]);
 
-        return view('livewire.dealers.show');
+        $bills = DealerBill::query()
+            ->where(fn ($q) => $q
+                ->whereHas('dealerStall', fn ($q2) => $q2->where('did', $this->dealer->did))
+                ->orWhereHas('externalDealer', fn ($q2) => $q2->where('did', $this->dealer->did))
+            )
+            ->with(['dealerStall.stall:sid,block', 'externalDealer'])
+            ->orderByDesc('due_date')
+            ->paginate(15, pageName: 'bills');
+
+        return view('livewire.dealers.show', compact('bills'));
     }
 }

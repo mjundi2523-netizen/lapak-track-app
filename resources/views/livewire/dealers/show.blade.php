@@ -93,40 +93,51 @@
                     <div><span class="font-semibold">Akhir Sewa:</span> {{ $ds->rent_end_date?->format('d-m-Y') ?? '-' }}</div>
                 </div>
 
-                @if($ds->bills->count() > 0)
-                    <h4 class="text-sm font-semibold m-0 mb-2.5 text-[#1b2433]">Tagihan</h4>
-                    <div class="rounded-[10px] overflow-hidden" style="border:1px solid #f0f0f1;">
-                        <table class="w-full border-collapse">
-                            <thead>
-                                <tr style="background:#fafafa;">
-                                    <th class="text-left px-4 py-2.5 text-[11px] font-bold text-[#a1a1aa] uppercase tracking-[0.04em]">No. Tagihan</th>
-                                    <th class="text-right px-4 py-2.5 text-[11px] font-bold text-[#a1a1aa] uppercase tracking-[0.04em]">Jumlah</th>
-                                    <th class="text-left px-4 py-2.5 text-[11px] font-bold text-[#a1a1aa] uppercase tracking-[0.04em]">Jatuh Tempo</th>
-                                    <th class="text-left px-4 py-2.5 text-[11px] font-bold text-[#a1a1aa] uppercase tracking-[0.04em]">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($ds->bills as $b)
-                                    @php $st = $statusMap[$b->billing_status] ?? [$b->billing_status, '#f1f1f3', '#52525b']; @endphp
-                                    <tr class="cursor-pointer transition-colors hover:bg-[#fafafa]"
-                                        onclick="window.location='{{ route('bills.show', $b) }}'">
-                                        <td class="px-4 py-3 text-sm font-semibold text-[#18181b]" style="border-top:1px solid #f4f4f5;">{{ $b->bill_id ?? '-' }}</td>
-                                        <td class="px-4 py-3 text-sm text-[#27272a] text-right" style="border-top:1px solid #f4f4f5;">{{ $rp0($b->total_amount) }}</td>
-                                        <td class="px-4 py-3 text-sm text-[#27272a]" style="border-top:1px solid #f4f4f5;">{{ $b->due_date?->format('d-m-Y') ?? '-' }}</td>
-                                        <td class="px-4 py-3" style="border-top:1px solid #f4f4f5;">
-                                            <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold" style="background:{{ $st[1] }}; color:{{ $st[2] }};">{{ $st[0] }}</span>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                @else
-                    <p class="text-sm text-[#71717a] m-0">Belum ada tagihan untuk lapak ini.</p>
-                @endif
+                {{-- Tidak ada bills di sini lagi — lihat card "Riwayat Tagihan" di bawah --}}
             </div>
         </div>
     @endforeach
+
+    {{-- Riwayat Tagihan (semua lapak + eksternal, paginated) --}}
+    <div class="bg-white rounded-2xl overflow-hidden mb-4" style="border:1px solid #eceef2; box-shadow:0 1px 2px rgba(16,12,40,0.04);">
+        <div class="flex items-center justify-between px-6 py-4" style="border-bottom:1px solid #eef0f4;">
+            <h3 class="text-base font-bold text-[#1b2433] m-0">Riwayat Tagihan</h3>
+            <span class="text-xs text-[#9aa3b2]">{{ $bills->total() }} tagihan</span>
+        </div>
+        @if($bills->isEmpty())
+            <p class="px-6 py-6 text-sm text-[#71717a] m-0">Belum ada tagihan.</p>
+        @else
+            <table class="w-full border-collapse">
+                <thead>
+                    <tr style="background:color-mix(in srgb, var(--lt-p) 5%, #fff);">
+                        <th class="text-left px-5 py-3 text-[11px] font-bold text-[#a1a1aa] uppercase tracking-[0.04em]">No. Tagihan</th>
+                        <th class="text-left px-4 py-3 text-[11px] font-bold text-[#a1a1aa] uppercase tracking-[0.04em]">Lokasi</th>
+                        <th class="text-left px-4 py-3 text-[11px] font-bold text-[#a1a1aa] uppercase tracking-[0.04em]">Jatuh Tempo</th>
+                        <th class="text-right px-4 py-3 text-[11px] font-bold text-[#a1a1aa] uppercase tracking-[0.04em]">Jumlah</th>
+                        <th class="text-left px-5 py-3 text-[11px] font-bold text-[#a1a1aa] uppercase tracking-[0.04em]">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($bills as $b)
+                        @php $st = $statusMap[$b->billing_status] ?? [$b->billing_status, '#f1f1f3', '#52525b']; @endphp
+                        <tr class="cursor-pointer transition-colors hover:bg-[#fafafa]"
+                            onclick="window.location='{{ route('bills.show', $b) }}'">
+                            <td class="px-5 py-3 text-sm font-semibold text-[#18181b]" style="border-top:1px solid #f4f4f5;">{{ $b->bill_id ?? '-' }}</td>
+                            <td class="px-4 py-3 text-sm text-[#52525b]" style="border-top:1px solid #f4f4f5;">{{ $b->location_label }}</td>
+                            <td class="px-4 py-3 text-sm text-[#52525b] tabular-nums" style="border-top:1px solid #f4f4f5;">{{ $b->due_date?->format('d-m-Y') ?? '-' }}</td>
+                            <td class="px-4 py-3 text-sm text-[#27272a] text-right tabular-nums" style="border-top:1px solid #f4f4f5;">{{ $rp0($b->total_amount) }}</td>
+                            <td class="px-5 py-3" style="border-top:1px solid #f4f4f5;">
+                                <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold" style="background:{{ $st[1] }}; color:{{ $st[2] }};">{{ $st[0] }}</span>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+            <div class="px-5 py-3.5" style="border-top:1px solid #f4f4f5;">
+                {{ $bills->links() }}
+            </div>
+        @endif
+    </div>
 
     {{-- Modal: Hapus Rental (Salah Input) --}}
     <x-modal wire:model="deleteModal" title="Hapus Rental (Salah Input)" separator>
