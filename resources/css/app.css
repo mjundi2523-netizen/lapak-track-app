@@ -14,6 +14,13 @@
     display: none !important;
 }
 
+/* MaryUI x-choices: panel dropdown default-nya z-10, kalah oleh konten tabel index
+   sehingga muncul di belakang baris. Angkat di atas tabel. Rule ini unlayered,
+   jadi menang melawan utility .z-10 (yang ada di layer utilities). */
+[wire\:key^="options-list-"] {
+    z-index: 60;
+}
+
 /* MaryUI membocorkan atribut class (mis. mb-4) ke <input> dalam selain ke
    wrapper .input. Margin pada <input> (flex-item, align-items:center) menggeser
    placeholder ke atas. Netralkan margin di input dalam; margin tetap di wrapper. */

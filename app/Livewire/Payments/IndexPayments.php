@@ -2,8 +2,10 @@
 
 namespace App\Livewire\Payments;
 
+use App\Models\Dealer;
 use App\Models\DealerPayment;
 use App\Services\BillGenerationService;
+use Illuminate\Support\Collection;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -17,6 +19,11 @@ class IndexPayments extends Component
 
     public string $search = '';
     public string $voidedFilter = '';
+    public string $frequencyFilter = '';
+    public ?int $dealerId = null;
+
+    /** Kandidat opsi untuk autocomplete pedagang (x-choices searchable). */
+    public Collection $dealersList;
 
     // Modal kwitansi
     public bool $showReceipt = false;
@@ -25,6 +32,32 @@ class IndexPayments extends Component
     public function mount(BillGenerationService $bills): void
     {
         $bills->ensureAllActive();
+        $this->searchDealer();
+    }
+
+    /** Reset halaman saat filter berubah agar tidak nyangkut di page kosong. */
+    public function updated(string $name): void
+    {
+        if (in_array($name, ['search', 'voidedFilter', 'frequencyFilter', 'dealerId'], true)) {
+            $this->resetPage();
+        }
+    }
+
+    /** Dipanggil x-choices saat user mengetik; jaga pedagang terpilih tetap muncul. */
+    public function searchDealer(string $value = ''): void
+    {
+        $selected = $this->dealerId
+            ? Dealer::where('did', $this->dealerId)->get()
+            : collect();
+
+        $this->dealersList = Dealer::query()
+            ->when($value, fn ($q) => $q->where('name', 'like', "%{$value}%"))
+            ->orderBy('name')
+            ->limit(30)
+            ->get()
+            ->merge($selected)
+            ->unique('did')
+            ->values();
     }
 
     public function openReceipt(int $dpid): void
@@ -49,12 +82,14 @@ class IndexPayments extends Component
 
         $payments = DealerPayment::query()
             ->with(['dealerBill.dealerStall.dealer', 'dealerBill.dealerStall.stall'])
-            ->when($this->search, fn ($q) => $q
+            ->when($this->search, fn ($q) => $q->where(fn ($w) => $w
                 ->where('bill_id', 'like', "%{$this->search}%")
                 ->orWhereHas('dealerBill.dealerStall.dealer', fn ($q2) => $q2->where('name', 'like', "%{$this->search}%"))
-            )
+            ))
             ->when($this->voidedFilter === 'voided', fn ($q) => $q->where('is_voided', true))
             ->when($this->voidedFilter === 'active', fn ($q) => $q->where('is_voided', false))
+            ->when($this->frequencyFilter, fn ($q) => $q->whereHas('dealerBill', fn ($q2) => $q2->where('frequency', $this->frequencyFilter)))
+            ->when($this->dealerId, fn ($q) => $q->whereHas('dealerBill.dealerStall', fn ($q2) => $q2->where('did', $this->dealerId)))
             ->orderBy('payment_date', 'desc')
             ->paginate(10);
 

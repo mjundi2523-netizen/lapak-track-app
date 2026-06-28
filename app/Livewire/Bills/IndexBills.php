@@ -2,8 +2,10 @@
 
 namespace App\Livewire\Bills;
 
+use App\Models\Dealer;
 use App\Models\DealerBill;
 use App\Services\BillGenerationService;
+use Illuminate\Support\Collection;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -17,10 +19,41 @@ class IndexBills extends Component
 
     public string $search = '';
     public string $statusFilter = '';
+    public string $frequencyFilter = '';
+    public ?int $dealerId = null;
+
+    /** Kandidat opsi untuk autocomplete pedagang (x-choices searchable). */
+    public Collection $dealersList;
 
     public function mount(BillGenerationService $bills): void
     {
         $bills->ensureAllActive();
+        $this->searchDealer();
+    }
+
+    /** Reset halaman saat filter berubah agar tidak nyangkut di page kosong. */
+    public function updated(string $name): void
+    {
+        if (in_array($name, ['search', 'statusFilter', 'frequencyFilter', 'dealerId'], true)) {
+            $this->resetPage();
+        }
+    }
+
+    /** Dipanggil x-choices saat user mengetik; jaga pedagang terpilih tetap muncul. */
+    public function searchDealer(string $value = ''): void
+    {
+        $selected = $this->dealerId
+            ? Dealer::where('did', $this->dealerId)->get()
+            : collect();
+
+        $this->dealersList = Dealer::query()
+            ->when($value, fn ($q) => $q->where('name', 'like', "%{$value}%"))
+            ->orderBy('name')
+            ->limit(30)
+            ->get()
+            ->merge($selected)
+            ->unique('did')
+            ->values();
     }
 
     public function render()
@@ -31,11 +64,13 @@ class IndexBills extends Component
                 'dealerStall.stall',
                 'payments' => fn ($q) => $q->where('is_voided', false),
             ])
-            ->when($this->search, fn ($q) => $q
+            ->when($this->search, fn ($q) => $q->where(fn ($w) => $w
                 ->where('bill_id', 'like', "%{$this->search}%")
                 ->orWhereHas('dealerStall.dealer', fn ($q2) => $q2->where('name', 'like', "%{$this->search}%"))
-            )
+            ))
             ->when($this->statusFilter, fn ($q) => $q->where('billing_status', $this->statusFilter))
+            ->when($this->frequencyFilter, fn ($q) => $q->where('frequency', $this->frequencyFilter))
+            ->when($this->dealerId, fn ($q) => $q->whereHas('dealerStall', fn ($q2) => $q2->where('did', $this->dealerId)))
             ->orderBy('created_at', 'desc');
 
         $bills = $query->paginate(10);

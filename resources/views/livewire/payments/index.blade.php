@@ -10,9 +10,20 @@
 
 <div>
     <x-index-header title="Pembayaran">
-        <x-input placeholder="Cari..." wire:model.live.debounce="search" clearable />
+        <x-input placeholder="Cari no. bayar..." wire:model.live.debounce="search" clearable />
+        <div class="w-52 shrink-0">
+            <x-choices wire:model.live="dealerId" :options="$dealersList" option-label="name" option-value="did"
+                search-function="searchDealer" placeholder="Filter pedagang..." single searchable clearable />
+        </div>
+        <x-select wire:model.live="frequencyFilter" :options="[
+            ['value' => '', 'label' => 'Semua Frekuensi'],
+            ['value' => 'daily', 'label' => 'Harian'],
+            ['value' => 'weekly', 'label' => 'Mingguan'],
+            ['value' => 'monthly', 'label' => 'Bulanan'],
+            ['value' => 'annual', 'label' => 'Tahunan'],
+        ]" option-value="value" option-label="label" class="w-40" />
         <x-select wire:model.live="voidedFilter" :options="[
-            ['value' => '', 'label' => 'Semua'],
+            ['value' => '', 'label' => 'Semua Status'],
             ['value' => 'active', 'label' => 'Aktif'],
             ['value' => 'voided', 'label' => 'Dibatalkan'],
         ]" option-value="value" option-label="label" class="w-40" />
