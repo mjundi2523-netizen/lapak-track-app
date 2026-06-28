@@ -15,7 +15,28 @@
             <x-input label="Setiap (interval)" wire:model="interval_count" type="number" min="1"
                 hint="Mis. Bulanan + 3 = ditagih tiap 3 bulan" required />
 
-            <x-input label="Harga" wire:model="price" type="number" required />
+            <div x-data="{
+                    fmt(v) {
+                        let s = String(Math.round(Number(v) || 0));
+                        return s === '0' ? '' : s.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                    },
+                    onInput(e) {
+                        let raw = e.target.value.replace(/\D/g, '');
+                        e.target.value = raw ? raw.replace(/\B(?=(\d{3})+(?!\d))/g, '.') : '';
+                        $wire.set('price', raw ? Number(raw) : 0);
+                    },
+                    init() {
+                        let v = $wire.price;
+                        if (v) this.$refs.priceInput.value = this.fmt(v);
+                    }
+                }">
+                <label class="label"><span class="label-text font-semibold">Harga</span></label>
+                <input type="text" inputmode="numeric" x-ref="priceInput" @input="onInput($event)"
+                    class="input input-bordered w-full" placeholder="0" required />
+                @error('price')
+                    <label class="label"><span class="label-text-alt text-error">{{ $message }}</span></label>
+                @enderror
+            </div>
 
             <x-checkbox label="Untuk pedagang baru" wire:model.live="cond_new"
                 hint="Aturan ini khusus pedagang baru." />

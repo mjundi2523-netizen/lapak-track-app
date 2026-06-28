@@ -4,7 +4,28 @@
     <x-card class="max-w-[680px]">
         <x-form wire:submit="save">
             <x-input label="Nama Biaya" wire:model="add_on" required />
-            <x-input label="Harga" wire:model="price" type="number" required />
+            <div x-data="{
+                    fmt(v) {
+                        let s = String(Math.round(Number(v) || 0));
+                        return s === '0' ? '' : s.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                    },
+                    onInput(e) {
+                        let raw = e.target.value.replace(/\D/g, '');
+                        e.target.value = raw ? raw.replace(/\B(?=(\d{3})+(?!\d))/g, '.') : '';
+                        $wire.set('price', raw ? Number(raw) : 0);
+                    },
+                    init() {
+                        let v = $wire.price;
+                        if (v) this.$refs.priceInput.value = this.fmt(v);
+                    }
+                }">
+                <label class="label"><span class="label-text font-semibold">Harga</span></label>
+                <input type="text" inputmode="numeric" x-ref="priceInput" @input="onInput($event)"
+                    class="input input-bordered w-full" placeholder="0" required />
+                @error('price')
+                    <label class="label"><span class="label-text-alt text-error">{{ $message }}</span></label>
+                @enderror
+            </div>
             <x-select label="Frekuensi" wire:model="frequency" :options="[
                 ['value' => 'daily', 'label' => 'Harian'],
                 ['value' => 'weekly', 'label' => 'Mingguan'],

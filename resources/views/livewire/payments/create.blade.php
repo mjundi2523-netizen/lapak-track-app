@@ -28,13 +28,37 @@
                 @endif
             </div>
 
-            <div>
-                <x-input label="Jumlah Bayar" wire:model="paid_amount" type="number" step="0.01" min="0.01"
-                    :max="$remaining"
-                    hint="{{ $remaining !== null ? 'Sisa tagihan: Rp ' . number_format($remaining, 0, ',', '.') . ' (nominal tidak boleh lebih)' : '' }}"
-                    required />
+            <div x-data="{
+                    fmt(v) {
+                        let s = String(Math.round(Number(v) || 0));
+                        return s === '0' ? '' : s.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                    },
+                    onInput(e) {
+                        let raw = e.target.value.replace(/\D/g, '');
+                        e.target.value = raw ? raw.replace(/\B(?=(\d{3})+(?!\d))/g, '.') : '';
+                        $wire.set('paid_amount', raw ? Number(raw) : 0);
+                    },
+                    init() {
+                        let v = $wire.paid_amount;
+                        if (v) this.$refs.amtInput.value = this.fmt(v);
+                        $wire.$watch('paid_amount', v => {
+                            this.$refs.amtInput.value = this.fmt(v);
+                        });
+                    }
+                }">
+                <label class="label"><span class="label-text font-semibold">Jumlah Bayar</span></label>
+                <input type="text" inputmode="numeric" x-ref="amtInput" @input="onInput($event)"
+                    class="input input-bordered w-full" placeholder="0" required />
+                @error('paid_amount')
+                    <label class="label"><span class="label-text-alt text-error">{{ $message }}</span></label>
+                @enderror
+                @if($remaining !== null)
+                    <label class="label">
+                        <span class="label-text-alt text-base-content/60">Sisa tagihan: Rp {{ number_format($remaining, 0, ',', '.') }} (nominal tidak boleh lebih)</span>
+                    </label>
+                @endif
                 @if($remaining !== null && $remaining > 0)
-                    <button type="button" wire:click="payFull" class="text-sm font-semibold mt-1" style="color:var(--lt-p);">
+                    <button type="button" wire:click="payFull" class="text-sm font-semibold mt-0.5" style="color:var(--lt-p);">
                         Bayar penuh (Rp {{ number_format($remaining, 0, ',', '.') }})
                     </button>
                 @endif
