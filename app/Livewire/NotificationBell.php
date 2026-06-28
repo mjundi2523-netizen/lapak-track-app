@@ -9,14 +9,21 @@ use Livewire\Component;
 
 class NotificationBell extends Component
 {
+    public function clear(): void
+    {
+        session(['notif_cleared_at' => Carbon::today()->toDateString()]);
+    }
+
     public function render()
     {
         $today = Carbon::today();
+        $clearedDate = session('notif_cleared_at');
 
         $alerts = DealerBill::query()
             ->whereIn('billing_status', ['unpaid', 'pending'])
             ->whereDate('due_date', '<=', $today)
             ->whereNotNull('due_date')
+            ->when($clearedDate, fn ($q) => $q->whereDate('due_date', '>', $clearedDate))
             ->with([
                 'dealerStall.dealer:did,name',
                 'dealerStall.stall:sid,block',
@@ -28,7 +35,8 @@ class NotificationBell extends Component
         $overdueItems = $alerts->filter(fn ($b) => $b->due_date && $b->due_date->lt($today))->take(10);
         $todayItems   = $alerts->filter(fn ($b) => $b->due_date && $b->due_date->isToday())->take(5);
         $totalCount   = $alerts->count();
+        $isCleared    = (bool) $clearedDate;
 
-        return view('livewire.notification-bell', compact('overdueItems', 'todayItems', 'totalCount'));
+        return view('livewire.notification-bell', compact('overdueItems', 'todayItems', 'totalCount', 'isCleared'));
     }
 }

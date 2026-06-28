@@ -21,20 +21,30 @@
         {{-- Header --}}
         <div class="flex items-center justify-between px-5 py-4" style="border-bottom:1px solid #f0f0f1;">
             <span class="text-sm font-bold text-[#1b2433]">Notifikasi</span>
-            @if($totalCount > 0)
-                <span class="text-xs font-semibold px-2 py-0.5 rounded-full" style="background:#fee2e2; color:#b91c1c;">
-                    {{ $totalCount }} belum dibayar
-                </span>
-            @endif
+            <div class="flex items-center gap-2">
+                @if($totalCount > 0)
+                    <button wire:click="clear"
+                            class="text-xs font-semibold transition hover:underline"
+                            style="color:#ef4444;">
+                        Hapus semua
+                    </button>
+                @endif
+            </div>
         </div>
 
         {{-- Body --}}
         <div class="overflow-y-auto" style="max-height:380px;">
             @if($totalCount === 0)
                 <div class="flex flex-col items-center gap-2 py-10 px-5 text-center">
-                    <x-icon name="o-check-circle" class="w-10 h-10 text-[#22c55e]" />
-                    <p class="text-sm font-semibold text-[#1b2433] m-0">Semua tagihan lunas</p>
-                    <p class="text-xs text-[#9aa3b2] m-0">Tidak ada tagihan yang melewati jatuh tempo.</p>
+                    @if($isCleared)
+                        <x-icon name="o-bell-slash" class="w-10 h-10 text-[#9aa3b2]" />
+                        <p class="text-sm font-semibold text-[#1b2433] m-0">Notifikasi dihapus</p>
+                        <p class="text-xs text-[#9aa3b2] m-0">Notifikasi baru akan muncul saat ada tagihan overdue berikutnya.</p>
+                    @else
+                        <x-icon name="o-check-circle" class="w-10 h-10 text-[#22c55e]" />
+                        <p class="text-sm font-semibold text-[#1b2433] m-0">Semua tagihan lunas</p>
+                        <p class="text-xs text-[#9aa3b2] m-0">Tidak ada tagihan yang melewati jatuh tempo.</p>
+                    @endif
                 </div>
             @else
                 {{-- Jatuh Tempo Hari Ini --}}
