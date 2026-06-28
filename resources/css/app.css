@@ -175,29 +175,11 @@
         /* fallback: sembunyikan semua jika tidak ada elemen cetak yang dikenal */
     }
 
-    /* Sembunyikan semua kecuali konten yang akan dicetak */
-    body > *,
-    body [data-livewire],
-    body .livewire,
+    /* Sembunyikan semua kecuali konten yang akan dicetak.
+       :not(:has(.lt-print-overlay)) agar ancestor dari print-overlay tidak ikut disembunyikan. */
+    body > *:not(:has(.lt-print-overlay)),
     nav, header, aside, footer,
     .no-print {
-        display: none !important;
-    }
-
-    /* Tampilkan hanya elemen cetak yang aktif */
-    #lt-receipt,
-    #lt-invoice,
-    #lt-letter {
-        display: block !important;
-        position: static !important;
-        width: 100% !important;
-        box-shadow: none !important;
-    }
-
-    /* Sembunyikan tombol cetak di dalam modal */
-    #lt-receipt .no-print,
-    #lt-invoice .no-print,
-    #lt-letter .no-print {
         display: none !important;
     }
 }

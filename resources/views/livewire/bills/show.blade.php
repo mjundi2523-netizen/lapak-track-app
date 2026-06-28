@@ -97,7 +97,7 @@
         @endif
     </div>
 
-    {{-- Modal Invoice --}}
+    {{-- Modal Invoice (preview visual saja) --}}
     <x-modal wire:model="showInvoice" title="Invoice Tagihan" box-class="max-w-2xl">
         @if($showInvoice)
             @include('bills._invoice-card', ['invoiceBill' => $dealerBill])
@@ -107,6 +107,13 @@
             <x-button label="Cetak" onclick="window.print()" icon="o-printer" class="btn-primary no-print" />
         </x-slot:actions>
     </x-modal>
+
+    {{-- Print-only: invoice di luar modal agar tidak terhalang display:none parent dialog --}}
+    @if($showInvoice)
+        <div class="lt-print-overlay" style="display:none;">
+            @include('bills._invoice-card', ['invoiceBill' => $dealerBill])
+        </div>
+    @endif
 
     {{-- Riwayat Pembayaran --}}
     <div class="bg-white rounded-2xl overflow-hidden" style="border:1px solid #eceef2; box-shadow:0 1px 2px rgba(16,12,40,0.04);">
