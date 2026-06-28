@@ -29,12 +29,15 @@ class EditPaymentTerm extends Component
     #[Validate('required|integer|min:0')]
     public int $price = 0;
 
+    public bool $is_new = false;
+
     public function mount(PaymentTerm $paymentTerm): void
     {
         $this->paymentTerm = $paymentTerm;
         $this->term_name = $paymentTerm->term_name;
         $this->frequency = $paymentTerm->frequency;
         $this->interval_count = $paymentTerm->interval_count ?? 1;
+        $this->is_new = (bool) $paymentTerm->is_new;
         $this->price = $paymentTerm->price;
     }
 
@@ -52,6 +55,7 @@ class EditPaymentTerm extends Component
                 'term_name' => $this->term_name,
                 'frequency' => $this->frequency,
                 'interval_count' => $this->interval_count,
+                'is_new' => $this->is_new,
                 'price' => $this->price,
                 'modified_by' => Auth::id(),
             ]);

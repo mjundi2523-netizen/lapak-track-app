@@ -30,6 +30,7 @@ class EditDealer extends Component
     public ?string $phone_number_2 = null;
     public ?string $product_type = null;
     public string $status = 'active';
+    public bool $is_new = false;
     public ?string $letter_no = null;
 
     public $scan_id_file = null;
@@ -54,9 +55,16 @@ class EditDealer extends Component
         $this->phone_number_2 = $dealer->phone_number_2;
         $this->product_type = $dealer->product_type;
         $this->status = $dealer->status;
+        $this->is_new = (bool) $dealer->is_new;
         $this->letter_no = $dealer->letter_no;
         $this->scan_id = $dealer->scan_id;
         $this->rent_start_date = Carbon::today()->toDateString();
+    }
+
+    // Status "pedagang baru" mengubah set lapak yang valid → reset pilihan.
+    public function updatedIsNew(): void
+    {
+        $this->selected_stalls = [];
     }
 
     protected function rules(): array
@@ -118,6 +126,19 @@ class EditDealer extends Component
 
                 return;
             }
+
+            // Lapak harus cocok dengan status pedagang (aturan bayar is_new = is_new pedagang).
+            $mismatch = Stall::whereIn('sid', $this->selected_stalls)
+                ->whereDoesntHave('paymentTerm', fn ($q) => $q->where('is_new', $this->is_new))
+                ->pluck('sid')
+                ->all();
+
+            if ($mismatch) {
+                $this->addError('selected_stalls', 'Ada lapak yang aturan bayarnya tidak sesuai status pedagang (baru/lama).');
+                $this->selected_stalls = array_values(array_diff($this->selected_stalls, $mismatch));
+
+                return;
+            }
         }
 
         if ($this->scan_id_file) {
@@ -134,6 +155,7 @@ class EditDealer extends Component
                 'phone_number_2' => $this->phone_number_2,
                 'product_type' => $this->product_type,
                 'status' => $this->status,
+                'is_new' => $this->is_new,
                 'letter_no' => $this->letter_no,
                 'scan_id' => $this->scan_id,
                 'modified_by' => Auth::id(),
@@ -169,6 +191,7 @@ class EditDealer extends Component
             ? collect()
             : Stall::query()
                 ->where('is_active', true)
+                ->whereHas('paymentTerm', fn ($q) => $q->where('is_new', $this->is_new))
                 ->with(['paymentTerm', 'addOns'])
                 ->withCount('activeRentals')
                 ->when($this->stallSearch !== '', fn ($q) => $q->where('block', 'like', '%' . $this->stallSearch . '%'))

@@ -17,6 +17,9 @@
 
             <x-input label="Harga" wire:model="price" type="number" required />
 
+            <x-checkbox label="Untuk pedagang baru" wire:model="is_new"
+                hint="Jika dicentang, aturan ini hanya berlaku untuk pedagang baru (is_new)." />
+
             <x-slot:actions>
                 <x-button label="Batal" link="{{ route('payment-terms.index') }}" class="btn-ghost" />
                 <x-button label="Simpan" type="submit" class="btn-primary" spinner="save" />

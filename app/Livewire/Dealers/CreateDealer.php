@@ -27,6 +27,7 @@ class CreateDealer extends Component
     public ?string $phone_number_2 = null;
     public ?string $product_type = null;
     public ?string $status = 'active';
+    public bool $is_new = false;
     public ?string $letter_no = null;
 
     public $scan_id_file = null;
@@ -59,6 +60,12 @@ class CreateDealer extends Component
         ];
     }
 
+    // Status "pedagang baru" mengubah set lapak yang valid → reset pilihan.
+    public function updatedIsNew(): void
+    {
+        $this->selected_stalls = [];
+    }
+
     public function toggleStall(int $sid): void
     {
         if (in_array($sid, $this->selected_stalls, true)) {
@@ -85,6 +92,19 @@ class CreateDealer extends Component
             return;
         }
 
+        // Lapak harus cocok dengan status pedagang: aturan bayar is_new = status pedagang is_new.
+        $mismatch = Stall::whereIn('sid', $this->selected_stalls)
+            ->whereDoesntHave('paymentTerm', fn ($q) => $q->where('is_new', $this->is_new))
+            ->pluck('sid')
+            ->all();
+
+        if ($mismatch) {
+            $this->addError('selected_stalls', 'Ada lapak yang aturan bayarnya tidak sesuai status pedagang (baru/lama).');
+            $this->selected_stalls = array_values(array_diff($this->selected_stalls, $mismatch));
+
+            return;
+        }
+
         if ($this->scan_id_file) {
             $this->scan_id = $this->scan_id_file->store('scan-ids', 'public');
         }
@@ -99,6 +119,7 @@ class CreateDealer extends Component
                 'phone_number_2' => $this->phone_number_2,
                 'product_type' => $this->product_type,
                 'status' => $this->status ?? 'active',
+                'is_new' => $this->is_new,
                 'letter_no' => $this->letter_no,
                 'scan_id' => $this->scan_id,
                 'created_by' => Auth::id(),
@@ -125,9 +146,10 @@ class CreateDealer extends Component
 
     public function render()
     {
-        // Semua lapak aktif (tersewa & kosong) untuk modal pemilihan.
+        // Lapak aktif yang aturan bayarnya sesuai status pedagang (baru/lama).
         $stalls = Stall::query()
             ->where('is_active', true)
+            ->whereHas('paymentTerm', fn ($q) => $q->where('is_new', $this->is_new))
             ->with(['paymentTerm', 'addOns'])
             ->withCount('activeRentals')
             ->when($this->stallSearch !== '', fn ($q) => $q->where('block', 'like', '%' . $this->stallSearch . '%'))

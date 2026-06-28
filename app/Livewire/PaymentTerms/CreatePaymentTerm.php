@@ -27,6 +27,8 @@ class CreatePaymentTerm extends Component
     #[Validate('required|integer|min:0')]
     public int $price = 0;
 
+    public bool $is_new = false;
+
     public function save(): void
     {
         $this->validate();
@@ -36,6 +38,7 @@ class CreatePaymentTerm extends Component
                 'term_name' => $this->term_name,
                 'frequency' => $this->frequency,
                 'interval_count' => $this->interval_count,
+                'is_new' => $this->is_new,
                 'price' => $this->price,
                 'created_by' => Auth::id(),
             ]);

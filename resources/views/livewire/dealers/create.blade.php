@@ -20,6 +20,9 @@
                     hint="Untuk surat/kartu pedagang (opsional)" />
             </div>
 
+            <x-checkbox label="Pedagang baru" wire:model.live="is_new"
+                hint="Pedagang baru memakai aturan bayar khusus — daftar lapak yang bisa dipilih menyesuaikan." />
+
             <x-input label="Scan KTP" wire:model="scan_id_file" type="file" accept="image/*,.pdf" />
 
             <hr class="my-4" />

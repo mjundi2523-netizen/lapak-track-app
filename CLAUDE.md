@@ -20,6 +20,8 @@
 - `billing_status` enum: `paid | installment | unpaid | pending | cancelled`. `cancelled` = status terminal (tunggakan yang dibatalkan saat sewa diakhiri); `recalculateBillingStatus()` tidak menyentuhnya, dan dikecualikan dari hitungan/notifikasi/pemilih bayar. Ditambah 2026-06-27.
 - `frequency` enum: `daily | weekly | monthly | annual`.
 - `payment_terms.interval_count` (unsigned, default 1) = pengali periode: "setiap {interval_count} {frequency}". Ditambah 2026-06-23.
+- **`dealer.is_new`** & **`payment_terms.is_new`** (bool, default false). Ditambah 2026-06-28. Pedagang `is_new=true` memakai aturan bayar `is_new=true`. **Pemilihan lapak difilter simetris**: pedagang baru hanya bisa pilih lapak yang `paymentTerm.is_new=true`, pedagang lama hanya yang `false` (`CreateDealer`/`EditDealer`, checkbox "Pedagang baru" `wire:model.live` + `updatedIsNew()` reset pilihan + guard mismatch di `save`). Form Aturan Bayar punya checkbox "Untuk pedagang baru".
+- `dealer.letter_no` (nullable) = No. surat/kartu pedagang (input di Create/Edit; fallback auto di surat).
 - `dealer_bills.bill_type` enum: `MTR | MAT | AAT | ATR` (lihat "Mesin billing"). `dealer_bills.aoid` (nullable, FK→`add_ons`) terisi hanya untuk ATR.
 - `add_ons.is_rent_date` (bool, default true) + `add_ons.start_date` (date, nullable) — anchor penagihan add-on. Ditambah 2026-06-27.
 - Bill (`dealer_bills`) milik **dealer_stall** (rental), bukan langsung milik dealer.
@@ -61,6 +63,10 @@ Lihat `.qoder/specs/LapakTrack_MVP_Plan.md` — logika billing (lazy roll-forwar
 - Field surat dari data pedagang + **rental aktif pertama** (fallback rental terbaru): Kios=block, Ukuran=stall.description, Masa Berlaku=rent_start s/d rent_end. Warga Negara "INDONESIA" & Status "Sewa/Kontrak" hardcoded. Tempat lahir belum ada di schema (hanya tgl).
 - **No. surat = input bebas** `dealer.letter_no` (kolom ditambah 2026-06-27, di form Create/Edit), fallback auto `{block}/PSR-N/{romawi-bulan}/{tahun}` bila kosong.
 - **Print fix (penting):** elemen `position:fixed` + halaman panjang → dulu tercetak berulang (8 halaman). Sekarang print pakai `body :not(:has(#lt-letter))… { display:none }` (mengkerutkan tinggi jadi 1 halaman) + overlay dijadikan `static`. Pola `:has()` butuh engine Chromium (print preview Edge/Chrome OK). **TODO:** kwitansi (`#lt-receipt`, masih `position:fixed` di app.css) berpotensi bug sama — terapkan pola serupa bila perlu.
+
+## Surat/Kartu Pedagang (cetak)
+- Tombol **Cetak Surat** di `ShowDealer` (`openLetter`) → modal partial `resources/views/dealers/_letter.blade.php` (`#lt-letter`), berisi Kartu Pedagang "PASAR SWASTA NUSANTARA" (data diri + 11 peraturan + ttd), acuan lampiran PDF hal.1. **Sudah dibuat user — jangan diubah tanpa diminta.**
+- Print di-scope lewat `@media print` di `app.css` (`body :not(:has(.lt-print-overlay))… display:none`; `#lt-letter` named-page **landscape**, kwitansi portrait). No. surat dari `dealer.letter_no` (fallback auto).
 
 ## Pembayaran: aturan nominal
 - **Blocking lebih-bayar**: `CreatePayment` menolak `paid_amount > sisa` (`sisa = total − Σ non-void`) + menolak tagihan `paid`/`cancelled`. Server-side (`addError`), plus `max` & tombol "Bayar penuh" (`payFull()`) di form. Belum ada konsep saldo/lebih-bayar — jangan diakali lewat over-payment.

@@ -21,6 +21,7 @@ class Dealer extends Model
         'phone_number_2',
         'product_type',
         'status',
+        'is_new',
         'scan_id',
         'letter_no',
         'created_by',
@@ -31,6 +32,7 @@ class Dealer extends Model
     {
         return [
             'birth_date' => 'date',
+            'is_new' => 'boolean',
         ];
     }
 

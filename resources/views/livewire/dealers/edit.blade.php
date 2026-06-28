@@ -22,6 +22,9 @@
                 placeholder="mis. A-004 / PSR-N / VI / 2026"
                 hint="Untuk surat/kartu pedagang (opsional)" />
 
+            <x-checkbox label="Pedagang baru" wire:model.live="is_new"
+                hint="Pedagang baru memakai aturan bayar khusus — daftar lapak yang bisa dipilih menyesuaikan." />
+
             <x-input label="Scan KTP" wire:model="scan_id_file" type="file" accept="image/*,.pdf" />
 
             @if($scan_id)
