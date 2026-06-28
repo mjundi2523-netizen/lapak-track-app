@@ -13,6 +13,7 @@ class ShowBill extends Component
     use Toast;
 
     public DealerBill $dealerBill;
+    public bool $showInvoice = false;
 
     public function mount(DealerBill $dealerBill): void
     {

@@ -39,6 +39,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Bills
     Route::get('/tagihan', App\Livewire\Bills\IndexBills::class)->name('bills.index');
+    Route::get('/tagihan-export', App\Http\Controllers\BillExportController::class)->name('bills.export');
     Route::get('/tagihan/{dealerBill}', App\Livewire\Bills\ShowBill::class)->name('bills.show');
 
     // Payments

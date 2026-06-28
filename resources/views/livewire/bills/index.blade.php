@@ -38,6 +38,16 @@
             ['value' => 'pending', 'label' => 'Pending'],
             ['value' => 'cancelled', 'label' => 'Dibatalkan'],
         ]" option-value="value" option-label="label" class="w-40" />
+        <a href="{{ route('bills.export', array_filter([
+                'search'    => $search,
+                'status'    => $statusFilter,
+                'frequency' => $frequencyFilter,
+                'dealer'    => $dealerId,
+            ])) }}"
+           class="inline-flex items-center gap-1.5 h-10 px-4 rounded-[9px] text-sm font-semibold text-white transition hover:brightness-95 shrink-0 no-print"
+           style="background:#16a34a;" title="Export ke Excel">
+            <x-icon name="o-arrow-down-tray" class="w-4 h-4" /> Excel
+        </a>
     </x-index-header>
 
     <div class="lt-card-table">

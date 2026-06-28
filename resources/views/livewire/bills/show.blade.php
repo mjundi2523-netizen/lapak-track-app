@@ -22,6 +22,8 @@
             <div class="text-[13px] text-[#9aa3b2]">Beranda&nbsp;/&nbsp;Tagihan&nbsp;/&nbsp;{{ $dealerBill->bill_id ?? '-' }}</div>
         </div>
         <div class="flex gap-2.5">
+            <x-button label="Cetak Invoice" wire:click="$set('showInvoice',true)" icon="o-printer"
+                      class="h-10 text-sm font-semibold border-none text-white" style="background:#6366f1;" />
             <x-button label="Hitung Ulang" wire:click="recalculate" icon="o-arrow-path" spinner
                       class="h-10 text-sm font-semibold text-white border-none" style="background:#0891b2;" />
             @if(! in_array($dealerBill->billing_status, ['paid', 'cancelled']))
@@ -94,6 +96,17 @@
             <p class="px-6 py-6 text-sm text-[#71717a] m-0">Rincian tidak tersedia untuk tagihan ini.</p>
         @endif
     </div>
+
+    {{-- Modal Invoice --}}
+    <x-modal wire:model="showInvoice" title="Invoice Tagihan" box-class="max-w-2xl">
+        @if($showInvoice)
+            @include('bills._invoice-card', ['invoiceBill' => $dealerBill])
+        @endif
+        <x-slot:actions>
+            <x-button label="Tutup" wire:click="$set('showInvoice',false)" class="btn-ghost no-print" />
+            <x-button label="Cetak" onclick="window.print()" icon="o-printer" class="btn-primary no-print" />
+        </x-slot:actions>
+    </x-modal>
 
     {{-- Riwayat Pembayaran --}}
     <div class="bg-white rounded-2xl overflow-hidden" style="border:1px solid #eceef2; box-shadow:0 1px 2px rgba(16,12,40,0.04);">

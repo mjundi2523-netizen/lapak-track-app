@@ -163,6 +163,45 @@
 
 } /* end @layer components */
 
+/* ── Print scoping ──────────────────────────────────────────────────────────
+   Satu @media print yang menghandle semua jenis cetakan:
+   - #lt-receipt  : kwitansi pembayaran (portrait)
+   - #lt-invoice  : invoice/tagihan (portrait)
+   - #lt-letter   : kartu pedagang (landscape, lihat @page lt-landscape)
+   Elemen yang tidak relevan disembunyikan; overlay/modal dijadikan static
+   supaya tidak terulang di setiap halaman. */
+@media print {
+    body :not(:has(#lt-receipt)):not(:has(#lt-invoice)):not(:has(#lt-letter)) * {
+        /* fallback: sembunyikan semua jika tidak ada elemen cetak yang dikenal */
+    }
+
+    /* Sembunyikan semua kecuali konten yang akan dicetak */
+    body > *,
+    body [data-livewire],
+    body .livewire,
+    nav, header, aside, footer,
+    .no-print {
+        display: none !important;
+    }
+
+    /* Tampilkan hanya elemen cetak yang aktif */
+    #lt-receipt,
+    #lt-invoice,
+    #lt-letter {
+        display: block !important;
+        position: static !important;
+        width: 100% !important;
+        box-shadow: none !important;
+    }
+
+    /* Sembunyikan tombol cetak di dalam modal */
+    #lt-receipt .no-print,
+    #lt-invoice .no-print,
+    #lt-letter .no-print {
+        display: none !important;
+    }
+}
+
 /* Tailwind v4 mengabaikan folder yang di-gitignore (vendor), jadi komponen MaryUI
    harus didaftarkan manual agar kelas-kelasnya tidak ke-purge. */
 @source "../../vendor/robsontenorio/mary/src/**/*.php";
