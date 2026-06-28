@@ -9,6 +9,7 @@
             <thead>
                 <tr>
                     <th class="lt-th">Nama</th>
+                    <th class="lt-th">Kondisi Pedagang</th>
                     <th class="lt-th">Frekuensi</th>
                     <th class="lt-th text-right">Harga</th>
                     <th class="lt-th"></th>
@@ -18,6 +19,16 @@
                 @forelse($paymentTerms as $row)
                     <tr class="lt-row">
                         <td class="lt-td font-semibold text-[#18181b]">{{ $row->term_name }}</td>
+                        <td class="lt-td">
+                            @php
+                                $cond = match($row->dealer_condition) {
+                                    'regular'  => ['Regular',  '#dcfce7', '#15803d'],
+                                    'external' => ['Eksternal','#fae8ff', '#86198f'],
+                                    default    => [$row->dealer_condition ?? '-', '#f1f1f3', '#52525b'],
+                                };
+                            @endphp
+                            <span class="lt-pill" style="background:{{ $cond[1] }}; color:{{ $cond[2] }};">{{ $cond[0] }}</span>
+                        </td>
                         <td class="lt-td">
                             <span class="lt-pill" style="background:#dbeafe; color:#1d4ed8;">{{ match($row->frequency) {
                                 'daily' => 'Harian', 'weekly' => 'Mingguan', 'monthly' => 'Bulanan', 'annual' => 'Tahunan', default => $row->frequency,
@@ -32,7 +43,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="4" class="lt-td text-center text-[#9aa3b2] py-8">Tidak ada data.</td></tr>
+                    <tr><td colspan="5" class="lt-td text-center text-[#9aa3b2] py-8">Tidak ada data.</td></tr>
                 @endforelse
             </tbody>
         </table>

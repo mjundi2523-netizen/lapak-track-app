@@ -11,7 +11,7 @@
             <x-checkbox label="Aktif" wire:model="is_active" />
 
             <div>
-                <label class="label"><span class="label-text">Biaya Lain-lain</span></label>
+                <label class="label"><span class="label-text mb-4">Biaya Lain-lain</span></label>
                 <div class="grid grid-cols-2 gap-2">
                     @foreach($addOns as $ao)
                         <label class="flex items-center gap-2 cursor-pointer">

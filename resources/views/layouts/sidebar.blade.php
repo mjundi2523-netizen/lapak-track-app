@@ -1,13 +1,15 @@
 @php
+    $topItems = [
+        ['label' => 'Dashboard', 'icon' => 'o-home', 'route' => 'dashboard', 'active' => 'dashboard'],
+    ];
     $sections = [
         'Master Data' => [
-            ['label' => 'Dashboard',      'icon' => 'o-home',               'route' => 'dashboard',            'active' => 'dashboard'],
+            ['label' => 'Pedagang',       'icon' => 'o-users',              'route' => 'dealers.index',        'active' => 'dealers.*'],
             ['label' => 'Aturan Bayar',   'icon' => 'o-banknotes',          'route' => 'payment-terms.index',  'active' => 'payment-terms.*'],
             ['label' => 'Biaya Lain-lain','icon' => 'o-plus-circle',        'route' => 'add-ons.index',        'active' => 'add-ons.*'],
             ['label' => 'Lapak',          'icon' => 'o-building-storefront','route' => 'stalls.index',         'active' => 'stalls.*'],
         ],
         'Transaksi' => [
-            ['label' => 'Registrasi Pedagang','icon' => 'o-user-plus',     'route' => 'dealers.index',        'active' => 'dealers.*'],
             ['label' => 'Tagihan',        'icon' => 'o-document-text',      'route' => 'bills.index',          'active' => 'bills.*'],
             ['label' => 'Pembayaran',     'icon' => 'o-credit-card',        'route' => 'payments.index',       'active' => 'payments.*'],
         ],
@@ -26,6 +28,23 @@
 
 {{-- Nav --}}
 <div class="flex-1 overflow-y-auto pt-1 pb-3">
+    {{-- Dashboard (di luar section, selalu paling atas) --}}
+    @foreach($topItems as $item)
+        @php $isActive = request()->routeIs($item['active']); @endphp
+        <a href="{{ route($item['route']) }}" wire:navigate
+           :class="collapsed ? 'justify-center !px-0' : ''"
+           class="flex items-center gap-[13px] w-full text-sm font-medium py-[11px] px-6 cursor-pointer transition-colors
+                  {{ $isActive
+                      ? 'text-white'
+                      : 'text-[#aeb7c5] hover:bg-white/[0.04] hover:text-white' }}"
+           @style([
+               'background:rgba(255,255,255,0.06); box-shadow:inset 3px 0 0 var(--lt-p)' => $isActive,
+           ])>
+            <x-icon name="{{ $item['icon'] }}" class="w-5 h-5 shrink-0" />
+            <span x-show="!collapsed" x-cloak class="whitespace-nowrap">{{ $item['label'] }}</span>
+        </a>
+    @endforeach
+
     @foreach($sections as $section => $items)
         <div x-show="!collapsed" x-cloak
              class="text-[11px] font-bold uppercase tracking-[0.08em] text-[#5b6678] px-6 pt-3.5 pb-2">{{ $section }}</div>

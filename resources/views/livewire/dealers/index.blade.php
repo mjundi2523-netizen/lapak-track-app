@@ -10,6 +10,7 @@
                 <tr>
                     <th class="lt-th">NIK</th>
                     <th class="lt-th">Nama</th>
+                    <th class="lt-th">Kondisi</th>
                     <th class="lt-th">Telepon</th>
                     <th class="lt-th">Status</th>
                     <th class="lt-th"></th>
@@ -20,6 +21,17 @@
                     <tr class="lt-row">
                         <td class="lt-td tabular-nums text-[#52525b]">{{ $row->nik }}</td>
                         <td class="lt-td font-semibold text-[#18181b]">{{ $row->name }}</td>
+                        <td class="lt-td">
+                            @php
+                                $cond = match($row->dealer_condition) {
+                                    'regular'  => ['Regular',  '#dcfce7', '#15803d'],
+                                    'new'      => ['Baru',     '#dbeafe', '#1d4ed8'],
+                                    'external' => ['Eksternal','#fae8ff', '#86198f'],
+                                    default    => [$row->dealer_condition ?? '-', '#f1f1f3', '#52525b'],
+                                };
+                            @endphp
+                            <span class="lt-pill" style="background:{{ $cond[1] }}; color:{{ $cond[2] }};">{{ $cond[0] }}</span>
+                        </td>
                         <td class="lt-td">{{ $row->phone_number_1 ?: '-' }}</td>
                         <td class="lt-td">
                             @if($row->status === 'active')
@@ -36,7 +48,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="5" class="lt-td text-center text-[#9aa3b2] py-8">Tidak ada data.</td></tr>
+                    <tr><td colspan="6" class="lt-td text-center text-[#9aa3b2] py-8">Tidak ada data.</td></tr>
                 @endforelse
             </tbody>
         </table>

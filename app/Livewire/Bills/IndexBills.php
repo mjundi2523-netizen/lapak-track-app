@@ -72,7 +72,10 @@ class IndexBills extends Component
             ))
             ->when($this->statusFilter, fn ($q) => $q->where('billing_status', $this->statusFilter))
             ->when($this->frequencyFilter, fn ($q) => $q->where('frequency', $this->frequencyFilter))
-            ->when($this->dealerId, fn ($q) => $q->whereHas('dealerStall', fn ($q2) => $q2->where('did', $this->dealerId)))
+            ->when($this->dealerId, fn ($q) => $q->where(fn ($w) => $w
+                ->whereHas('dealerStall', fn ($q2) => $q2->where('did', $this->dealerId))
+                ->orWhereHas('externalDealer', fn ($q2) => $q2->where('did', $this->dealerId))
+            ))
             ->orderBy('created_at', 'desc');
 
         $bills = $query->paginate(10);
