@@ -36,10 +36,7 @@
                 </div>
 
                 <div class="flex items-center gap-2 relative">
-                    <button class="relative w-10 h-10 inline-flex items-center justify-center rounded-[10px] text-[#52525b] hover:bg-base-200 transition">
-                        <x-icon name="o-bell" class="w-[21px] h-[21px]" />
-                        <span class="absolute top-[7px] right-2 w-2 h-2 rounded-full bg-[#ef4444]" style="border:2px solid #fff;"></span>
-                    </button>
+                    <livewire:notification-bell />
 
                     <button @click="userMenu = !userMenu" @click.outside="userMenu = false"
                             class="flex items-center gap-2 rounded-[10px] py-1.5 pl-1.5 pr-2 hover:bg-base-200 transition">
