@@ -195,6 +195,7 @@
    mengkerut jadi 1 halaman & overlay 'fixed' tidak berulang di tiap halaman.
    Surat dipetakan ke named-page landscape; kwitansi pakai portrait default. */
 @page lt-landscape { size: A4 landscape; margin: 9mm; }
+@page lt-invoice   { size: A4 portrait;  margin: 4mm; }
 
 @media print {
     body :not(:has(.lt-print-overlay)):not(.lt-print-overlay):not(.lt-print-overlay *) {
@@ -211,6 +212,7 @@
     .lt-print-overlay > * { width: 100% !important; max-width: none !important; }
     .no-print { display: none !important; }
     #lt-receipt, #lt-letter { box-shadow: none !important; }
-    #lt-letter { page: lt-landscape; }
+    #lt-letter  { page: lt-landscape; }
+    #lt-invoice { page: lt-invoice; box-shadow: none !important; }
     @page { margin: 12mm; }
 }
