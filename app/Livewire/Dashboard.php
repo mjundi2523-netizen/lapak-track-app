@@ -9,6 +9,7 @@ use App\Models\Expense;
 use App\Models\Stall;
 use App\Services\BillGenerationService;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -74,6 +75,40 @@ class Dashboard extends Component
             ->limit(5)
             ->get();
 
+        // --- Pedagang menunggak & top 10 tunggakan terbesar ---
+        // Outstanding = total_amount - paid, untuk bill unpaid/installment.
+        $paidSub = DB::raw('(SELECT dbid, SUM(paid_amount) as paid FROM dealer_payment WHERE is_voided = 0 GROUP BY dbid) pp');
+
+        $stallDebt = DB::table('dealer_bills')
+            ->join('dealer_stall', 'dealer_bills.dsid', '=', 'dealer_stall.dsid')
+            ->leftJoin($paidSub, 'pp.dbid', '=', 'dealer_bills.dbid')
+            ->whereIn('dealer_bills.billing_status', ['unpaid', 'installment'])
+            ->selectRaw('dealer_stall.did, SUM(dealer_bills.total_amount - COALESCE(pp.paid, 0)) as outstanding')
+            ->groupBy('dealer_stall.did')
+            ->get()->keyBy('did');
+
+        $extDebt = DB::table('dealer_bills')
+            ->join('external_dealers', 'dealer_bills.edid', '=', 'external_dealers.edid')
+            ->leftJoin($paidSub, 'pp.dbid', '=', 'dealer_bills.dbid')
+            ->whereIn('dealer_bills.billing_status', ['unpaid', 'installment'])
+            ->selectRaw('external_dealers.did, SUM(dealer_bills.total_amount - COALESCE(pp.paid, 0)) as outstanding')
+            ->groupBy('external_dealers.did')
+            ->get()->keyBy('did');
+
+        $debtMap = collect($stallDebt->keys())->merge($extDebt->keys())->unique()
+            ->mapWithKeys(fn ($did) => [$did => (float)($stallDebt[$did]->outstanding ?? 0) + (float)($extDebt[$did]->outstanding ?? 0)])
+            ->filter(fn ($v) => $v > 0)
+            ->sortByDesc(fn ($v) => $v);
+
+        $dealersWithDebt = $debtMap->count();
+        $top10Dids       = $debtMap->take(10)->keys();
+        $dealerNames     = Dealer::whereIn('did', $top10Dids)->pluck('name', 'did');
+        $top10Debtors    = $debtMap->take(10)->map(fn ($outstanding, $did) => [
+            'did'         => $did,
+            'name'        => $dealerNames[$did] ?? '-',
+            'outstanding' => $outstanding,
+        ])->values();
+
         return view('livewire.dashboard', [
             'stallTotal' => Stall::count(),
             'stallActive' => $stallActive,
@@ -91,10 +126,12 @@ class Dashboard extends Component
             'heroExpense' => $heroExpense,
             'heroNet' => $heroNet,
             'totalPemasukan' => $totalPemasukan,
-            'overdue' => $overdue,
-            'overdueTotal' => $overdueTotal,
-            'recentPayments' => $recentPayments,
-            'chart' => $this->buildChart(),
+            'overdue'          => $overdue,
+            'overdueTotal'     => $overdueTotal,
+            'recentPayments'   => $recentPayments,
+            'dealersWithDebt'  => $dealersWithDebt,
+            'top10Debtors'     => $top10Debtors,
+            'chart'            => $this->buildChart(),
         ]);
     }
 

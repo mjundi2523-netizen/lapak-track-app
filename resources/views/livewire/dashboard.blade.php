@@ -18,24 +18,31 @@
     </div>
 
     {{-- Hero cards --}}
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-5 mb-5">
         <div class="relative overflow-hidden rounded-[14px] px-6 py-[22px] text-white min-h-[120px]"
              style="background:linear-gradient(135deg,#14a07a,#21c08f); box-shadow:0 10px 24px rgba(20,160,122,0.22);">
             <div class="text-sm font-medium opacity-90 mb-3 relative z-10">Total Tagihan Bulan Ini</div>
-            <div class="text-[33px] font-bold leading-none relative z-10">{{ $rp($heroTotal) }}</div>
+            <div class="text-[28px] font-bold leading-none relative z-10">{{ $rp($heroTotal) }}</div>
             <span class="absolute right-[22px] -bottom-2.5 text-[90px] font-extrabold leading-none" style="color:rgba(255,255,255,0.15);">Rp</span>
         </div>
         <div class="relative overflow-hidden rounded-[14px] px-6 py-[22px] text-white min-h-[120px]"
              style="background:linear-gradient(135deg,#2b7fc2,#3ea7dc); box-shadow:0 10px 24px rgba(43,127,194,0.22);">
             <div class="text-sm font-medium opacity-90 mb-3 relative z-10">Sudah Terbayar</div>
-            <div class="text-[33px] font-bold leading-none relative z-10">{{ $rp($heroPaid) }}</div>
+            <div class="text-[28px] font-bold leading-none relative z-10">{{ $rp($heroPaid) }}</div>
             <span class="absolute right-[22px] -bottom-2.5 text-[90px] font-extrabold leading-none" style="color:rgba(255,255,255,0.15);">Rp</span>
         </div>
         <div class="relative overflow-hidden rounded-[14px] px-6 py-[22px] text-white min-h-[120px]"
              style="background:linear-gradient(135deg, var(--lt-p), color-mix(in srgb, var(--lt-p) 55%, #7aa0ff)); box-shadow:0 10px 24px color-mix(in srgb, var(--lt-p) 30%, transparent);">
             <div class="text-sm font-medium opacity-90 mb-3 relative z-10">Belum Terbayar</div>
-            <div class="text-[33px] font-bold leading-none relative z-10">{{ $rp($heroUnpaid) }}</div>
+            <div class="text-[28px] font-bold leading-none relative z-10">{{ $rp($heroUnpaid) }}</div>
             <span class="absolute right-[22px] -bottom-2.5 text-[90px] font-extrabold leading-none" style="color:rgba(255,255,255,0.15);">Rp</span>
+        </div>
+        <div class="relative overflow-hidden rounded-[14px] px-6 py-[22px] text-white min-h-[120px]"
+             style="background:linear-gradient(135deg,#dc2626,#f87171); box-shadow:0 10px 24px rgba(220,38,38,0.22);">
+            <div class="text-sm font-medium opacity-90 mb-3 relative z-10">Pedagang Menunggak</div>
+            <div class="text-[44px] font-bold leading-none relative z-10">{{ $dealersWithDebt }}</div>
+            <span class="absolute right-[18px] -bottom-2.5 text-[90px] font-extrabold leading-none" style="color:rgba(255,255,255,0.15);">!</span>
+            <div class="text-xs opacity-75 mt-2 relative z-10">pedagang</div>
         </div>
     </div>
 
@@ -141,6 +148,44 @@
                     <div class="px-6 py-3.5" style="border-top:1px solid #f4f4f5;">
                         {{ $overdue->links() }}
                     </div>
+                @endif
+            </div>
+            {{-- Top 10 Tunggakan Terbesar --}}
+            <div class="bg-white rounded-2xl overflow-hidden" style="border:1px solid #eceef2; box-shadow:0 1px 2px rgba(16,12,40,0.04);">
+                <div class="flex items-center justify-between px-6 py-[18px]" style="border-bottom:1px solid #eef0f4;">
+                    <h3 class="text-base font-bold text-[#1b2433] m-0">10 Tunggakan Terbesar</h3>
+                    <a href="{{ route('reports.dealer-summary') }}" wire:navigate
+                       class="text-xs font-semibold transition hover:underline" style="color:var(--lt-p);">
+                        Lihat semua →
+                    </a>
+                </div>
+                @if($top10Debtors->isEmpty())
+                    <div class="text-center py-10 text-[#9aa3b2]">
+                        <x-icon name="o-check-circle" class="w-10 h-10 mx-auto mb-2 text-success" />
+                        Tidak ada tunggakan.
+                    </div>
+                @else
+                    <table class="w-full border-collapse">
+                        <thead>
+                            <tr style="background:color-mix(in srgb, var(--lt-p) 6%, #fff);">
+                                <th class="text-left px-6 py-3 text-[11px] font-bold text-[#a1a1aa] uppercase tracking-[0.04em]">#</th>
+                                <th class="text-left px-4 py-3 text-[11px] font-bold text-[#a1a1aa] uppercase tracking-[0.04em]">Pedagang</th>
+                                <th class="text-right px-6 py-3 text-[11px] font-bold text-[#a1a1aa] uppercase tracking-[0.04em]">Total Tunggakan</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($top10Debtors as $i => $d)
+                                <tr class="cursor-pointer transition-colors hover:bg-[#fff7f7]"
+                                    onclick="window.location='{{ route('dealers.show', $d['did']) }}'">
+                                    <td class="px-6 py-3.5 text-sm text-[#9aa3b2] font-semibold" style="border-top:1px solid #f4f4f5;">{{ $i + 1 }}</td>
+                                    <td class="px-4 py-3.5 text-sm font-semibold text-[#18181b]" style="border-top:1px solid #f4f4f5;">{{ $d['name'] }}</td>
+                                    <td class="px-6 py-3.5 text-sm font-bold text-right text-[#b91c1c]" style="border-top:1px solid #f4f4f5;">
+                                        {{ $rp($d['outstanding']) }}
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
                 @endif
             </div>
         </div>
