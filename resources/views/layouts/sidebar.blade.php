@@ -16,7 +16,8 @@
             ['label' => 'Pengeluaran',    'icon' => 'o-arrow-trending-down','route' => 'expenses.index',       'active' => 'expenses.*'],
         ],
         'Laporan' => [
-            ['label' => 'Arus Kas',       'icon' => 'o-chart-bar',          'route' => 'reports.cash-flow',    'active' => 'reports.*'],
+            ['label' => 'Arus Kas',        'icon' => 'o-chart-bar',   'route' => 'reports.cash-flow',     'active' => 'reports.cash-flow'],
+            ['label' => 'Rekap Pedagang',  'icon' => 'o-table-cells', 'route' => 'reports.dealer-summary','active' => 'reports.dealer-summary*'],
         ],
     ];
 @endphp

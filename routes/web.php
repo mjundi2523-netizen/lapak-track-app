@@ -60,6 +60,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Laporan
     Route::get('/laporan/arus-kas', App\Livewire\Reports\CashFlow::class)->name('reports.cash-flow');
+    Route::get('/laporan/rekap-pedagang', App\Livewire\Reports\DealerSummary::class)->name('reports.dealer-summary');
+    Route::get('/laporan/rekap-pedagang-export', App\Http\Controllers\DealerSummaryExportController::class)->name('reports.dealer-summary.export');
 });
 
 require __DIR__.'/auth.php';
