@@ -75,21 +75,25 @@ class IndexPayments extends Component
     public function render()
     {
         $receiptPayment = $this->showReceipt && $this->receiptId
-            ? DealerPayment::with(['dealerBill.dealerStall.dealer', 'dealerBill.dealerStall.stall'])
+            ? DealerPayment::with(['dealerBill.dealerStall.dealer', 'dealerBill.dealerStall.stall', 'dealerBill.externalDealer.dealer'])
                 ->where('is_voided', false)
                 ->find($this->receiptId)
             : null;
 
         $payments = DealerPayment::query()
-            ->with(['dealerBill.dealerStall.dealer', 'dealerBill.dealerStall.stall'])
+            ->with(['dealerBill.dealerStall.dealer', 'dealerBill.dealerStall.stall', 'dealerBill.externalDealer.dealer'])
             ->when($this->search, fn ($q) => $q->where(fn ($w) => $w
                 ->where('bill_id', 'like', "%{$this->search}%")
                 ->orWhereHas('dealerBill.dealerStall.dealer', fn ($q2) => $q2->where('name', 'like', "%{$this->search}%"))
+                ->orWhereHas('dealerBill.externalDealer.dealer', fn ($q2) => $q2->where('name', 'like', "%{$this->search}%"))
             ))
             ->when($this->voidedFilter === 'voided', fn ($q) => $q->where('is_voided', true))
             ->when($this->voidedFilter === 'active', fn ($q) => $q->where('is_voided', false))
             ->when($this->frequencyFilter, fn ($q) => $q->whereHas('dealerBill', fn ($q2) => $q2->where('frequency', $this->frequencyFilter)))
-            ->when($this->dealerId, fn ($q) => $q->whereHas('dealerBill.dealerStall', fn ($q2) => $q2->where('did', $this->dealerId)))
+            ->when($this->dealerId, fn ($q) => $q->where(fn ($w) => $w
+                ->whereHas('dealerBill.dealerStall', fn ($q2) => $q2->where('did', $this->dealerId))
+                ->orWhereHas('dealerBill.externalDealer', fn ($q2) => $q2->where('did', $this->dealerId))
+            ))
             ->orderBy('payment_date', 'desc')
             ->paginate(10);
 

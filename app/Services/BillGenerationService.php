@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\DealerBill;
 use App\Models\DealerStall;
+use App\Models\ExternalDealer;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -127,12 +128,84 @@ class BillGenerationService
             ->get()
             ->each(fn (DealerStall $ds) => $this->ensureBillsUpToDate($ds));
 
+        // Langganan pedagang eksternal (relasi langsung ke payment_terms).
+        ExternalDealer::where('deleted', false)
+            ->with('paymentTerm')
+            ->get()
+            ->each(fn (ExternalDealer $ed) => $this->ensureExternalBillsUpToDate($ed));
+
         // Refresh status tersimpan: tagihan 'pending' yang sudah lewat jatuh tempo jadi 'unpaid'.
         DealerBill::where('billing_status', 'pending')
             ->whereDate('due_date', '<=', Carbon::today())
             ->update(['billing_status' => 'unpaid']);
 
         return DealerBill::count() - $before;
+    }
+
+    /**
+     * Lazy roll-forward untuk langganan pedagang eksternal (tanpa lapak).
+     * Anchor = external_dealers.start_date, term dari external_dealers.ptid, key cursor (edid, frequency).
+     */
+    public function ensureExternalBillsUpToDate(ExternalDealer $ed): void
+    {
+        if ($ed->deleted) {
+            return;
+        }
+
+        $ed->loadMissing('paymentTerm');
+        $term = $ed->paymentTerm;
+
+        if (! $term || $term->price <= 0) {
+            return;
+        }
+
+        $start = Carbon::parse($ed->start_date)->startOfDay();
+        $today = Carbon::today();
+        $horizon = $ed->end_date
+            ? Carbon::parse($ed->end_date)->startOfDay()->min($today)
+            : $today;
+
+        if ($start->gt($horizon)) {
+            return;
+        }
+
+        $userId = Auth::id() ?? $ed->created_by ?? 1;
+        $interval = max(1, (int) ($term->interval_count ?? 1));
+        $amount = (int) $term->price;
+        $frequency = $term->frequency;
+
+        DB::transaction(function () use ($ed, $frequency, $interval, $amount, $start, $horizon, $userId) {
+            $lastEnd = DealerBill::where('edid', $ed->edid)
+                ->where('frequency', $frequency)
+                ->max('period_end');
+
+            $periodStart = $lastEnd ? Carbon::parse($lastEnd)->startOfDay() : $start->copy();
+            $guard = 0;
+
+            while ($periodStart->lte($horizon) && $guard < self::MAX_PERIODS_PER_RUN) {
+                $guard++;
+
+                $periodEnd = $this->advance($periodStart->copy(), $frequency, $interval);
+                $dueDate = $periodEnd->copy();
+
+                DealerBill::create([
+                    'bill_id' => $this->billIdGenerator->generate('dealer_bills', 'EXT', Carbon::now()),
+                    'bill_type' => 'EXT',
+                    'frequency' => $frequency,
+                    'aoid' => null,
+                    'dsid' => null,
+                    'edid' => $ed->edid,
+                    'total_amount' => $amount,
+                    'due_date' => $dueDate,
+                    'billing_status' => DealerBill::deriveStatus(0, $amount, $dueDate),
+                    'period_start' => $periodStart->copy(),
+                    'period_end' => $periodEnd->copy(),
+                    'created_by' => $userId,
+                ]);
+
+                $periodStart = $periodEnd->copy();
+            }
+        });
     }
 
     /**

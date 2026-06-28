@@ -27,7 +27,28 @@ class CreatePaymentTerm extends Component
     #[Validate('required|integer|min:0')]
     public int $price = 0;
 
-    public bool $is_new = false;
+    // Kondisi pedagang sasaran aturan ini (regular default; 2 checkbox mutually-exclusive).
+    public bool $cond_new = false;
+    public bool $cond_external = false;
+
+    public function updatedCondNew($value): void
+    {
+        if ($value) {
+            $this->cond_external = false;
+        }
+    }
+
+    public function updatedCondExternal($value): void
+    {
+        if ($value) {
+            $this->cond_new = false;
+        }
+    }
+
+    protected function dealerCondition(): string
+    {
+        return $this->cond_external ? 'external' : ($this->cond_new ? 'new' : 'regular');
+    }
 
     public function save(): void
     {
@@ -38,7 +59,7 @@ class CreatePaymentTerm extends Component
                 'term_name' => $this->term_name,
                 'frequency' => $this->frequency,
                 'interval_count' => $this->interval_count,
-                'is_new' => $this->is_new,
+                'dealer_condition' => $this->dealerCondition(),
                 'price' => $this->price,
                 'created_by' => Auth::id(),
             ]);

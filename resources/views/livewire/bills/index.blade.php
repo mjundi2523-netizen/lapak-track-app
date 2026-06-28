@@ -4,6 +4,7 @@
         'MAT' => ['Sewa + Add-on',  '#fce7f3', '#be185d'],
         'AAT' => ['Add-on',         '#dbeafe', '#1d4ed8'],
         'ATR' => ['Add-on (jadwal)','#cffafe', '#0e7490'],
+        'EXT' => ['Eksternal',      '#fae8ff', '#86198f'],
     ];
     $freqLabel = ['daily' => 'Harian', 'weekly' => 'Mingguan', 'monthly' => 'Bulanan', 'annual' => 'Tahunan'];
     $statusMap = [
@@ -76,8 +77,8 @@
                                 -
                             @endif
                         </td>
-                        <td class="lt-td">{{ $row->dealerStall?->dealer?->name ?? '-' }}</td>
-                        <td class="lt-td">{{ $row->dealerStall?->stall?->block ?? '-' }}</td>
+                        <td class="lt-td">{{ $row->holder?->name ?? '-' }}</td>
+                        <td class="lt-td">{{ $row->location_label }}</td>
                         <td class="lt-td text-right">Rp {{ number_format($row->total_amount, 0, ',', '.') }}</td>
                         <td class="lt-td text-right text-[#71717a]">Rp {{ number_format($paid, 0, ',', '.') }}</td>
                         <td class="lt-td text-right">

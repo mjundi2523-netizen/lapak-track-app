@@ -6,6 +6,7 @@
         'MAT' => ['Sewa + Add-on', '#fce7f3', '#be185d'],
         'AAT' => ['Add-on',        '#dbeafe', '#1d4ed8'],
         'ATR' => ['Add-on (jadwal)','#cffafe', '#0e7490'],
+        'EXT' => ['Eksternal',      '#fae8ff', '#86198f'],
     ];
     $freqLabel = ['daily' => 'Harian', 'weekly' => 'Mingguan', 'monthly' => 'Bulanan', 'annual' => 'Tahunan'];
     $statusMap = [
@@ -101,8 +102,8 @@
                 <div><span class="font-semibold">Status Tagihan:</span>
                     <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold" style="background:{{ $bst[1] }}; color:{{ $bst[2] }};">{{ $bst[0] }}</span>
                 </div>
-                <div><span class="font-semibold">Pedagang:</span> {{ $bill->dealerStall?->dealer?->name ?? '-' }}</div>
-                <div><span class="font-semibold">Lapak:</span> {{ $bill->dealerStall?->stall?->block ?? '-' }}</div>
+                <div><span class="font-semibold">Pedagang:</span> {{ $bill->holder?->name ?? '-' }}</div>
+                <div><span class="font-semibold">Lapak:</span> {{ $bill->location_label }}</div>
                 <div><span class="font-semibold">Periode:</span> {{ $bill->period_start?->format('d-m-Y') }} s/d {{ $bill->period_end?->format('d-m-Y') }}</div>
                 <div><span class="font-semibold">Total Tagihan:</span> {{ $rp0($bill->total_amount) }}</div>
                 <div><span class="font-semibold">Terbayar (tagihan):</span> {{ $rp2($billPaid) }}</div>

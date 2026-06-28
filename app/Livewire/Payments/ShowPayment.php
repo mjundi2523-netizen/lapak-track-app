@@ -36,6 +36,7 @@ class ShowPayment extends Component
         $this->payment->load([
             'dealerBill.dealerStall.dealer',
             'dealerBill.dealerStall.stall',
+            'dealerBill.externalDealer.dealer',
             'dealerBill.payments' => fn ($q) => $q->where('is_voided', false),
             'createdBy',
             'voidedBy',

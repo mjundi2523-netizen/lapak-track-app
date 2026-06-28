@@ -17,8 +17,10 @@
 
             <x-input label="Harga" wire:model="price" type="number" required />
 
-            <x-checkbox label="Untuk pedagang baru" wire:model="is_new"
-                hint="Jika dicentang, aturan ini hanya berlaku untuk pedagang baru (is_new)." />
+            <x-checkbox label="Untuk pedagang baru" wire:model.live="cond_new"
+                hint="Aturan ini khusus pedagang baru." />
+            <x-checkbox label="Untuk pedagang eksternal" wire:model.live="cond_external"
+                hint="Aturan ini khusus pedagang eksternal (tukang gerobak/keliling). Tanpa dicentang = pedagang reguler." />
 
             <x-slot:actions>
                 <x-button label="Batal" link="{{ route('payment-terms.index') }}" class="btn-ghost" />

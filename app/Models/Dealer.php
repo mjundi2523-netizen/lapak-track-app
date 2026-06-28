@@ -21,7 +21,7 @@ class Dealer extends Model
         'phone_number_2',
         'product_type',
         'status',
-        'is_new',
+        'dealer_condition',
         'scan_id',
         'letter_no',
         'created_by',
@@ -32,13 +32,30 @@ class Dealer extends Model
     {
         return [
             'birth_date' => 'date',
-            'is_new' => 'boolean',
         ];
     }
 
     public function dealerStalls(): HasMany
     {
         return $this->hasMany(DealerStall::class, 'did', 'did');
+    }
+
+    /** Langganan eksternal (pedagang non-lapak): relasi langsung ke payment_terms. */
+    public function externalDealers(): HasMany
+    {
+        return $this->hasMany(ExternalDealer::class, 'did', 'did');
+    }
+
+    /** Langganan eksternal yang masih berjalan (belum berakhir & tidak dihapus). */
+    public function activeExternal(): HasMany
+    {
+        $today = Carbon::today()->toDateString();
+
+        return $this->hasMany(ExternalDealer::class, 'did', 'did')
+            ->where('deleted', false)
+            ->where(function ($q) use ($today) {
+                $q->whereNull('end_date')->orWhereDate('end_date', '>', $today);
+            });
     }
 
     public function activeStalls(): HasMany

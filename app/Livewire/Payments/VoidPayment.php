@@ -23,7 +23,7 @@ class VoidPayment extends Component
 
     public function mount(DealerPayment $payment): void
     {
-        $this->payment = $payment->load(['dealerBill.dealerStall.dealer', 'dealerBill.dealerStall.stall']);
+        $this->payment = $payment->load(['dealerBill.dealerStall.dealer', 'dealerBill.dealerStall.stall', 'dealerBill.externalDealer.dealer']);
     }
 
     public function void(): void

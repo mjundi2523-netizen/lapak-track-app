@@ -9,11 +9,11 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div><span class="font-semibold">No. Bayar:</span> {{ $payment->bill_id ?? '-' }}</div>
-            <div><span class="font-semibold">Pedagang:</span> {{ $payment->dealerBill?->dealerStall?->dealer?->name ?? '-' }}</div>
+            <div><span class="font-semibold">Pedagang:</span> {{ $payment->dealerBill?->holder?->name ?? '-' }}</div>
             <div><span class="font-semibold">Jumlah:</span> Rp {{ number_format($payment->paid_amount, 2, ',', '.') }}</div>
             <div><span class="font-semibold">Tanggal:</span> {{ $payment->payment_date?->format('d-m-Y') ?? '-' }}</div>
             <div><span class="font-semibold">Metode:</span> {{ ucfirst($payment->payment_method) }}</div>
-            <div><span class="font-semibold">Lapak:</span> {{ $payment->dealerBill?->dealerStall?->stall?->block ?? '-' }}</div>
+            <div><span class="font-semibold">Lapak:</span> {{ $payment->dealerBill?->location_label }}</div>
         </div>
 
         <x-form wire:submit="void">

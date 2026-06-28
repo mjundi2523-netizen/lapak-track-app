@@ -51,7 +51,7 @@ class Dashboard extends Component
         $totalPemasukan = (float) DealerPayment::where('is_voided', false)->sum('paid_amount');
 
         // --- Jatuh tempo & terlambat (paginated, badge = count asli) ---
-        $overdueQuery = DealerBill::with(['dealerStall.dealer', 'dealerStall.stall'])
+        $overdueQuery = DealerBill::with(['dealerStall.dealer', 'dealerStall.stall', 'externalDealer.dealer'])
             ->whereDate('due_date', '<=', Carbon::today())
             ->whereNotIn('billing_status', ['paid', 'cancelled'])
             ->orderBy('due_date');
@@ -60,7 +60,7 @@ class Dashboard extends Component
         $overdue = $overdueQuery->paginate(8);
 
         // --- Pembayaran terbaru (mengganti "Notifikasi" mock di desain) ---
-        $recentPayments = DealerPayment::with('dealerBill.dealerStall.dealer')
+        $recentPayments = DealerPayment::with(['dealerBill.dealerStall.dealer', 'dealerBill.externalDealer.dealer'])
             ->where('is_voided', false)
             ->orderByDesc('payment_date')
             ->orderByDesc('dpid')

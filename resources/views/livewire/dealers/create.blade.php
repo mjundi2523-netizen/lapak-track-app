@@ -20,11 +20,16 @@
                     hint="Untuk surat/kartu pedagang (opsional)" />
             </div>
 
-            <x-checkbox label="Pedagang baru" wire:model.live="is_new"
-                hint="Pedagang baru memakai aturan bayar khusus — daftar lapak yang bisa dipilih menyesuaikan." />
+            <div class="flex flex-wrap gap-6">
+                <x-checkbox label="Pedagang baru" wire:model.live="cond_new"
+                    hint="Memakai aturan bayar khusus pedagang baru." />
+                <x-checkbox label="Pedagang eksternal" wire:model.live="cond_external"
+                    hint="Tukang gerobak/keliling — tidak perlu memilih lapak." />
+            </div>
 
             <x-input label="Scan KTP" wire:model="scan_id_file" type="file" accept="image/*,.pdf" />
 
+            @unless($cond_external)
             <hr class="my-4" />
 
             <h3 class="font-bold text-lg mb-2">Lapak</h3>
@@ -58,6 +63,18 @@
                 <x-input label="Tanggal Mulai Sewa" wire:model="rent_start_date" type="date" required />
                 <x-input label="Tanggal Akhir Sewa (opsional)" wire:model="rent_end_date" type="date" />
             </div>
+            @else
+                <hr class="my-4" />
+                <h3 class="font-bold text-lg mb-2">Aturan Bayar (Eksternal)</h3>
+                <p class="text-sm text-[#9aa3b2] -mt-1 mb-2">Pedagang eksternal tidak menyewa lapak — pilih aturan bayar yang berlaku.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <x-select label="Aturan Bayar" wire:model="selected_ptid"
+                        :options="$paymentTerms->map(fn($p) => ['id' => $p->ptid, 'name' => $p->term_name . ' · Rp ' . number_format($p->price, 0, ',', '.') . ' / ' . match($p->frequency) { 'daily' => 'hari', 'weekly' => 'minggu', 'monthly' => 'bulan', 'annual' => 'tahun', default => $p->frequency }])"
+                        option-value="id" option-label="name"
+                        placeholder="{{ $paymentTerms->isEmpty() ? 'Belum ada aturan bayar eksternal' : 'Pilih aturan bayar' }}" />
+                    <x-input label="Tanggal Mulai" wire:model="external_start_date" type="date" />
+                </div>
+            @endunless
 
             <x-slot:actions>
                 <x-button label="Batal" link="{{ route('dealers.index') }}" class="btn-ghost" />

@@ -12,7 +12,7 @@
                             <div>
                                 <div class="font-semibold">{{ $selectedBill->bill_id ?? 'Tagihan #' . $selectedBill->dbid }}</div>
                                 <div class="text-sm text-base-content/70">
-                                    {{ $selectedBill->dealerStall?->dealer?->name }} - {{ $selectedBill->dealerStall?->stall?->block }}
+                                    {{ $selectedBill->holder?->name }} - {{ $selectedBill->location_label }}
                                 </div>
                                 <div class="text-sm">
                                     Total: Rp {{ number_format($selectedBill->total_amount, 0, ',', '.') }} |
@@ -61,7 +61,7 @@
                 <div class="bg-base-200 rounded-lg p-3 cursor-pointer hover:bg-base-300" wire:click="selectBill({{ $bill->dbid }})">
                     <div class="font-semibold">{{ $bill->bill_id ?? 'Tagihan #' . $bill->dbid }}</div>
                     <div class="text-sm text-base-content/70">
-                        {{ $bill->dealerStall?->dealer?->name ?? '-' }} - {{ $bill->dealerStall?->stall?->block ?? '-' }}
+                        {{ $bill->holder?->name ?? '-' }} - {{ $bill->location_label }}
                     </div>
                     <div class="text-sm">
                         Rp {{ number_format($bill->total_amount, 0, ',', '.') }} |

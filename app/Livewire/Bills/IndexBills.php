@@ -62,11 +62,13 @@ class IndexBills extends Component
             ->with([
                 'dealerStall.dealer',
                 'dealerStall.stall',
+                'externalDealer.dealer',
                 'payments' => fn ($q) => $q->where('is_voided', false),
             ])
             ->when($this->search, fn ($q) => $q->where(fn ($w) => $w
                 ->where('bill_id', 'like', "%{$this->search}%")
                 ->orWhereHas('dealerStall.dealer', fn ($q2) => $q2->where('name', 'like', "%{$this->search}%"))
+                ->orWhereHas('externalDealer.dealer', fn ($q2) => $q2->where('name', 'like', "%{$this->search}%"))
             ))
             ->when($this->statusFilter, fn ($q) => $q->where('billing_status', $this->statusFilter))
             ->when($this->frequencyFilter, fn ($q) => $q->where('frequency', $this->frequencyFilter))

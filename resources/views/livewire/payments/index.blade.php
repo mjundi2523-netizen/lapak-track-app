@@ -4,6 +4,7 @@
         'MAT' => ['Sewa + Add-on', '#fce7f3', '#be185d'],
         'AAT' => ['Add-on',        '#dbeafe', '#1d4ed8'],
         'ATR' => ['Add-on (jadwal)','#cffafe', '#0e7490'],
+        'EXT' => ['Eksternal',      '#fae8ff', '#86198f'],
     ];
     $freqLabel = ['daily' => 'Harian', 'weekly' => 'Mingguan', 'monthly' => 'Bulanan', 'annual' => 'Tahunan'];
 @endphp
@@ -49,7 +50,7 @@
                     @php $t = $typePill[$row->dealerBill?->bill_type] ?? null; @endphp
                     <tr class="lt-row {{ $row->is_voided ? 'lt-row-danger' : '' }}">
                         <td class="lt-td font-semibold text-[#18181b]">{{ $row->bill_id ?? '-' }}</td>
-                        <td class="lt-td">{{ $row->dealerBill?->dealerStall?->dealer?->name ?? '-' }}</td>
+                        <td class="lt-td">{{ $row->dealerBill?->holder?->name ?? '-' }}</td>
                         <td class="lt-td">
                             @if($t)
                                 <div class="flex flex-col items-start gap-1">

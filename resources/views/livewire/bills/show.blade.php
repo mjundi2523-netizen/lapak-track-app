@@ -37,8 +37,8 @@
         <div class="px-6 py-4 text-base font-bold text-[#1b2433]" style="border-bottom:1px solid #eef0f4;">Informasi Tagihan</div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-[18px] p-6 text-sm">
             <div><span class="font-semibold">No. Tagihan:</span> {{ $dealerBill->bill_id ?? '-' }}</div>
-            <div><span class="font-semibold">Pedagang:</span> {{ $dealerBill->dealerStall?->dealer?->name ?? '-' }}</div>
-            <div><span class="font-semibold">Lapak:</span> {{ $dealerBill->dealerStall?->stall?->block ?? '-' }}</div>
+            <div><span class="font-semibold">Pedagang:</span> {{ $dealerBill->holder?->name ?? '-' }}</div>
+            <div><span class="font-semibold">Lapak:</span> {{ $dealerBill->location_label }}</div>
             <div><span class="font-semibold">Jumlah:</span> {{ $rp0($dealerBill->total_amount) }}</div>
             <div><span class="font-semibold">Jatuh Tempo:</span> {{ $dealerBill->due_date?->format('d-m-Y') ?? '-' }}</div>
             <div>

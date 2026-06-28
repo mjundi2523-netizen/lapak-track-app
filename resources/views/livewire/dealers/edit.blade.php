@@ -22,8 +22,12 @@
                 placeholder="mis. A-004 / PSR-N / VI / 2026"
                 hint="Untuk surat/kartu pedagang (opsional)" />
 
-            <x-checkbox label="Pedagang baru" wire:model.live="is_new"
-                hint="Pedagang baru memakai aturan bayar khusus — daftar lapak yang bisa dipilih menyesuaikan." />
+            <div class="flex flex-wrap gap-6">
+                <x-checkbox label="Pedagang baru" wire:model.live="cond_new"
+                    hint="Memakai aturan bayar khusus pedagang baru." />
+                <x-checkbox label="Pedagang eksternal" wire:model.live="cond_external"
+                    hint="Tukang gerobak/keliling — tidak menyewa lapak." />
+            </div>
 
             <x-input label="Scan KTP" wire:model="scan_id_file" type="file" accept="image/*,.pdf" />
 
@@ -33,7 +37,7 @@
 
             {{-- Lapak yang disewa --}}
             <hr class="my-2" />
-            <h3 class="font-bold text-base text-[#1b2433]">Lapak Disewa</h3>
+            <h3 class="font-bold text-base text-[#1b2433]">{{ $cond_external ? 'Aturan Bayar (Eksternal)' : 'Lapak Disewa' }}</h3>
 
             @if($hasActiveRental)
                 {{-- Task 2: tampilkan readonly --}}
@@ -58,6 +62,39 @@
                     </table>
                 </div>
                 <p class="text-xs text-[#9aa3b2]">Lapak hanya bisa diubah lewat aksi "Akhiri Sewa" di halaman detail pedagang.</p>
+            @elseif($cond_external)
+                @if($hasActiveExternal)
+                    <div class="rounded-[10px] overflow-hidden" style="border:1px solid #f0f0f1;">
+                        <table class="w-full border-collapse text-sm">
+                            <thead>
+                                <tr style="background:#fafafa;">
+                                    <th class="text-left px-4 py-2.5 text-[11px] font-bold text-[#a1a1aa] uppercase tracking-[0.04em]">Aturan Bayar</th>
+                                    <th class="text-left px-4 py-2.5 text-[11px] font-bold text-[#a1a1aa] uppercase tracking-[0.04em]">Mulai</th>
+                                    <th class="text-left px-4 py-2.5 text-[11px] font-bold text-[#a1a1aa] uppercase tracking-[0.04em]">Berakhir</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($activeExternal as $e)
+                                    <tr>
+                                        <td class="px-4 py-3 font-semibold text-[#18181b]" style="border-top:1px solid #f4f4f5;">{{ $e->paymentTerm?->term_name ?? '-' }}</td>
+                                        <td class="px-4 py-3 text-[#27272a]" style="border-top:1px solid #f4f4f5;">{{ $e->start_date?->format('d-m-Y') ?? '-' }}</td>
+                                        <td class="px-4 py-3 text-[#27272a]" style="border-top:1px solid #f4f4f5;">{{ $e->end_date?->format('d-m-Y') ?? '— (berjalan)' }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="text-xs text-[#9aa3b2]">Pedagang eksternal — langganan aktif.</p>
+                @else
+                    <p class="text-sm text-[#9aa3b2] -mt-1 mb-2">Pedagang eksternal tidak menyewa lapak — pilih aturan bayar yang berlaku.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <x-select label="Aturan Bayar" wire:model="selected_ptid"
+                            :options="$paymentTerms->map(fn($p) => ['id' => $p->ptid, 'name' => $p->term_name . ' · Rp ' . number_format($p->price, 0, ',', '.') . ' / ' . match($p->frequency) { 'daily' => 'hari', 'weekly' => 'minggu', 'monthly' => 'bulan', 'annual' => 'tahun', default => $p->frequency }])"
+                            option-value="id" option-label="name"
+                            placeholder="{{ $paymentTerms->isEmpty() ? 'Belum ada aturan bayar eksternal' : 'Pilih aturan bayar' }}" />
+                        <x-input label="Tanggal Mulai" wire:model="external_start_date" type="date" />
+                    </div>
+                @endif
             @else
                 {{-- Task 4: pedagang tanpa sewa aktif boleh memilih lapak lagi --}}
                 <p class="text-sm text-[#9aa3b2] -mt-1">Pedagang ini belum menyewa lapak. Pilih lapak untuk memulai sewa baru.</p>

@@ -18,6 +18,7 @@ class DealerBill extends Model
         'frequency',
         'aoid',
         'dsid',
+        'edid',
         'total_amount',
         'due_date',
         'billing_status',
@@ -42,9 +43,29 @@ class DealerBill extends Model
         return $this->belongsTo(DealerStall::class, 'dsid', 'dsid');
     }
 
+    public function externalDealer(): BelongsTo
+    {
+        return $this->belongsTo(ExternalDealer::class, 'edid', 'edid');
+    }
+
     public function addOn(): BelongsTo
     {
         return $this->belongsTo(AddOn::class, 'aoid', 'aoid');
+    }
+
+    /**
+     * Pemilik tagihan, dari salah satu parent: dealer_stall (sewa) atau external_dealers.
+     * Pastikan relasi terkait sudah di-eager-load untuk hindari N+1.
+     */
+    public function getHolderAttribute(): ?Dealer
+    {
+        return $this->dealerStall?->dealer ?? $this->externalDealer?->dealer;
+    }
+
+    /** Label lokasi: blok lapak (sewa) atau "Eksternal". */
+    public function getLocationLabelAttribute(): string
+    {
+        return $this->dealerStall?->stall?->block ?? ($this->edid ? 'Eksternal' : '-');
     }
 
     public function payments(): HasMany
@@ -80,6 +101,13 @@ class DealerBill extends Model
         // Rincian ditentukan oleh stream `(aoid, frequency)` — sama seperti
         // pengelompokan BillGenerationService — BUKAN oleh label `bill_type`
         // (label hanya turunan dari jumlah komponen: MTR/ATR/MAT/AAT).
+
+        // Tagihan eksternal: komponennya = aturan bayar langganan.
+        if ($this->edid !== null) {
+            $term = $this->externalDealer?->paymentTerm;
+
+            return $term ? [['label' => $term->term_name, 'amount' => (int) $term->price]] : [];
+        }
 
         // Stream jadwal-sendiri (aoid terisi): satu add-on spesifik.
         if ($this->aoid !== null) {

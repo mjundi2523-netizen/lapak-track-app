@@ -110,8 +110,8 @@
                                     style="background:#fef2f2;"
                                     onclick="window.location='{{ route('bills.show', $row) }}'">
                                     <td class="px-6 py-3.5 text-sm font-semibold text-[#18181b]" style="border-top:1px solid #f4f4f5;">{{ $row->bill_id ?? '-' }}</td>
-                                    <td class="px-4 py-3.5 text-sm text-[#27272a]" style="border-top:1px solid #f4f4f5;">{{ $row->dealerStall?->dealer?->name ?? '-' }}</td>
-                                    <td class="px-4 py-3.5 text-sm text-[#27272a]" style="border-top:1px solid #f4f4f5;">{{ $row->dealerStall?->stall?->block ?? '-' }}</td>
+                                    <td class="px-4 py-3.5 text-sm text-[#27272a]" style="border-top:1px solid #f4f4f5;">{{ $row->holder?->name ?? '-' }}</td>
+                                    <td class="px-4 py-3.5 text-sm text-[#27272a]" style="border-top:1px solid #f4f4f5;">{{ $row->location_label }}</td>
                                     <td class="px-4 py-3.5 text-sm text-[#27272a] text-right" style="border-top:1px solid #f4f4f5;">{{ $rp($row->total_amount) }}</td>
                                     <td class="px-6 py-3.5" style="border-top:1px solid #f4f4f5;">
                                         <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold" style="background:{{ $st[1] }}; color:{{ $st[2] }};">{{ $st[0] }}</span>
@@ -139,7 +139,7 @@
                         <div class="flex items-start gap-3 py-3.5" @if(!$loop->last) style="border-bottom:1px solid #f4f4f5;" @endif>
                             <span class="w-[9px] h-[9px] rounded-full mt-1.5 shrink-0" style="background:#14a07a;"></span>
                             <div class="flex-1 min-w-0">
-                                <div class="text-sm font-semibold text-[#27272a] truncate">{{ $p->dealerBill?->dealerStall?->dealer?->name ?? 'Pedagang' }}</div>
+                                <div class="text-sm font-semibold text-[#27272a] truncate">{{ $p->dealerBill?->holder?->name ?? 'Pedagang' }}</div>
                                 <div class="text-xs text-[#9aa3b2] mt-0.5">{{ $p->dealerBill?->bill_id ?? '-' }} · {{ $p->payment_date?->diffForHumans() }}</div>
                             </div>
                             <div class="text-sm font-bold text-[#27272a] whitespace-nowrap">{{ $rp($p->paid_amount) }}</div>

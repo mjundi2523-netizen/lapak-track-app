@@ -31,6 +31,8 @@ class ShowBill extends Component
             'dealerStall.dealer',
             'dealerStall.stall.paymentTerm',
             'dealerStall.stall.addOns',
+            'externalDealer.dealer',
+            'externalDealer.paymentTerm',
             'addOn',
             'payments' => fn ($q) => $q->orderBy('payment_date', 'desc'),
             'payments.voidedBy',

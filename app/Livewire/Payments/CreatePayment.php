@@ -128,7 +128,7 @@ class CreatePayment extends Component
         $selectedBill = null;
         $remaining = null;
         if ($this->selectedDbid) {
-            $selectedBill = DealerBill::with(['dealerStall.dealer', 'dealerStall.stall', 'payments' => fn ($q) => $q->where('is_voided', false)])
+            $selectedBill = DealerBill::with(['dealerStall.dealer', 'dealerStall.stall', 'externalDealer.dealer', 'payments' => fn ($q) => $q->where('is_voided', false)])
                 ->find($this->selectedDbid);
             if ($selectedBill) {
                 $remaining = max((float) $selectedBill->total_amount - (float) $selectedBill->payments->sum('paid_amount'), 0);
@@ -136,11 +136,12 @@ class CreatePayment extends Component
         }
 
         $billResults = DealerBill::query()
-            ->with(['dealerStall.dealer', 'dealerStall.stall'])
+            ->with(['dealerStall.dealer', 'dealerStall.stall', 'externalDealer.dealer'])
             ->whereNotIn('billing_status', ['paid', 'cancelled'])
             ->when($this->billSearch, fn ($q) => $q
                 ->where('bill_id', 'like', "%{$this->billSearch}%")
                 ->orWhereHas('dealerStall.dealer', fn ($q2) => $q2->where('name', 'like', "%{$this->billSearch}%"))
+                ->orWhereHas('externalDealer.dealer', fn ($q2) => $q2->where('name', 'like', "%{$this->billSearch}%"))
             )
             ->orderBy('due_date')
             ->limit(20)

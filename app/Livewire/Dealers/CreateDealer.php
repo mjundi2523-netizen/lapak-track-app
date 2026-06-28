@@ -4,8 +4,11 @@ namespace App\Livewire\Dealers;
 
 use App\Models\Dealer;
 use App\Models\DealerStall;
+use App\Models\ExternalDealer;
+use App\Models\PaymentTerm;
 use App\Models\Stall;
 use App\Services\BillGenerationService;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
@@ -27,18 +30,26 @@ class CreateDealer extends Component
     public ?string $phone_number_2 = null;
     public ?string $product_type = null;
     public ?string $status = 'active';
-    public bool $is_new = false;
+    public bool $cond_new = false;
+    public bool $cond_external = false;
     public ?string $letter_no = null;
 
     public $scan_id_file = null;
     public ?string $scan_id = null;
 
     public array $selected_stalls = [];
+    public ?int $selected_ptid = null;          // aturan bayar (pedagang eksternal)
+    public string $external_start_date = '';    // mulai langganan eksternal
     public string $rent_start_date = '';
     public ?string $rent_end_date = null;
 
     public bool $showStallModal = false;
     public string $stallSearch = '';
+
+    public function mount(): void
+    {
+        $this->external_start_date = Carbon::today()->toDateString();
+    }
 
     protected function rules(): array
     {
@@ -53,17 +64,37 @@ class CreateDealer extends Component
             'status' => 'required|in:active,inactive',
             'letter_no' => 'nullable|string|max:100',
             'scan_id_file' => 'nullable|file|max:5120',
-            'selected_stalls' => 'required|array|min:1',
+            'selected_stalls' => 'nullable|array',
             'selected_stalls.*' => 'integer|exists:stall,sid',
-            'rent_start_date' => 'required|date',
+            'rent_start_date' => 'nullable|date',
             'rent_end_date' => 'nullable|date|after_or_equal:rent_start_date',
+            'selected_ptid' => 'nullable|integer|exists:payment_terms,ptid',
+            'external_start_date' => 'nullable|date',
         ];
     }
 
-    // Status "pedagang baru" mengubah set lapak yang valid → reset pilihan.
-    public function updatedIsNew(): void
+    // Kondisi pedagang mengubah set lapak yang valid → reset pilihan + jaga mutually-exclusive.
+    public function updatedCondNew($value): void
     {
+        if ($value) {
+            $this->cond_external = false;
+        }
         $this->selected_stalls = [];
+        $this->selected_ptid = null;
+    }
+
+    public function updatedCondExternal($value): void
+    {
+        if ($value) {
+            $this->cond_new = false;
+        }
+        $this->selected_stalls = [];
+        $this->selected_ptid = null;
+    }
+
+    protected function dealerCondition(): string
+    {
+        return $this->cond_external ? 'external' : ($this->cond_new ? 'new' : 'regular');
     }
 
     public function toggleStall(int $sid): void
@@ -79,6 +110,19 @@ class CreateDealer extends Component
     {
         $this->validate();
 
+        // Tanggal mulai sewa wajib hanya bila ada lapak yang dipilih.
+        if (! empty($this->selected_stalls)) {
+            $this->validate(['rent_start_date' => 'required|date']);
+        }
+
+        // Pedagang eksternal: wajib pilih aturan bayar + tanggal mulai langganan.
+        if ($this->cond_external) {
+            $this->validate([
+                'selected_ptid' => 'required|integer|exists:payment_terms,ptid',
+                'external_start_date' => 'required|date',
+            ]);
+        }
+
         // Tolak lapak yang sudah tersewa (jaga-jaga jika dipilih lewat manipulasi state).
         $occupied = Stall::whereIn('sid', $this->selected_stalls)
             ->whereHas('activeRentals')
@@ -92,14 +136,14 @@ class CreateDealer extends Component
             return;
         }
 
-        // Lapak harus cocok dengan status pedagang: aturan bayar is_new = status pedagang is_new.
+        // Lapak harus cocok kondisi pedagang: payment_terms.dealer_condition = dealer.dealer_condition.
         $mismatch = Stall::whereIn('sid', $this->selected_stalls)
-            ->whereDoesntHave('paymentTerm', fn ($q) => $q->where('is_new', $this->is_new))
+            ->whereDoesntHave('paymentTerm', fn ($q) => $q->where('dealer_condition', $this->dealerCondition()))
             ->pluck('sid')
             ->all();
 
         if ($mismatch) {
-            $this->addError('selected_stalls', 'Ada lapak yang aturan bayarnya tidak sesuai status pedagang (baru/lama).');
+            $this->addError('selected_stalls', 'Ada lapak yang aturan bayarnya tidak sesuai kondisi pedagang.');
             $this->selected_stalls = array_values(array_diff($this->selected_stalls, $mismatch));
 
             return;
@@ -119,24 +163,37 @@ class CreateDealer extends Component
                 'phone_number_2' => $this->phone_number_2,
                 'product_type' => $this->product_type,
                 'status' => $this->status ?? 'active',
-                'is_new' => $this->is_new,
+                'dealer_condition' => $this->dealerCondition(),
                 'letter_no' => $this->letter_no,
                 'scan_id' => $this->scan_id,
                 'created_by' => Auth::id(),
             ]);
 
-            // Buat satu rental (dealer_stall) per lapak yang dipilih, lalu generate tagihannya.
-            foreach ($this->selected_stalls as $sid) {
-                $ds = DealerStall::create([
+            if ($this->cond_external) {
+                // Langganan eksternal (relasi langsung ke aturan bayar), lalu generate tagihannya.
+                $ed = ExternalDealer::create([
                     'did' => $dealer->did,
-                    'sid' => $sid,
-                    'rent_start_date' => $this->rent_start_date,
-                    'rent_end_date' => $this->rent_end_date,
+                    'ptid' => $this->selected_ptid,
+                    'start_date' => $this->external_start_date,
                     'deleted' => false,
                     'created_by' => Auth::id(),
                 ]);
 
-                $billService->ensureBillsUpToDate($ds);
+                $billService->ensureExternalBillsUpToDate($ed);
+            } else {
+                // Buat satu rental (dealer_stall) per lapak yang dipilih, lalu generate tagihannya.
+                foreach ($this->selected_stalls as $sid) {
+                    $ds = DealerStall::create([
+                        'did' => $dealer->did,
+                        'sid' => $sid,
+                        'rent_start_date' => $this->rent_start_date,
+                        'rent_end_date' => $this->rent_end_date,
+                        'deleted' => false,
+                        'created_by' => Auth::id(),
+                    ]);
+
+                    $billService->ensureBillsUpToDate($ds);
+                }
             }
         });
 
@@ -146,10 +203,10 @@ class CreateDealer extends Component
 
     public function render()
     {
-        // Lapak aktif yang aturan bayarnya sesuai status pedagang (baru/lama).
+        // Lapak aktif yang aturan bayarnya sesuai kondisi pedagang.
         $stalls = Stall::query()
             ->where('is_active', true)
-            ->whereHas('paymentTerm', fn ($q) => $q->where('is_new', $this->is_new))
+            ->whereHas('paymentTerm', fn ($q) => $q->where('dealer_condition', $this->dealerCondition()))
             ->with(['paymentTerm', 'addOns'])
             ->withCount('activeRentals')
             ->when($this->stallSearch !== '', fn ($q) => $q->where('block', 'like', '%' . $this->stallSearch . '%'))
@@ -163,6 +220,10 @@ class CreateDealer extends Component
                 ->with('paymentTerm')
                 ->orderBy('block')
                 ->get(),
+            // Aturan bayar untuk pedagang eksternal (tanpa lapak).
+            'paymentTerms' => $this->cond_external
+                ? PaymentTerm::where('dealer_condition', $this->dealerCondition())->orderBy('term_name')->get()
+                : collect(),
         ]);
     }
 }

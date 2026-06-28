@@ -16,7 +16,7 @@ class PaymentTerm extends Model
         'term_name',
         'frequency',
         'interval_count',
-        'is_new',
+        'dealer_condition',
         'price',
         'created_by',
         'modified_by',
@@ -27,7 +27,6 @@ class PaymentTerm extends Model
         return [
             'price' => 'integer',
             'interval_count' => 'integer',
-            'is_new' => 'boolean',
         ];
     }
 
