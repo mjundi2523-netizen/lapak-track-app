@@ -27,6 +27,11 @@ class ShowDealer extends Component
     public string $endDate = '';
     public string $arrearAction = 'keep'; // keep | cancel
 
+    // --- State modal "Hapus Rental (Salah Input)" ---
+    public bool $deleteModal = false;
+    public ?int $deleteDsid = null;
+    public string $deleteBlock = '';
+
     // --- State modal "Cetak Surat Pedagang" ---
     public bool $showLetter = false;
 
@@ -95,6 +100,48 @@ class ShowDealer extends Component
 
         $this->endModal = false;
         $this->success('Sewa lapak "' . $this->endBlock . '" berhasil diakhiri.');
+    }
+
+    public function startDelete(int $dsid): void
+    {
+        $ds = $this->dealer->dealerStalls()->where('dsid', $dsid)->first();
+        if (! $ds) {
+            return;
+        }
+        $this->deleteDsid  = $dsid;
+        $this->deleteBlock = $ds->stall?->block ?? '-';
+        $this->deleteModal = true;
+    }
+
+    public function deleteRental(): void
+    {
+        $ds = DealerStall::where('dsid', $this->deleteDsid)
+            ->where('did', $this->dealer->did)
+            ->firstOrFail();
+
+        // Cegah penghapusan jika sudah ada pembayaran (bukan salah input murni).
+        $hasPaid = DealerBill::where('dsid', $ds->dsid)
+            ->whereHas('payments', fn ($q) => $q->where('is_voided', false))
+            ->exists();
+
+        if ($hasPaid) {
+            $this->addError('deleteRental', 'Tidak bisa dihapus — sudah ada pembayaran yang tercatat untuk rental ini. Gunakan "Akhiri Sewa" sebagai gantinya.');
+
+            return;
+        }
+
+        DB::transaction(function () use ($ds) {
+            // Batalkan semua tagihan yang belum dibayar.
+            DealerBill::where('dsid', $ds->dsid)
+                ->whereIn('billing_status', ['unpaid', 'pending'])
+                ->update(['billing_status' => 'cancelled', 'modified_by' => Auth::id()]);
+
+            // Soft-delete record rental.
+            $ds->update(['deleted' => true, 'modified_by' => Auth::id()]);
+        });
+
+        $this->deleteModal = false;
+        $this->success('Rental lapak "' . $this->deleteBlock . '" berhasil dihapus dari sistem.');
     }
 
     public function render()

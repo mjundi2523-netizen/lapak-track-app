@@ -65,17 +65,27 @@
         <div class="bg-white rounded-2xl overflow-hidden mb-4" style="border:1px solid #eceef2; box-shadow:0 1px 2px rgba(16,12,40,0.04);">
             <div class="flex items-center justify-between gap-3 px-6 py-4" style="border-bottom:1px solid #eef0f4;">
                 <span class="text-base font-bold text-[#1b2433]">Lapak: {{ $ds->stall?->block ?? '-' }}</span>
-                @if($ended)
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold" style="background:#f1f1f3; color:#52525b;">
-                        <x-icon name="o-check-circle" class="w-4 h-4" /> Sewa berakhir {{ $ds->rent_end_date->format('d-m-Y') }}
-                    </span>
-                @else
-                    <button type="button" wire:click="startEnd({{ $ds->dsid }})"
-                            class="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-[9px] text-sm font-semibold transition hover:brightness-95"
-                            style="background:#fee2e2; color:#b91c1c;">
-                        <x-icon name="o-x-circle" class="w-4 h-4" /> Akhiri Sewa
+                <div class="flex items-center gap-2">
+                    {{-- Tombol Hapus (salah input) — selalu tampil, ikon saja --}}
+                    <button type="button" wire:click="startDelete({{ $ds->dsid }})"
+                            title="Hapus rental ini (hanya untuk salah input)"
+                            class="inline-flex items-center justify-center w-9 h-9 rounded-[9px] transition hover:brightness-95"
+                            style="background:#f4f4f6; color:#71717a;">
+                        <x-icon name="o-trash" class="w-4 h-4" />
                     </button>
-                @endif
+
+                    @if($ended)
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold" style="background:#f1f1f3; color:#52525b;">
+                            <x-icon name="o-check-circle" class="w-4 h-4" /> Sewa berakhir {{ $ds->rent_end_date->format('d-m-Y') }}
+                        </span>
+                    @else
+                        <button type="button" wire:click="startEnd({{ $ds->dsid }})"
+                                class="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-[9px] text-sm font-semibold transition hover:brightness-95"
+                                style="background:#fee2e2; color:#b91c1c;">
+                            <x-icon name="o-x-circle" class="w-4 h-4" /> Akhiri Sewa
+                        </button>
+                    @endif
+                </div>
             </div>
             <div class="p-6">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-[18px] mb-[18px] text-sm">
@@ -117,6 +127,31 @@
             </div>
         </div>
     @endforeach
+
+    {{-- Modal: Hapus Rental (Salah Input) --}}
+    <x-modal wire:model="deleteModal" title="Hapus Rental (Salah Input)" separator>
+        <div class="space-y-3">
+            <div class="flex items-start gap-3 p-4 rounded-xl" style="background:#fff7ed; border:1px solid #fed7aa;">
+                <x-icon name="o-exclamation-triangle" class="w-5 h-5 mt-0.5 shrink-0" style="color:#c2410c;" />
+                <p class="text-sm m-0" style="color:#9a3412;">
+                    <span class="font-semibold">Gunakan hanya jika data ini diinput secara tidak sengaja.</span>
+                    Record rental akan dihapus dari sistem dan lapak kembali kosong.
+                    Semua tagihan yang belum dibayar akan dibatalkan otomatis.
+                </p>
+            </div>
+            <p class="text-sm text-[#52525b] m-0">
+                Hapus rental lapak <span class="font-semibold">{{ $deleteBlock }}</span>?
+            </p>
+            @error('deleteRental')
+                <p class="text-sm font-semibold" style="color:#b91c1c;">{{ $message }}</p>
+            @enderror
+        </div>
+        <x-slot:actions>
+            <x-button label="Batal" @click="$wire.deleteModal = false" class="btn-ghost" />
+            <x-button label="Ya, Hapus" wire:click="deleteRental" spinner="deleteRental"
+                      class="text-white border-0" style="background:#b91c1c;" />
+        </x-slot:actions>
+    </x-modal>
 
     {{-- Modal: Akhiri Sewa --}}
     <x-modal wire:model="endModal" title="Akhiri Sewa Lapak" separator persistent>
