@@ -3,7 +3,10 @@
 
     <x-card class="max-w-[680px]">
         <x-form wire:submit="save">
-            <x-input label="Blok" wire:model="block" required placeholder="Contoh: A-01" />
+            <div class="grid grid-cols-2 gap-4">
+                <x-input label="Blok" wire:model="block" required placeholder="Contoh: A01" hint="1 huruf + 2 angka" />
+                <x-input label="Nomor" wire:model="number" required placeholder="Contoh: 05" hint="2 angka" />
+            </div>
             <x-input label="Ukuran" wire:model="size" placeholder="Contoh: 3x4 m" />
             <x-input label="Deskripsi" wire:model="description" placeholder="Catatan tambahan (opsional)" />
 

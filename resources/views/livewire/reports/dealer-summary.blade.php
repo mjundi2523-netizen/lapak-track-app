@@ -80,7 +80,7 @@
                     @php
                         $s = $summaries[$dealer->did] ?? ['bill_count' => 0, 'total_billed' => 0, 'total_paid' => 0, 'outstanding' => 0, 'last_payment' => null];
                         $cp = $condPill[$dealer->dealer_condition] ?? [$dealer->dealer_condition, '#f1f1f3', '#52525b'];
-                        $location = $dealer->dealerStalls->map(fn($ds) => $ds->stall?->block)->filter()->implode(', ')
+                        $location = $dealer->dealerStalls->map(fn($ds) => $ds->stall?->code)->filter()->implode(', ')
                             ?: ($dealer->dealer_condition === 'external' ? 'Eksternal' : '-');
                         $hasDebt = $s['outstanding'] > 0;
                     @endphp

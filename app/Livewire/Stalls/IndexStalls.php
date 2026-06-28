@@ -26,8 +26,11 @@ class IndexStalls extends Component
     {
         $stalls = Stall::query()
             ->with(['paymentTerm'])
-            ->when($this->search, fn ($q) => $q->where('block', 'like', "%{$this->search}%"))
+            ->when($this->search, fn ($q) => $q->where(fn ($w) => $w
+                ->where('block', 'like', "%{$this->search}%")
+                ->orWhere('number', 'like', "%{$this->search}%")))
             ->orderBy('block')
+            ->orderBy('number')
             ->paginate(10);
 
         return view('livewire.stalls.index', [

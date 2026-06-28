@@ -7,7 +7,8 @@
             ['label' => 'Pedagang',       'icon' => 'o-users',              'route' => 'dealers.index',        'active' => 'dealers.*'],
             ['label' => 'Aturan Bayar',   'icon' => 'o-banknotes',          'route' => 'payment-terms.index',  'active' => 'payment-terms.*'],
             ['label' => 'Biaya Lain-lain','icon' => 'o-plus-circle',        'route' => 'add-ons.index',        'active' => 'add-ons.*'],
-            ['label' => 'Lapak',          'icon' => 'o-building-storefront','route' => 'stalls.index',         'active' => 'stalls.*'],
+            ['label' => 'Lapak',          'icon' => 'o-building-storefront','route' => 'stalls.index',         'active' => ['stalls.index', 'stalls.create', 'stalls.edit', 'stalls.show']],
+            ['label' => 'Denah Lapak',    'icon' => 'o-map',                'route' => 'stalls.map',           'active' => 'stalls.map'],
             ['label' => 'Kategori Pengeluaran','icon' => 'o-tag',          'route' => 'expense-categories.index', 'active' => 'expense-categories.*'],
         ],
         'Transaksi' => [

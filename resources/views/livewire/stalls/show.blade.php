@@ -15,7 +15,7 @@
     <div class="flex items-center justify-between gap-4 mb-5 pb-4" style="border-bottom:1px solid #e5e7eb;">
         <div>
             <h1 class="text-[26px] font-bold tracking-tight text-[#1b2433] m-0 mb-1.5">Detail Lapak</h1>
-            <div class="text-[13px] text-[#9aa3b2]">Beranda&nbsp;/&nbsp;Lapak&nbsp;/&nbsp;{{ $stall->block }}</div>
+            <div class="text-[13px] text-[#9aa3b2]">Beranda&nbsp;/&nbsp;Lapak&nbsp;/&nbsp;{{ $stall->code }}</div>
         </div>
         <div class="flex gap-2.5">
             <a href="{{ route('stalls.edit', $stall) }}" wire:navigate
@@ -39,6 +39,7 @@
                 <div class="px-6 py-4 text-base font-bold text-[#1b2433]" style="border-bottom:1px solid #eef0f4;">Informasi Lapak</div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-[18px] p-6">
                     <div class="text-sm"><span class="font-semibold">Blok:</span> {{ $stall->block }}</div>
+                    <div class="text-sm"><span class="font-semibold">Nomor:</span> {{ $stall->number }}</div>
                     <div class="text-sm">
                         <span class="font-semibold">Status:</span>
                         @if($stall->is_active)

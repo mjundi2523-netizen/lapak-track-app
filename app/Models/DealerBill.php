@@ -65,7 +65,7 @@ class DealerBill extends Model
     /** Label lokasi: blok lapak (sewa) atau "Eksternal". */
     public function getLocationLabelAttribute(): string
     {
-        return $this->dealerStall?->stall?->block ?? ($this->edid ? 'Eksternal' : '-');
+        return $this->dealerStall?->stall?->code ?? ($this->edid ? 'Eksternal' : '-');
     }
 
     public function payments(): HasMany

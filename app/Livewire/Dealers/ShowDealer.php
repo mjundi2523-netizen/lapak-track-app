@@ -59,7 +59,7 @@ class ShowDealer extends Component
         }
 
         $this->endDsid = $dsid;
-        $this->endBlock = $ds->stall?->block ?? '-';
+        $this->endBlock = $ds->stall?->code ?? '-';
         $this->endDate = ($ds->rent_end_date ?? Carbon::today())->toDateString();
         $this->arrearAction = 'keep';
         $this->endModal = true;
@@ -110,7 +110,7 @@ class ShowDealer extends Component
             return;
         }
         $this->deleteDsid  = $dsid;
-        $this->deleteBlock = $ds->stall?->block ?? '-';
+        $this->deleteBlock = $ds->stall?->code ?? '-';
         $this->deleteModal = true;
     }
 

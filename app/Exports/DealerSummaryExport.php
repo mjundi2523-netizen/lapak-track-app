@@ -112,7 +112,7 @@ class DealerSummaryExport implements FromCollection, WithHeadings, WithMapping, 
     {
         $s = $this->summaries[$row->did] ?? ['bill_count' => 0, 'total_billed' => 0, 'total_paid' => 0, 'outstanding' => 0, 'last_payment' => null];
         $condLabel = ['regular' => 'Regular', 'new' => 'Baru', 'external' => 'Eksternal'];
-        $location = $row->dealerStalls->map(fn ($ds) => $ds->stall?->block)->filter()->implode(', ') ?: ($row->dealer_condition === 'external' ? 'Eksternal' : '-');
+        $location = $row->dealerStalls->map(fn ($ds) => $ds->stall?->code)->filter()->implode(', ') ?: ($row->dealer_condition === 'external' ? 'Eksternal' : '-');
 
         return [
             $row->name,

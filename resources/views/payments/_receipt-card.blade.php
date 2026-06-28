@@ -6,7 +6,7 @@
     $date = Carbon::parse($payment->payment_date)->locale('id');
 
     $dealer = $payment->dealerBill?->dealerStall?->dealer?->name ?? '-';
-    $block = $payment->dealerBill?->dealerStall?->stall?->block;
+    $block = $payment->dealerBill?->dealerStall?->stall?->code;
     $billId = $payment->dealerBill?->bill_id;
 
     $note = 'Pembayaran ' . ($billId ? 'tagihan ' . $billId : 'tagihan')

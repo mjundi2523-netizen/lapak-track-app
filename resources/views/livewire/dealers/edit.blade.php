@@ -53,7 +53,7 @@
                         <tbody>
                             @foreach($activeRentals as $r)
                                 <tr>
-                                    <td class="px-4 py-3 font-semibold text-[#18181b]" style="border-top:1px solid #f4f4f5;">{{ $r->stall?->block ?? '-' }}</td>
+                                    <td class="px-4 py-3 font-semibold text-[#18181b]" style="border-top:1px solid #f4f4f5;">{{ $r->stall?->code ?? '-' }}</td>
                                     <td class="px-4 py-3 text-[#27272a]" style="border-top:1px solid #f4f4f5;">{{ $r->rent_start_date?->format('d-m-Y') ?? '-' }}</td>
                                     <td class="px-4 py-3 text-[#27272a]" style="border-top:1px solid #f4f4f5;">{{ $r->rent_end_date?->format('d-m-Y') ?? '— (berjalan)' }}</td>
                                 </tr>
@@ -112,7 +112,7 @@
                     <div class="flex flex-wrap gap-2 mt-3">
                         @foreach($selectedStallDetails as $s)
                             <span class="inline-flex items-center gap-2 lt-pill" style="background:#eef2ff; color:#4338ca;">
-                                {{ $s->block }}
+                                {{ $s->code }}
                                 @if($s->paymentTerm)
                                     <span class="text-[#6366f1]">· Rp {{ number_format($s->paymentTerm->price, 0, ',', '.') }}</span>
                                 @endif
@@ -161,7 +161,7 @@
                             <input type="checkbox" class="checkbox checkbox-sm mt-1" @checked($checked) @disabled($occupied) wire:click.stop="toggleStall({{ $stall->sid }})" />
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center gap-2 flex-wrap">
-                                    <span class="font-semibold text-[#18181b]">{{ $stall->block }}</span>
+                                    <span class="font-semibold text-[#18181b]">{{ $stall->code }}</span>
                                     @if($occupied)
                                         <span class="lt-pill" style="background:#fee2e2; color:#b91c1c;">Tersewa</span>
                                     @else

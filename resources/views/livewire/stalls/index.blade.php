@@ -1,6 +1,6 @@
 <div>
     <x-index-header title="Lapak">
-        <x-input placeholder="Cari blok..." wire:model.live.debounce="search" clearable />
+        <x-input placeholder="Cari lokasi (blok/nomor)..." wire:model.live.debounce="search" clearable />
         <x-button label="Tambah" link="{{ route('stalls.create') }}" class="btn-primary" icon="o-plus" />
     </x-index-header>
 
@@ -8,8 +8,8 @@
         <table class="lt-table">
             <thead>
                 <tr>
-                    <th class="lt-th">Blok</th>
-                    <th class="lt-th">Deskripsi</th>
+                    <th class="lt-th">Lokasi</th>
+                    <th class="lt-th">Ukuran</th>
                     <th class="lt-th">Aturan Bayar</th>
                     <th class="lt-th">Status</th>
                     <th class="lt-th"></th>
@@ -18,8 +18,8 @@
             <tbody>
                 @forelse($stalls as $row)
                     <tr class="lt-row">
-                        <td class="lt-td font-semibold text-[#18181b]">{{ $row->block }}</td>
-                        <td class="lt-td">{{ $row->description ?: '-' }}</td>
+                        <td class="lt-td font-semibold text-[#18181b]">{{ $row->code }}</td>
+                        <td class="lt-td">{{ $row->size ?: '-' }}</td>
                         <td class="lt-td">{{ $row->paymentTerm?->term_name ?? '-' }}</td>
                         <td class="lt-td">
                             @if($row->is_active)

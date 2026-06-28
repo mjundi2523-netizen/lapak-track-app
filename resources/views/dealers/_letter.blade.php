@@ -13,7 +13,7 @@
     $romans = [1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV', 5 => 'V', 6 => 'VI', 7 => 'VII', 8 => 'VIII', 9 => 'IX', 10 => 'X', 11 => 'XI', 12 => 'XII'];
     $issue = $rental?->rent_start_date ? Carbon::parse($rental->rent_start_date) : $today;
     // Nomor surat: input bebas user (dealer.letter_no); fallback auto bila kosong.
-    $noNomor = $dealer->letter_no ?: (($stall?->block ?? '—') . ' / PSR-N / ' . ($romans[$issue->month] ?? '') . ' / ' . $issue->year);
+    $noNomor = $dealer->letter_no ?: (($stall ? $stall->block . '-' . $stall->number : '—') . ' / PSR-N / ' . ($romans[$issue->month] ?? '') . ' / ' . $issue->year);
 
     $masaBerlaku = $rental ? ($fmt($rental->rent_start_date) . ' s/d ' . $fmt($rental->rent_end_date)) : '-';
 
@@ -23,7 +23,7 @@
         'Alamat'          => $dealer->address ?: '-',
         'N I K'           => $dealer->nik,
         'Warga Negara'    => 'INDONESIA',
-        'Kios / Los Nomor' => $stall?->block ?? '-',
+        'Kios / Los Nomor' => $stall?->code ?? '-',
         'Ukuran'          => $stall?->size ?: '-',
         'Status Bangunan' => 'Sewa/Kontrak',
         'Jenis Usaha'     => $dealer->product_type ?: '-',

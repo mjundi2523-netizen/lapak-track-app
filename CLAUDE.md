@@ -28,6 +28,8 @@
 - `dealer_bills.bill_type` enum: `MTR | MAT | AAT | ATR` (lihat "Mesin billing"). `dealer_bills.aoid` (nullable, FK→`add_ons`) terisi hanya untuk ATR.
 - `add_ons.is_rent_date` (bool, default true) + `add_ons.start_date` (date, nullable) — anchor penagihan add-on. Ditambah 2026-06-27.
 - Bill (`dealer_bills`) milik **dealer_stall** (rental), bukan langsung milik dealer.
+- **Lokasi lapak (`stall`)** = 2 kolom: **`block`** (1 huruf + 2 angka, mis. `A01`, regex `^[A-Z]\d{2}$`) + **`number`** (2 angka, mis. `05`, regex `^\d{2}$`). Unik komposit (`block`,`number`) via index `stall_block_number_unique` (unique block-saja sudah di-drop). Accessor **`Stall::$code`** = `"{block} / {number}"` (mis. "A01 / 05") — dipakai di semua tampilan (index/show/denah/picker pedagang/surat/kwitansi, `DealerBill::$location_label`). Surat: nomor surat fallback pakai `{block}-{number}`; field "Kios/Los Nomor" pakai `code`. Create/Edit menormalkan input (block uppercase, number pad 2 digit). **Denah** dikelompokkan per `block`, tiap sel = `number`. Ditambah 2026-06-28 (gantikan `block` bebas lama "A-001"; data lama dikonversi: tiap grup huruf → block `{huruf}01`, angka jadi number). **Catatan:** ada 1 lapak uji (sid 55, desc "tes", tanpa rental) yang block lamanya tak berpola → fallback `Z01/01`; hapus bila tak dipakai.
+- **`stall.size`** (varchar(100), nullable) = ukuran fisik lapak (mis. "3x4 m"), input di Create/Edit, tampil di detail + surat ("Ukuran"). Ditambah 2026-06-28. `stall.description` jadi catatan opsional.
 
 ## Rencana eksekusi MVP
 Lihat `.qoder/specs/LapakTrack_MVP_Plan.md` — logika billing (lazy roll-forward), status otomatis, notifikasi in-app, + checklist Task 7–12 & revisi Task 4/6.

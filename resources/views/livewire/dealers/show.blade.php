@@ -64,7 +64,7 @@
         @php $ended = (bool) $ds->rent_end_date; @endphp
         <div class="bg-white rounded-2xl overflow-hidden mb-4" style="border:1px solid #eceef2; box-shadow:0 1px 2px rgba(16,12,40,0.04);">
             <div class="flex items-center justify-between gap-3 px-6 py-4" style="border-bottom:1px solid #eef0f4;">
-                <span class="text-base font-bold text-[#1b2433]">Lapak: {{ $ds->stall?->block ?? '-' }}</span>
+                <span class="text-base font-bold text-[#1b2433]">Lapak: {{ $ds->stall?->code ?? '-' }}</span>
                 <div class="flex items-center gap-2">
                     {{-- Tombol Hapus (salah input) — selalu tampil, ikon saja --}}
                     <button type="button" wire:click="startDelete({{ $ds->dsid }})"

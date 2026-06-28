@@ -15,6 +15,7 @@ class Stall extends Model
 
     protected $fillable = [
         'block',
+        'number',
         'description',
         'size',
         'ptid',
@@ -28,6 +29,12 @@ class Stall extends Model
         return [
             'is_active' => 'boolean',
         ];
+    }
+
+    /** Kode lokasi gabungan: "{block} / {number}" (mis. "A01 / 05"). */
+    public function getCodeAttribute(): string
+    {
+        return trim(($this->block ?? '') . ' / ' . ($this->number ?? ''));
     }
 
     public function paymentTerm(): BelongsTo
