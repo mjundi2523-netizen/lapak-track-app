@@ -23,15 +23,17 @@
     ];
 @endphp
 
-{{-- Logo --}}
-<div class="flex items-center gap-3 px-[22px] pt-[22px] pb-[18px] transition-all duration-200"
-     :class="collapsed && 'justify-center !px-0'">
+{{-- Logo (klik untuk buka/tutup sidebar) --}}
+<button type="button" @click="collapsed = !collapsed"
+        class="flex items-center gap-3 w-full px-[22px] pt-[22px] pb-[18px] transition-all duration-200 cursor-pointer"
+        :class="collapsed && 'justify-center !px-0'"
+        :title="collapsed ? 'Buka sidebar' : 'Tutup sidebar'">
     <div class="w-[38px] h-[38px] rounded-[11px] flex items-center justify-center shrink-0"
          style="background:var(--lt-p); box-shadow:0 6px 18px color-mix(in srgb, var(--lt-p) 45%, transparent);">
         <x-icon name="o-square-3-stack-3d" class="w-[22px] h-[22px] text-white" />
     </div>
     <span x-show="!collapsed" x-cloak class="font-bold text-xl text-white tracking-tight whitespace-nowrap">LapakTrack</span>
-</div>
+</button>
 
 {{-- Nav --}}
 <div class="flex-1 overflow-y-auto pt-1 pb-3">

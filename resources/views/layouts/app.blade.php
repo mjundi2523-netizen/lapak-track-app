@@ -8,7 +8,7 @@
     @livewireStyles
 </head>
 <body class="min-h-screen" style="background:color-mix(in srgb, var(--lt-p) 5%, #f4f4f6); color:#18181b; -webkit-font-smoothing:antialiased;">
-    <div x-data="{ collapsed: false, userMenu: false }" class="flex min-h-screen">
+    <div x-data="{ collapsed: true, userMenu: false }" class="flex min-h-screen">
         {{-- Sidebar (dark) --}}
         <aside
             :class="collapsed ? 'w-[76px]' : 'w-64'"
