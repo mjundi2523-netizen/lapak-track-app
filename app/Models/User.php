@@ -27,6 +27,13 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_premium' => 'boolean',
         ];
+    }
+
+    /** Akun premium → membuka fitur yang digerbang (laporan, denah, pengeluaran, eksternal). */
+    public function isPremium(): bool
+    {
+        return (bool) $this->is_premium;
     }
 }

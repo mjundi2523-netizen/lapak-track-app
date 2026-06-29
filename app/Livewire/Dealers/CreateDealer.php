@@ -85,6 +85,14 @@ class CreateDealer extends Component
 
     public function updatedCondExternal($value): void
     {
+        // Fitur "Pedagang eksternal" = premium.
+        if ($value && ! auth()->user()->isPremium()) {
+            $this->cond_external = false;
+            $this->dispatch('premium-required');
+
+            return;
+        }
+
         if ($value) {
             $this->cond_new = false;
         }
@@ -108,6 +116,14 @@ class CreateDealer extends Component
 
     public function save(BillGenerationService $billService): void
     {
+        // Guard premium: cegah pembuatan pedagang eksternal oleh akun non-premium.
+        if ($this->cond_external && ! auth()->user()->isPremium()) {
+            $this->cond_external = false;
+            $this->dispatch('premium-required');
+
+            return;
+        }
+
         $this->validate();
 
         // Tanggal mulai sewa wajib hanya bila ada lapak yang dipilih.

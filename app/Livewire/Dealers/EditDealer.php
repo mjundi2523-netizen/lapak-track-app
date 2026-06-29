@@ -80,6 +80,14 @@ class EditDealer extends Component
 
     public function updatedCondExternal($value): void
     {
+        // Fitur "Pedagang eksternal" = premium.
+        if ($value && ! auth()->user()->isPremium()) {
+            $this->cond_external = false;
+            $this->dispatch('premium-required');
+
+            return;
+        }
+
         if ($value) {
             $this->cond_new = false;
         }
@@ -171,6 +179,14 @@ class EditDealer extends Component
 
         // Tambah langganan eksternal hanya bila belum punya yang aktif.
         $addingExternal = $this->cond_external && ! $hasActiveExternal && $this->selected_ptid;
+
+        // Guard premium: cegah penambahan langganan eksternal baru oleh akun non-premium.
+        if ($addingExternal && ! auth()->user()->isPremium()) {
+            $this->dispatch('premium-required');
+
+            return;
+        }
+
         if ($addingExternal) {
             $this->validate([
                 'selected_ptid' => 'required|integer|exists:payment_terms,ptid',

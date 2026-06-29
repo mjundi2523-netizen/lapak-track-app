@@ -25,8 +25,15 @@
             <div class="flex flex-wrap gap-6">
                 <x-checkbox label="Pedagang baru" wire:model.live="cond_new"
                     hint="Memakai aturan bayar khusus pedagang baru." />
-                <x-checkbox label="Pedagang eksternal" wire:model.live="cond_external"
-                    hint="Tukang gerobak/keliling — tidak menyewa lapak." />
+                <div class="flex items-start gap-1.5">
+                    <x-checkbox label="Pedagang eksternal" wire:model.live="cond_external"
+                        hint="Tukang gerobak/keliling — tidak menyewa lapak." />
+                    @unless(auth()->user()->isPremium())
+                        <span class="inline-flex items-center gap-1 mt-0.5 px-2 py-0.5 rounded-full text-[11px] font-semibold" style="background:#fef3c7; color:#b45309;">
+                            <x-icon name="s-lock-closed" class="w-3 h-3" /> Premium
+                        </span>
+                    @endunless
+                </div>
             </div>
 
             <x-input label="Scan KTP" wire:model="scan_id_file" type="file" accept="image/*,.pdf" />

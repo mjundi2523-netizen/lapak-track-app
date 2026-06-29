@@ -78,6 +78,7 @@
     </div>
 
     <x-toast />
+    @include('partials.premium-modal')
     @livewireScripts
 </body>
 </html>

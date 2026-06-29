@@ -18,6 +18,10 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ]);
+
+        $middleware->alias([
+            'premium' => \App\Http\Middleware\EnsurePremium::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
