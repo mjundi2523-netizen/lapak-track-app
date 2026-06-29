@@ -7,23 +7,27 @@
             <h1 class="text-[26px] font-bold tracking-tight text-[#1b2433] m-0 mb-1.5">Laporan Arus Kas</h1>
             <div class="text-[13px] text-[#9aa3b2]">Beranda&nbsp;/&nbsp;Laporan&nbsp;/&nbsp;Arus Kas</div>
         </div>
-        <x-select wire:model.live="year"
-            :options="$years->map(fn($y) => ['id' => $y, 'name' => $y])" option-value="id" option-label="name" class="w-32" />
+        <div class="flex items-center gap-2.5">
+            <x-select wire:model.live="month"
+                :options="$months" option-value="id" option-label="name" class="w-40" />
+            <x-select wire:model.live="year"
+                :options="$years->map(fn($y) => ['id' => $y, 'name' => $y])" option-value="id" option-label="name" class="w-28" />
+        </div>
     </div>
 
     {{-- Kartu ringkasan tahun --}}
     <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5">
         <div class="rounded-[14px] px-6 py-[22px] text-white min-h-[110px]" style="background:linear-gradient(135deg,#14a07a,#21c08f); box-shadow:0 10px 24px rgba(20,160,122,0.22);">
-            <div class="text-sm font-medium opacity-90 mb-3">Total Pemasukan {{ $year }}</div>
+            <div class="text-sm font-medium opacity-90 mb-3">Total Pemasukan {{ $periodLabel }}</div>
             <div class="text-[28px] font-bold leading-none">{{ $rp($totalIncome) }}</div>
         </div>
         <div class="rounded-[14px] px-6 py-[22px] text-white min-h-[110px]" style="background:linear-gradient(135deg,#ef4444,#f97316); box-shadow:0 10px 24px rgba(239,68,68,0.22);">
-            <div class="text-sm font-medium opacity-90 mb-3">Total Pengeluaran {{ $year }}</div>
+            <div class="text-sm font-medium opacity-90 mb-3">Total Pengeluaran {{ $periodLabel }}</div>
             <div class="text-[28px] font-bold leading-none">{{ $rp($totalExpense) }}</div>
         </div>
         <div class="rounded-[14px] px-6 py-[22px] text-white min-h-[110px]"
              style="background:linear-gradient(135deg, {{ $totalNet >= 0 ? 'var(--lt-p),#7c8cff' : '#b91c1c,#ef4444' }}); box-shadow:0 10px 24px color-mix(in srgb, var(--lt-p) 24%, transparent);">
-            <div class="text-sm font-medium opacity-90 mb-3">Laba / Rugi {{ $year }}</div>
+            <div class="text-sm font-medium opacity-90 mb-3">Laba / Rugi {{ $periodLabel }}</div>
             <div class="text-[28px] font-bold leading-none">{{ $rp($totalNet) }}</div>
         </div>
     </div>
@@ -70,7 +74,7 @@
                     <span class="font-semibold text-[#b91c1c]">{{ $rp($c['total']) }}</span>
                 </div>
             @empty
-                <p class="px-5 py-6 text-sm text-[#9aa3b2] m-0">Belum ada pengeluaran tahun ini.</p>
+                <p class="px-5 py-6 text-sm text-[#9aa3b2] m-0">Belum ada pengeluaran pada periode ini.</p>
             @endforelse
         </div>
     </div>
