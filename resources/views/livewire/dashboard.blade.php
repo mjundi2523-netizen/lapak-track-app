@@ -63,7 +63,7 @@
     </div>
 
     {{-- Two-column grid --}}
-    <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_340px] gap-5 items-start">
+    <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_580px] gap-5 items-start">
         {{-- Left column --}}
         <div class="flex flex-col gap-5 min-w-0">
             {{-- Statistik chart --}}
