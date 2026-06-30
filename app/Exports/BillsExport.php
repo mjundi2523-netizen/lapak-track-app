@@ -20,6 +20,8 @@ class BillsExport implements FromCollection, WithHeadings, WithMapping, ShouldAu
         private readonly string $statusFilter = '',
         private readonly string $frequencyFilter = '',
         private readonly ?int $dealerId = null,
+        private readonly string $from = '',
+        private readonly string $to = '',
     ) {}
 
     public function collection(): Collection
@@ -37,6 +39,8 @@ class BillsExport implements FromCollection, WithHeadings, WithMapping, ShouldAu
             ))
             ->when($this->statusFilter, fn ($q) => $q->where('billing_status', $this->statusFilter))
             ->when($this->frequencyFilter, fn ($q) => $q->where('frequency', $this->frequencyFilter))
+            ->when($this->from, fn ($q) => $q->whereDate('due_date', '>=', $this->from))
+            ->when($this->to, fn ($q) => $q->whereDate('due_date', '<=', $this->to))
             ->when($this->dealerId, fn ($q) => $q->where(fn ($w) => $w
                 ->whereHas('dealerStall', fn ($q2) => $q2->where('did', $this->dealerId))
                 ->orWhereHas('externalDealer', fn ($q2) => $q2->where('did', $this->dealerId))

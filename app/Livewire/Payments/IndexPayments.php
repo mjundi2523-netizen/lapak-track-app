@@ -22,6 +22,10 @@ class IndexPayments extends Component
     public string $frequencyFilter = '';
     public ?int $dealerId = null;
 
+    // Filter rentang tanggal bayar (kosong = semua).
+    public string $from = '';
+    public string $to = '';
+
     /** Kandidat opsi untuk autocomplete pedagang (x-choices searchable). */
     public Collection $dealersList;
 
@@ -38,9 +42,16 @@ class IndexPayments extends Component
     /** Reset halaman saat filter berubah agar tidak nyangkut di page kosong. */
     public function updated(string $name): void
     {
-        if (in_array($name, ['search', 'voidedFilter', 'frequencyFilter', 'dealerId'], true)) {
+        if (in_array($name, ['search', 'voidedFilter', 'frequencyFilter', 'dealerId', 'from', 'to'], true)) {
             $this->resetPage();
         }
+    }
+
+    public function resetFilters(): void
+    {
+        $this->reset(['search', 'voidedFilter', 'frequencyFilter', 'dealerId', 'from', 'to']);
+        $this->resetPage();
+        $this->searchDealer();
     }
 
     /** Dipanggil x-choices saat user mengetik; jaga pedagang terpilih tetap muncul. */
@@ -91,6 +102,8 @@ class IndexPayments extends Component
             ))
             ->when($this->voidedFilter === 'voided', fn ($q) => $q->where('is_voided', true))
             ->when($this->voidedFilter === 'active', fn ($q) => $q->where('is_voided', false))
+            ->when($this->from, fn ($q) => $q->whereDate('payment_date', '>=', $this->from))
+            ->when($this->to, fn ($q) => $q->whereDate('payment_date', '<=', $this->to))
             ->when($this->frequencyFilter, fn ($q) => $q->whereHas('dealerBill', fn ($q2) => $q2->where('frequency', $this->frequencyFilter)))
             ->when($this->dealerId, fn ($q) => $q->where(fn ($w) => $w
                 ->whereHas('dealerBill.dealerStall', fn ($q2) => $q2->where('did', $this->dealerId))

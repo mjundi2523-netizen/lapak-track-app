@@ -17,6 +17,8 @@ class BillExportController extends Controller
             statusFilter: $request->get('status', ''),
             frequencyFilter: $request->get('frequency', ''),
             dealerId: $request->filled('dealer') ? (int) $request->get('dealer') : null,
+            from: $request->get('from', ''),
+            to: $request->get('to', ''),
         ), $filename);
     }
 }

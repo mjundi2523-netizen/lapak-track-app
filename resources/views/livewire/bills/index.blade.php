@@ -18,37 +18,60 @@
 
 <div>
     <x-index-header title="Tagihan">
-        <x-input placeholder="Cari no. tagihan..." wire:model.live.debounce="search" clearable />
-        <div class="w-52 shrink-0">
-            <x-choices wire:model.live="dealerId" :options="$dealersList" option-label="name" option-value="did"
-                search-function="searchDealer" placeholder="Filter pedagang..." single searchable clearable />
-        </div>
-        <x-select wire:model.live="frequencyFilter" :options="[
-            ['value' => '', 'label' => 'Semua Frekuensi'],
-            ['value' => 'daily', 'label' => 'Harian'],
-            ['value' => 'weekly', 'label' => 'Mingguan'],
-            ['value' => 'monthly', 'label' => 'Bulanan'],
-            ['value' => 'annual', 'label' => 'Tahunan'],
-        ]" option-value="value" option-label="label" class="w-40" />
-        <x-select wire:model.live="statusFilter" :options="[
-            ['value' => '', 'label' => 'Semua Status'],
-            ['value' => 'unpaid', 'label' => 'Belum Bayar'],
-            ['value' => 'installment', 'label' => 'Cicilan'],
-            ['value' => 'paid', 'label' => 'Lunas'],
-            ['value' => 'pending', 'label' => 'Pending'],
-            ['value' => 'cancelled', 'label' => 'Dibatalkan'],
-        ]" option-value="value" option-label="label" class="w-40" />
         <a href="{{ route('bills.export', array_filter([
                 'search'    => $search,
                 'status'    => $statusFilter,
                 'frequency' => $frequencyFilter,
                 'dealer'    => $dealerId,
+                'from'      => $from,
+                'to'        => $to,
             ])) }}"
            class="inline-flex items-center gap-1.5 h-10 px-4 rounded-[9px] text-sm font-semibold text-white transition hover:brightness-95 shrink-0 no-print"
            style="background:#16a34a;" title="Export ke Excel">
             <x-icon name="o-arrow-down-tray" class="w-4 h-4" /> Excel
         </a>
     </x-index-header>
+
+    {{-- Segmen filter --}}
+    <div class="bg-white rounded-2xl p-4 sm:p-5 mb-5" style="border:1px solid #eceef2; box-shadow:0 1px 2px rgba(16,12,40,0.04);">
+        <div class="flex items-center justify-between gap-3 mb-3.5">
+            <div class="flex items-center gap-2 text-sm font-semibold text-[#1b2433]">
+                <x-icon name="o-funnel" class="w-4 h-4 text-[#9aa3b2]" /> Filter
+            </div>
+            <button type="button" wire:click="resetFilters"
+                    class="inline-flex items-center gap-1.5 text-xs font-semibold text-[#71717a] hover:text-[#dc2626] transition">
+                <x-icon name="o-arrow-path" class="w-3.5 h-3.5" /> Reset
+            </button>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-3">
+            <x-input label="Cari" placeholder="No. tagihan / nama pedagang" wire:model.live.debounce="search" clearable />
+            <x-choices label="Pedagang" wire:model.live="dealerId" :options="$dealersList" option-label="name" option-value="did"
+                search-function="searchDealer" placeholder="Semua pedagang" single searchable clearable />
+            <x-select label="Frekuensi" wire:model.live="frequencyFilter" :options="[
+                ['value' => '', 'label' => 'Semua Frekuensi'],
+                ['value' => 'daily', 'label' => 'Harian'],
+                ['value' => 'weekly', 'label' => 'Mingguan'],
+                ['value' => 'monthly', 'label' => 'Bulanan'],
+                ['value' => 'annual', 'label' => 'Tahunan'],
+            ]" option-value="value" option-label="label" />
+            <x-select label="Status" wire:model.live="statusFilter" :options="[
+                ['value' => '', 'label' => 'Semua Status'],
+                ['value' => 'unpaid', 'label' => 'Belum Bayar'],
+                ['value' => 'installment', 'label' => 'Cicilan'],
+                ['value' => 'paid', 'label' => 'Lunas'],
+                ['value' => 'pending', 'label' => 'Pending'],
+                ['value' => 'cancelled', 'label' => 'Dibatalkan'],
+            ]" option-value="value" option-label="label" />
+            <div>
+                <label class="block text-sm font-medium text-[#3f3f46] mb-1">Jatuh Tempo Dari</label>
+                <input type="date" wire:model.live="from" class="input input-bordered w-full" />
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-[#3f3f46] mb-1">Jatuh Tempo Sampai</label>
+                <input type="date" wire:model.live="to" class="input input-bordered w-full" />
+            </div>
+        </div>
+    </div>
 
     <div class="lt-card-table">
         <table class="lt-table">
