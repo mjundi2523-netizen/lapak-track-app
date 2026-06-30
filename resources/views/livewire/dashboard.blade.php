@@ -73,7 +73,7 @@
                     <span class="text-[13px] text-[#9aa3b2]">8 bulan terakhir</span>
                 </div>
                 <div class="flex gap-5 px-6 pt-3.5 pb-0.5">
-                    <div class="flex items-center gap-[7px] text-[13px] text-[#52525b]"><span class="w-[9px] h-[9px] rounded-full" style="background:#6366f1;"></span>Tagihan</div>
+                    <div class="flex items-center gap-[7px] text-[13px] text-[#52525b]"><span class="w-[9px] h-[9px] rounded-full" style="background:var(--lt-p);"></span>Tagihan</div>
                     <div class="flex items-center gap-[7px] text-[13px] text-[#52525b]"><span class="w-[9px] h-[9px] rounded-full" style="background:#14a07a;"></span>Terbayar</div>
                     <div class="flex items-center gap-[7px] text-[13px] text-[#52525b]"><span class="w-[9px] h-[9px] rounded-full" style="background:#ef4444;"></span>Pengeluaran</div>
                 </div>
@@ -81,8 +81,8 @@
                     <svg viewBox="0 0 {{ $chart['w'] }} {{ $chart['h'] }}" width="100%" style="display:block; overflow:visible;">
                         <defs>
                             <linearGradient id="lt_gA" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stop-color="rgba(99,102,241,0.28)"></stop>
-                                <stop offset="100%" stop-color="rgba(99,102,241,0.02)"></stop>
+                                <stop offset="0%" stop-color="rgba(8,145,178,0.28)"></stop>
+                                <stop offset="100%" stop-color="rgba(8,145,178,0.02)"></stop>
                             </linearGradient>
                             <linearGradient id="lt_gB" x1="0" y1="0" x2="0" y2="1">
                                 <stop offset="0%" stop-color="rgba(20,160,122,0.26)"></stop>
@@ -95,7 +95,7 @@
                         @endforeach
                         <polygon points="{{ $areaStr($chart['a'], $chart['baseY']) }}" fill="url(#lt_gA)" stroke="none"></polygon>
                         <polygon points="{{ $areaStr($chart['b'], $chart['baseY']) }}" fill="url(#lt_gB)" stroke="none"></polygon>
-                        <polyline points="{{ $ptsStr($chart['a']) }}" fill="none" stroke="#6366f1" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></polyline>
+                        <polyline points="{{ $ptsStr($chart['a']) }}" fill="none" stroke="#0891b2" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></polyline>
                         <polyline points="{{ $ptsStr($chart['b']) }}" fill="none" stroke="#14a07a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></polyline>
                         <polyline points="{{ $ptsStr($chart['c']) }}" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-dasharray="5 4" stroke-linecap="round" stroke-linejoin="round"></polyline>
                         @foreach($chart['xlabels'] as $xl)

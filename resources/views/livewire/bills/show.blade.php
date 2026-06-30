@@ -23,7 +23,7 @@
         </div>
         <div class="flex gap-2.5">
             <x-button label="Cetak Invoice" wire:click="$set('showInvoice',true)" icon="o-printer"
-                      class="h-10 text-sm font-semibold border-none text-white" style="background:#6366f1;" />
+                      class="h-10 text-sm font-semibold border-none text-white" style="background:var(--lt-p);" />
             <x-button label="Hitung Ulang" wire:click="recalculate" icon="o-arrow-path" spinner
                       class="h-10 text-sm font-semibold text-white border-none" style="background:#0891b2;" />
             @if(! in_array($dealerBill->billing_status, ['paid', 'cancelled']))

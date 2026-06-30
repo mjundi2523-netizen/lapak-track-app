@@ -2,10 +2,11 @@
 
 namespace App\Livewire\Profile;
 
+use App\Models\Dealer;
+use App\Models\Stall;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Mary\Traits\Toast;
 
@@ -61,6 +62,16 @@ class ShowProfile extends Component
         $this->success('Password berhasil diubah.');
     }
 
+    /** Simpan preferensi mode gelap ke config_users (per-user). */
+    public function setDark(bool $on): void
+    {
+        $user = Auth::user();
+        $user->config()->updateOrCreate(
+            ['user_id' => $user->id],
+            ['dark_mode' => $on],
+        );
+    }
+
     public function logout(): void
     {
         Auth::logout();
@@ -72,6 +83,9 @@ class ShowProfile extends Component
 
     public function render()
     {
-        return view('livewire.profile.show-profile');
+        return view('livewire.profile.show-profile', [
+            'stallCount' => Stall::count(),
+            'dealerCount' => Dealer::count(),
+        ]);
     }
 }

@@ -23,7 +23,7 @@
 
             {{-- Header gradient --}}
             <div class="relative px-7 pt-8 pb-7 text-center text-white overflow-hidden"
-                 style="background:linear-gradient(135deg,#4f39f6,#7c8cff);">
+                 style="background:linear-gradient(135deg,#0891b2,#22d3ee);">
                 <div class="absolute inset-0 opacity-20"
                      style="background:radial-gradient(circle at 80% 0%, #fff, transparent 45%);"></div>
                 <button type="button" @click="open = false"

@@ -4,9 +4,18 @@
     themes: light --default, dark --prefersdark;
 }
 
-/* Warna primer LapakTrack (dipakai sidebar gelap, kartu hero, aksen dashboard). */
+/* Warna primer LapakTrack (dipakai sidebar gelap, kartu hero, aksen dashboard).
+   Aksen cyan menyegarkan (ganti dari indigo #4f39f6 — 2026-06-30). */
 :root {
-    --lt-p: #4f39f6;
+    --lt-p: #0891b2;
+}
+
+/* Selaraskan warna primer komponen MaryUI/DaisyUI (btn-primary dll) ke cyan brand,
+   light & dark — sebelumnya tertinggal di biru/ungu default DaisyUI. */
+[data-theme="light"],
+[data-theme="dark"] {
+    --color-primary: #0891b2;
+    --color-primary-content: #ffffff;
 }
 
 /* Cegah kedip elemen Alpine x-show sebelum Alpine siap. */
@@ -216,3 +225,107 @@
     #lt-invoice { page: lt-invoice; box-shadow: none !important; }
     @page { margin: 12mm; }
 }
+
+/* ════════════════════════════════════════════════════════════════════════
+   DARK MODE — class `lt-dark` di <body>, dirender server dari config_users
+   (toggle di halaman Profil; persist saat wire:navigate karena <body> di-morph).
+   Sidebar memang sudah gelap → dibiarkan. Override ini menyasar nilai warna
+   nyata yang dipakai app (hex inline + class arbitrary Tailwind). Hanya aktif
+   saat `lt-dark`, jadi mode terang sama sekali tak terpengaruh.
+   ════════════════════════════════════════════════════════════════════════ */
+body.lt-dark { background: #0e1420 !important; color: #c7cedb; }
+body.lt-dark main { background: #0e1420 !important; color: #c7cedb; }
+body.lt-dark header { background: #141b27 !important; border-bottom-color: #222c3d !important; }
+body.lt-dark ::-webkit-scrollbar-thumb { background: #33405a; }
+
+/* Permukaan kartu (putih → gelap). bg-white = class; +4 inline background:#fff. */
+body.lt-dark .bg-white,
+body.lt-dark [style*="background:#fff;"],
+body.lt-dark [style*="background:#fff "],
+body.lt-dark [style*="background:#ffffff"] { background-color: #161e2c !important; }
+
+/* Permukaan halus & netral */
+body.lt-dark .bg-\[\#fafafa\],
+body.lt-dark [style*="background:#fafafa"] { background-color: #1a2230 !important; }
+body.lt-dark [style*="#eef1f6"] { background-color: #0e1420 !important; }
+body.lt-dark .bg-\[\#f4f4f5\],
+body.lt-dark .bg-\[\#f4f4f6\],
+body.lt-dark [style*="background:#f1f1f3"] { background-color: #222c3d !important; }
+/* Permukaan input lembut (search bar topbar, field disabled) #f7f8fb/#f6f7fb */
+body.lt-dark [style*="background:#f7f8fb"],
+body.lt-dark [style*="background:#f6f7fb"],
+body.lt-dark [style*="background:#f7f8fb;"],
+body.lt-dark .bg-\[\#f7f8fb\] { background-color: #1b2433 !important; }
+
+/* Header tabel (thead/tfoot + lt-table) */
+body.lt-dark thead tr,
+body.lt-dark tfoot tr,
+body.lt-dark .lt-table thead tr { background-color: #1b2433 !important; }
+body.lt-dark .lt-th { color: #8a94a6 !important; }
+body.lt-dark .lt-td { border-top-color: #222c3d !important; color: #c7cedb; }
+body.lt-dark .lt-row:hover { background: #1a2230 !important; }
+body.lt-dark .lt-card-table { background: #161e2c; border-color: #243044; }
+
+/* Baris "danger" (tunggakan/jatuh tempo): pink terang #fef2f2 → merah gelap. */
+body.lt-dark [style*="background:#fef2f2"],
+body.lt-dark .lt-row-danger { background-color: #2a1a20 !important; }
+/* Hover netral untuk baris biasa yang kebetulan pakai class hover #fff7f7. */
+body.lt-dark .hover\:bg-\[\#fff7f7\]:hover { background-color: #1a2230 !important; }
+/* Hover merah khusus baris danger (ditaruh paling akhir agar menang). */
+body.lt-dark [style*="background:#fef2f2"]:hover,
+body.lt-dark .lt-row-danger:hover { background-color: #381f27 !important; }
+
+/* Border (inline hex + class arbitrary) */
+body.lt-dark [style*="#eceef2"],
+body.lt-dark [style*="#eef0f4"],
+body.lt-dark [style*="#e5e7eb"],
+body.lt-dark [style*="#e6e8ee"],
+body.lt-dark [style*="#e0e3ea"],
+body.lt-dark [style*="#f0f0f1"],
+body.lt-dark [style*="#ececf0"],
+body.lt-dark .border-\[\#e4e4e7\],
+body.lt-dark .border-\[\#e5e7eb\] { border-color: #243044 !important; }
+body.lt-dark [style*="#f4f4f5"] { border-color: #222c3d !important; }
+body.lt-dark [style*="#d4d4d8"],
+body.lt-dark .border-\[\#d4d4d8\] { border-color: #33405a !important; }
+
+/* Teks — judul/kuat */
+body.lt-dark .text-\[\#1b2433\],
+body.lt-dark .text-\[\#18181b\],
+body.lt-dark [style*="color:#1b2433"],
+body.lt-dark [style*="color:#18181b"] { color: #e8ecf3 !important; }
+body.lt-dark main h1, body.lt-dark main h2, body.lt-dark main h3 { color: #e8ecf3 !important; }
+
+/* Teks — isi */
+body.lt-dark .text-\[\#27272a\],
+body.lt-dark .text-\[\#3f3f46\],
+body.lt-dark [style*="color:#27272a"],
+body.lt-dark [style*="color:#3f3f46"] { color: #c7cedb !important; }
+
+/* Teks — redup */
+body.lt-dark .text-\[\#52525b\],
+body.lt-dark [style*="color:#52525b"] { color: #aab3c2 !important; }
+body.lt-dark .text-\[\#71717a\],
+body.lt-dark [style*="color:#71717a"] { color: #9aa3b2 !important; }
+body.lt-dark .text-\[\#9aa3b2\],
+body.lt-dark .text-\[\#a1a1aa\],
+body.lt-dark .text-\[\#5b6678\],
+body.lt-dark [style*="color:#9aa3b2"],
+body.lt-dark [style*="color:#a1a1aa"] { color: #8a94a6 !important; }
+
+/* Input mentah (non-MaryUI): hanya yang ber-class bg-white (mis. form Profil).
+   Komponen MaryUI/DaisyUI (.input/.select) ditangani tema dark DaisyUI sendiri,
+   jadi jangan dipaksa di sini agar tak dua-warna. */
+body.lt-dark input.bg-white,
+body.lt-dark textarea.bg-white { background-color: #161e2c !important; color: #e8ecf3 !important; }
+body.lt-dark input.bg-white::placeholder,
+body.lt-dark textarea.bg-white::placeholder { color: #6b7689 !important; }
+/* Search topbar (bg-transparent) */
+body.lt-dark header input::placeholder { color: #6b7689 !important; }
+
+/* Pagination */
+body.lt-dark .lt-page,
+body.lt-dark .lt-page-arrow { background: #161e2c; border-color: #2c3950; color: #c7cedb; }
+body.lt-dark .lt-page:hover,
+body.lt-dark .lt-page-arrow:hover { background: #1a2230; }
+body.lt-dark .lt-page-disabled { background: #161e2c; }

@@ -8,7 +8,14 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
 </head>
-<body class="min-h-screen" style="background:color-mix(in srgb, var(--lt-p) 5%, #f4f4f6); color:#18181b; -webkit-font-smoothing:antialiased;">
+{{-- Dark mode: kelas `lt-dark` (CSS custom) + `data-theme="dark"` (komponen MaryUI/DaisyUI)
+     di <body>, dirender server dari config_users. Di <body> agar ikut ter-morph & persist
+     saat wire:navigate. `lt-dark` menyetel halaman hex-styled; `data-theme` menyetel kartu/
+     input/select/tombol MaryUI. --}}
+@php $lt_dark = auth()->user()?->prefersDark() ?? false; @endphp
+<body data-theme="{{ $lt_dark ? 'dark' : 'light' }}"
+      @class(['min-h-screen', 'lt-dark' => $lt_dark])
+      style="background:color-mix(in srgb, var(--lt-p) 5%, #f4f4f6); color:#18181b; -webkit-font-smoothing:antialiased;">
     <div x-data="{ collapsed: true, userMenu: false }" class="flex min-h-screen">
         {{-- Sidebar (dark) --}}
         <aside

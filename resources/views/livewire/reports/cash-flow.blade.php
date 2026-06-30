@@ -26,7 +26,7 @@
             <div class="text-[28px] font-bold leading-none">{{ $rp($totalExpense) }}</div>
         </div>
         <div class="rounded-[14px] px-6 py-[22px] text-white min-h-[110px]"
-             style="background:linear-gradient(135deg, {{ $totalNet >= 0 ? 'var(--lt-p),#7c8cff' : '#b91c1c,#ef4444' }}); box-shadow:0 10px 24px color-mix(in srgb, var(--lt-p) 24%, transparent);">
+             style="background:linear-gradient(135deg, {{ $totalNet >= 0 ? 'var(--lt-p),#22d3ee' : '#b91c1c,#ef4444' }}); box-shadow:0 10px 24px color-mix(in srgb, var(--lt-p) 24%, transparent);">
             <div class="text-sm font-medium opacity-90 mb-3">Laba / Rugi {{ $periodLabel }}</div>
             <div class="text-[28px] font-bold leading-none">{{ $rp($totalNet) }}</div>
         </div>

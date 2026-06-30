@@ -53,10 +53,10 @@
             @if($selectedStallDetails->isNotEmpty())
                 <div class="flex flex-wrap gap-2 mt-3">
                     @foreach($selectedStallDetails as $s)
-                        <span class="inline-flex items-center gap-2 lt-pill" style="background:#eef2ff; color:#4338ca;">
+                        <span class="inline-flex items-center gap-2 lt-pill" style="background:#cffafe; color:#0e7490;">
                             {{ $s->code }}
                             @if($s->paymentTerm)
-                                <span class="text-[#6366f1]">· Rp {{ number_format($s->paymentTerm->price, 0, ',', '.') }}</span>
+                                <span class="text-[#0e7490]">· Rp {{ number_format($s->paymentTerm->price, 0, ',', '.') }}</span>
                             @endif
                             <button type="button" wire:click="toggleStall({{ $s->sid }})" class="hover:text-error">
                                 <x-icon name="o-x-mark" class="w-4 h-4" />
@@ -104,8 +104,8 @@
                     @class([
                         'rounded-lg border p-3 transition',
                         'border-[#e4e4e7] opacity-60 bg-[#fafafa]' => $occupied,
-                        'border-indigo-400 bg-indigo-50 cursor-pointer' => !$occupied && $checked,
-                        'border-[#e4e4e7] hover:border-indigo-300 cursor-pointer' => !$occupied && !$checked,
+                        'border-cyan-400 bg-cyan-50 cursor-pointer' => !$occupied && $checked,
+                        'border-[#e4e4e7] hover:border-cyan-300 cursor-pointer' => !$occupied && !$checked,
                     ])
                     @if(!$occupied) wire:click="toggleStall({{ $stall->sid }})" @endif
                 >
