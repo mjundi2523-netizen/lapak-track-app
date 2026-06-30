@@ -18,6 +18,9 @@ return new class extends Migration
             $table->unsignedBigInteger('modified_by')->nullable();
             $table->timestamps();
 
+            // Cegah duplikat pasangan lapak–add-on (pengaman; sesuai DB produksi).
+            $table->unique(['sid', 'aoid'], 'stall_add_ons_sid_aoid_unique');
+
             $table->foreign('sid')->references('sid')->on('stall');
             $table->foreign('aoid')->references('aoid')->on('add_ons');
             $table->foreign('created_by')->references('id')->on('users');
