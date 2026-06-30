@@ -16,9 +16,12 @@
 <body data-theme="{{ $lt_dark ? 'dark' : 'light' }}"
       @class(['min-h-screen', 'lt-dark' => $lt_dark])
       style="background:color-mix(in srgb, var(--lt-p) 5%, #f4f4f6); color:#18181b; -webkit-font-smoothing:antialiased;">
-    <div x-data="{ collapsed: true, userMenu: false }" class="flex min-h-screen">
+    {{-- collapsed (computed): sempit bila tidak disematkan (pinnedOpen) DAN tidak sedang di-hover.
+         Hover → sidebar otomatis terbuka; klik logo/hamburger → sematkan tetap terbuka. --}}
+    <div x-data="{ pinnedOpen: false, hovering: false, userMenu: false, get collapsed() { return !this.pinnedOpen && !this.hovering } }" class="flex min-h-screen">
         {{-- Sidebar (dark) --}}
         <aside
+            @mouseenter="hovering = true" @mouseleave="hovering = false"
             :class="collapsed ? 'w-[76px]' : 'w-64'"
             class="shrink-0 flex flex-col sticky top-0 h-screen z-20 overflow-hidden transition-all duration-200"
             style="background:#1b2433; box-shadow:6px 0 24px rgba(27,36,51,0.16);">
@@ -31,7 +34,7 @@
             <header class="sticky top-0 z-30 bg-white flex items-center justify-between px-7"
                     style="height:68px; border-bottom:1px solid #eceef2;">
                 <div class="flex items-center gap-4">
-                    <button @click="collapsed = !collapsed"
+                    <button @click="pinnedOpen = !pinnedOpen"
                             class="w-[38px] h-[38px] inline-flex items-center justify-center rounded-[9px] text-[#52525b] hover:bg-base-200 transition">
                         <x-icon name="o-bars-3" class="w-[22px] h-[22px]" />
                     </button>
