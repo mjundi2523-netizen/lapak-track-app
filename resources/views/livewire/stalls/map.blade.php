@@ -1,5 +1,5 @@
 <div>
-    <x-index-header title="Denah Lapak">
+    <x-index-header title="Mapping Lapak">
         <x-button label="Daftar Lapak" link="{{ route('stalls.index') }}" class="btn-ghost" icon="o-list-bullet" />
     </x-index-header>
 
