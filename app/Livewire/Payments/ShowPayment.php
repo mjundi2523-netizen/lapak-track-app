@@ -21,14 +21,11 @@ class ShowPayment extends Component
         $this->payment = $payment;
     }
 
+    /** Render kwitansi tersembunyi lalu langsung buka dialog cetak browser (tanpa preview). */
     public function openReceipt(): void
     {
         $this->showReceipt = true;
-    }
-
-    public function closeReceipt(): void
-    {
-        $this->showReceipt = false;
+        $this->js('window.print()');
     }
 
     public function render()

@@ -60,10 +60,12 @@ class IndexPayments extends Component
             ->values();
     }
 
+    /** Render kwitansi tersembunyi lalu langsung buka dialog cetak browser (tanpa preview). */
     public function openReceipt(int $dpid): void
     {
         $this->receiptId = $dpid;
         $this->showReceipt = true;
+        $this->js('window.print()');
     }
 
     public function closeReceipt(): void

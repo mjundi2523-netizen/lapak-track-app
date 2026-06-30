@@ -41,14 +41,11 @@ class ShowDealer extends Component
         $this->dealer = $dealer;
     }
 
+    /** Render surat tersembunyi lalu langsung buka dialog cetak browser (tanpa preview). */
     public function openLetter(): void
     {
         $this->showLetter = true;
-    }
-
-    public function closeLetter(): void
-    {
-        $this->showLetter = false;
+        $this->js('window.print()');
     }
 
     public function startEnd(int $dsid): void

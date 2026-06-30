@@ -190,7 +190,7 @@
         </x-slot:actions>
     </x-modal>
 
-    {{-- Modal: Cetak Surat Pedagang --}}
+    {{-- Surat Pedagang: di-render tersembunyi, langsung ke dialog print (lihat openLetter). --}}
     @if($showLetter)
         @include('dealers._letter', ['dealer' => $dealer])
     @endif

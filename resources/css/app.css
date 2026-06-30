@@ -323,6 +323,20 @@ body.lt-dark textarea.bg-white::placeholder { color: #6b7689 !important; }
 /* Search topbar (bg-transparent) */
 body.lt-dark header input::placeholder { color: #6b7689 !important; }
 
+/* Dokumen cetak (#lt-receipt/#lt-invoice/#lt-letter) = kertas: SELALU putih, kebal
+   dark mode. Spesifisitas ID menang atas override .bg-white/[style*=#fff] di atas.
+   Hanya latar putih yang di-reset; teks/aksen dokumen sudah pakai warna gelap asli,
+   dan elemen sengaja-gelap (mis. header invoice #1a1a1a) tidak ikut karena bukan putih. */
+body.lt-dark #lt-receipt,
+body.lt-dark #lt-invoice,
+body.lt-dark #lt-letter,
+body.lt-dark #lt-receipt [style*="background:#fff"],
+body.lt-dark #lt-invoice [style*="background:#fff"],
+body.lt-dark #lt-letter [style*="background:#fff"],
+body.lt-dark #lt-receipt .bg-white,
+body.lt-dark #lt-invoice .bg-white,
+body.lt-dark #lt-letter .bg-white { background-color: #fff !important; }
+
 /* Pagination */
 body.lt-dark .lt-page,
 body.lt-dark .lt-page-arrow { background: #161e2c; border-color: #2c3950; color: #c7cedb; }

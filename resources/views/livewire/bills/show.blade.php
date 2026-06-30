@@ -22,7 +22,7 @@
             <div class="text-[13px] text-[#9aa3b2]">Beranda&nbsp;/&nbsp;Tagihan&nbsp;/&nbsp;{{ $dealerBill->bill_id ?? '-' }}</div>
         </div>
         <div class="flex gap-2.5">
-            <x-button label="Cetak Invoice" wire:click="$set('showInvoice',true)" icon="o-printer"
+            <x-button label="Cetak Invoice" wire:click="openInvoice" icon="o-printer"
                       class="h-10 text-sm font-semibold border-none text-white" style="background:var(--lt-p);" />
             <x-button label="Hitung Ulang" wire:click="recalculate" icon="o-arrow-path" spinner
                       class="h-10 text-sm font-semibold text-white border-none" style="background:#0891b2;" />
@@ -97,18 +97,8 @@
         @endif
     </div>
 
-    {{-- Modal Invoice (preview visual saja) --}}
-    <x-modal wire:model="showInvoice" title="Invoice Tagihan" box-class="max-w-2xl">
-        @if($showInvoice)
-            @include('bills._invoice-card', ['invoiceBill' => $dealerBill])
-        @endif
-        <x-slot:actions>
-            <x-button label="Tutup" wire:click="$set('showInvoice',false)" class="btn-ghost no-print" />
-            <x-button label="Cetak" onclick="window.print()" icon="o-printer" class="btn-primary no-print" />
-        </x-slot:actions>
-    </x-modal>
-
-    {{-- Print-only: invoice di luar modal agar tidak terhalang display:none parent dialog --}}
+    {{-- Invoice di-render TERSEMBUNYI; openInvoice() langsung memanggil window.print(),
+         @media print yang menampilkan isi .lt-print-overlay ini (tanpa preview di layar). --}}
     @if($showInvoice)
         <div class="lt-print-overlay" style="display:none;">
             @include('bills._invoice-card', ['invoiceBill' => $dealerBill])

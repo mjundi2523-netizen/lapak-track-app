@@ -78,14 +78,14 @@ Lihat `.qoder/specs/LapakTrack_MVP_Plan.md` — logika billing (lazy roll-forwar
   - `EditDealer`: kalau punya sewa aktif → daftar lapak **readonly**; kalau tidak → boleh **pilih lapak lagi** (buat rental baru + generate tagihan).
 
 ## Surat/Kartu Pedagang (cetak)
-- Tombol **Cetak Surat** di `ShowDealer` → modal `ShowDealer::openLetter()` menampilkan **Kartu Pedagang "PASAR SWASTA NUSANTARA"** (acuan: lampiran PDF hal.1, PT. Bintang Inter Nusantara). Partial `resources/views/dealers/_letter.blade.php` (`#lt-letter`).
+- Tombol **Cetak Surat** di `ShowDealer` → `openLetter()` **langsung buka dialog print** (tanpa preview; lihat catatan "Cetak = langsung print" di bagian Pembayaran) untuk **Kartu Pedagang "PASAR SWASTA NUSANTARA"** (acuan: lampiran PDF hal.1, PT. Bintang Inter Nusantara). Partial `resources/views/dealers/_letter.blade.php` (`#lt-letter`, kini `.lt-print-overlay` tersembunyi).
 - Layout 2 kolom landscape: kiri = data diri (No., 10 field, ttd pedagang + pas foto), kanan = **11 peraturan** + ttd "M. FARHAN YAKOB / Direktur Utama". Print scoped sendiri (`<style>@media print … @page A4 landscape`) — tak ubah app.css, tak bentrok dgn print kwitansi (portrait).
 - Field surat dari data pedagang + **rental aktif pertama** (fallback rental terbaru): Kios=block, Ukuran=stall.description, Masa Berlaku=rent_start s/d rent_end. Warga Negara "INDONESIA" & Status "Sewa/Kontrak" hardcoded. Tempat lahir belum ada di schema (hanya tgl).
 - **No. surat = input bebas** `dealer.letter_no` (kolom ditambah 2026-06-27, di form Create/Edit), fallback auto `{block}/PSR-N/{romawi-bulan}/{tahun}` bila kosong.
 - **Print fix (penting):** elemen `position:fixed` + halaman panjang → dulu tercetak berulang (8 halaman). Sekarang print pakai `body :not(:has(#lt-letter))… { display:none }` (mengkerutkan tinggi jadi 1 halaman) + overlay dijadikan `static`. Pola `:has()` butuh engine Chromium (print preview Edge/Chrome OK). **TODO:** kwitansi (`#lt-receipt`, masih `position:fixed` di app.css) berpotensi bug sama — terapkan pola serupa bila perlu.
 
 ## Surat/Kartu Pedagang (cetak)
-- Tombol **Cetak Surat** di `ShowDealer` (`openLetter`) → modal partial `resources/views/dealers/_letter.blade.php` (`#lt-letter`), berisi Kartu Pedagang "PASAR SWASTA NUSANTARA" (data diri + 11 peraturan + ttd), acuan lampiran PDF hal.1. **Sudah dibuat user — jangan diubah tanpa diminta.**
+- Tombol **Cetak Surat** di `ShowDealer` (`openLetter`) → langsung print partial `resources/views/dealers/_letter.blade.php` (`#lt-letter`), berisi Kartu Pedagang "PASAR SWASTA NUSANTARA" (data diri + 11 peraturan + ttd), acuan lampiran PDF hal.1. **Isi/desain kartu dibuat user — jangan diubah tanpa diminta** (wrapper diubah jadi overlay tersembunyi 2026-06-30 untuk langsung-print).
 - Print di-scope lewat `@media print` di `app.css` (`body :not(:has(.lt-print-overlay))… display:none`; `#lt-letter` named-page **landscape**, kwitansi portrait). No. surat dari `dealer.letter_no` (fallback auto).
 
 ## Pengeluaran & Laporan (ditambah 2026-06-29)
@@ -100,8 +100,9 @@ Lihat `.qoder/specs/LapakTrack_MVP_Plan.md` — logika billing (lazy roll-forwar
 
 ## Pembayaran: detail & kwitansi
 - **Detail** (`payments.show` → `ShowPayment`, `/pembayaran/{payment}`): Informasi Pembayaran (+ blok pembatalan bila void) & Tagihan Terkait (jenis, status, periode, total/terbayar/sisa, link ke `bills.show`). Aksi "Detail" (ikon mata) di index.
-- Tiap pembayaran (non-void) punya tombol **Cetak** di index & halaman detail → `openReceipt()` membuka **modal** struk (bukan tab baru). Modal = partial `payments/_receipt-modal.blade.php` (dipakai index & detail), komponen pemanggil wajib punya `closeReceipt()`.
-- Kartu struk = partial `resources/views/payments/_receipt-card.blade.php` (desain "TANDA TERIMA" dari Claude Design: serif + border ganda + `#lt-receipt`). Tombol Cetak panggil `window.print()`.
+- **Cetak = langsung ke dialog print browser, TANPA preview di layar** (diubah 2026-06-30). Berlaku untuk **3 dokumen**: kwitansi (`openReceipt`, IndexPayments/ShowPayment), invoice (`openInvoice`, ShowBill), surat pedagang (`openLetter`, ShowDealer). Pola: handler set flag (`showReceipt`/`showInvoice`/`showLetter`) untuk me-render kartu ke **`.lt-print-overlay` tersembunyi (`display:none`)** + panggil **`$this->js('window.print()')`** → `@media print` menampilkan hanya isi overlay. Partial preview lama (modal + tombol Tutup/Cetak) sudah dibuang.
+- Kartu struk = partial `resources/views/payments/_receipt-card.blade.php` (desain "TANDA TERIMA" dari Claude Design: serif + border ganda + `#lt-receipt`).
+- **Dokumen cetak kebal dark mode**: `#lt-receipt`/`#lt-invoice`/`#lt-letter` di-paksa latar putih di `app.css` (spesifisitas ID menang atas override `.bg-white`), supaya tetap kertas putih saat print walau "Background graphics" aktif.
 - Print di-scope lewat `@media print` global di `resources/css/app.css`: semua di-hide kecuali `#lt-receipt` (+ `.no-print` untuk tombol). Angka→kata via `App\Support\Terbilang`. Penanda tangan = user login, kota default "Bekasi" (hardcoded di partial — jadikan setting bila perlu).
 
 ## Menjalankan app (Laragon/lokal)

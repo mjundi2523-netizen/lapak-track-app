@@ -20,6 +20,13 @@ class ShowBill extends Component
         $this->dealerBill = $dealerBill;
     }
 
+    /** Render invoice tersembunyi lalu langsung buka dialog cetak browser (tanpa preview). */
+    public function openInvoice(): void
+    {
+        $this->showInvoice = true;
+        $this->js('window.print()');
+    }
+
     public function recalculate(): void
     {
         $this->dealerBill->recalculateBillingStatus();
