@@ -41,14 +41,8 @@
                 ['value' => 'active', 'label' => 'Aktif'],
                 ['value' => 'voided', 'label' => 'Dibatalkan'],
             ]" option-value="value" option-label="label" />
-            <div>
-                <label class="block text-sm font-medium text-[#3f3f46] mb-1">Tanggal Bayar Dari</label>
-                <input type="date" wire:model.live="from" class="input input-bordered w-full" />
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-[#3f3f46] mb-1">Tanggal Bayar Sampai</label>
-                <input type="date" wire:model.live="to" class="input input-bordered w-full" />
-            </div>
+            <x-input label="Tanggal Bayar Dari" type="date" wire:model.live="from" />
+            <x-input label="Tanggal Bayar Sampai" type="date" wire:model.live="to" />
         </div>
     </div>
 

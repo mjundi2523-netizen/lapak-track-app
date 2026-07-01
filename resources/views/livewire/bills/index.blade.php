@@ -62,14 +62,8 @@
                 ['value' => 'pending', 'label' => 'Pending'],
                 ['value' => 'cancelled', 'label' => 'Dibatalkan'],
             ]" option-value="value" option-label="label" />
-            <div>
-                <label class="block text-sm font-medium text-[#3f3f46] mb-1">Jatuh Tempo Dari</label>
-                <input type="date" wire:model.live="from" class="input input-bordered w-full" />
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-[#3f3f46] mb-1">Jatuh Tempo Sampai</label>
-                <input type="date" wire:model.live="to" class="input input-bordered w-full" />
-            </div>
+            <x-input label="Jatuh Tempo Dari" type="date" wire:model.live="from" />
+            <x-input label="Jatuh Tempo Sampai" type="date" wire:model.live="to" />
         </div>
     </div>
 
