@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Expenses;
 
+use App\Livewire\Concerns\ReturnsBack;
 use App\Models\Expense;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -13,6 +14,7 @@ use Mary\Traits\Toast;
 #[Layout('layouts.app')]
 class VoidExpense extends Component
 {
+    use ReturnsBack;
     use Toast;
 
     public Expense $expense;
@@ -39,12 +41,12 @@ class VoidExpense extends Component
         ]);
 
         $this->success('Pengeluaran berhasil dibatalkan.');
-        $this->redirect(route('expenses.index'), navigate: true);
+        $this->redirectBack('expenses.index');
     }
 
     public function cancel(): void
     {
-        $this->redirect(route('expenses.index'), navigate: true);
+        $this->redirectBack('expenses.index');
     }
 
     public function render()

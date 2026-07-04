@@ -2,6 +2,7 @@
 
 namespace App\Livewire\PaymentTerms;
 
+use App\Livewire\Concerns\ReturnsBack;
 use App\Models\PaymentTerm;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -13,6 +14,7 @@ use Mary\Traits\Toast;
 #[Layout('layouts.app')]
 class EditPaymentTerm extends Component
 {
+    use ReturnsBack;
     use Toast;
 
     public PaymentTerm $paymentTerm;
@@ -83,7 +85,7 @@ class EditPaymentTerm extends Component
         });
 
         $this->success('Aturan bayar berhasil diperbarui.');
-        $this->redirect(route('payment-terms.index'), navigate: true);
+        $this->redirectBack('payment-terms.index');
     }
 
     public function render()

@@ -4,6 +4,7 @@ namespace App\Livewire\Dealers;
 
 use App\Models\Dealer;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Mary\Traits\Toast;
@@ -14,6 +15,7 @@ class IndexDealers extends Component
     use Toast;
     use WithPagination;
 
+    #[Url(except: '')]
     public string $search = '';
 
     public function render()

@@ -2,6 +2,7 @@
 
 namespace App\Livewire\ExpenseCategories;
 
+use App\Livewire\Concerns\ReturnsBack;
 use App\Models\ExpenseCategory;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
@@ -11,6 +12,7 @@ use Mary\Traits\Toast;
 #[Layout('layouts.app')]
 class EditExpenseCategory extends Component
 {
+    use ReturnsBack;
     use Toast;
 
     public ExpenseCategory $expenseCategory;
@@ -35,7 +37,7 @@ class EditExpenseCategory extends Component
         ]);
 
         $this->success('Kategori pengeluaran berhasil diperbarui.');
-        $this->redirect(route('expense-categories.index'), navigate: true);
+        $this->redirectBack('expense-categories.index');
     }
 
     public function render()

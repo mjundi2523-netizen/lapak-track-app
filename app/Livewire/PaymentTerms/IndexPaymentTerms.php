@@ -5,6 +5,7 @@ namespace App\Livewire\PaymentTerms;
 use App\Models\PaymentTerm;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Mary\Traits\Toast;
@@ -15,6 +16,7 @@ class IndexPaymentTerms extends Component
     use Toast;
     use WithPagination;
 
+    #[Url(except: '')]
     public string $search = '';
 
     public function delete(PaymentTerm $paymentTerm): void

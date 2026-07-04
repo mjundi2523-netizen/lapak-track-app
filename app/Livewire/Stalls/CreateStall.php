@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Stalls;
 
+use App\Livewire\Concerns\ReturnsBack;
 use App\Models\AddOn;
 use App\Models\PaymentTerm;
 use App\Models\Stall;
@@ -15,6 +16,7 @@ use Mary\Traits\Toast;
 #[Layout('layouts.app')]
 class CreateStall extends Component
 {
+    use ReturnsBack;
     use Toast;
 
     public string $block = '';
@@ -75,7 +77,7 @@ class CreateStall extends Component
         });
 
         $this->success('Lapak berhasil ditambahkan.');
-        $this->redirect(route('stalls.index'), navigate: true);
+        $this->redirectBack('stalls.index');
     }
 
     public function render()

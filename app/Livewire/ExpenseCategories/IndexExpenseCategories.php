@@ -5,6 +5,7 @@ namespace App\Livewire\ExpenseCategories;
 use App\Models\ExpenseCategory;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Mary\Traits\Toast;
@@ -15,6 +16,7 @@ class IndexExpenseCategories extends Component
     use Toast;
     use WithPagination;
 
+    #[Url(except: '')]
     public string $search = '';
 
     public function delete(ExpenseCategory $expenseCategory): void

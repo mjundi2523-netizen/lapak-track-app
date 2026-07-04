@@ -4,6 +4,7 @@ namespace App\Livewire\Stalls;
 
 use App\Models\Stall;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Mary\Traits\Toast;
@@ -14,6 +15,7 @@ class IndexStalls extends Component
     use Toast;
     use WithPagination;
 
+    #[Url(except: '')]
     public string $search = '';
 
     public function toggleActive(Stall $stall): void

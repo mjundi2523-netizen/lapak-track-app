@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Payments;
 
+use App\Livewire\Concerns\ReturnsBack;
 use App\Models\DealerPayment;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -14,6 +15,7 @@ use Mary\Traits\Toast;
 #[Layout('layouts.app')]
 class VoidPayment extends Component
 {
+    use ReturnsBack;
     use Toast;
 
     public DealerPayment $payment;
@@ -43,12 +45,12 @@ class VoidPayment extends Component
         });
 
         $this->success('Pembayaran berhasil dibatalkan.');
-        $this->redirect(route('payments.index'), navigate: true);
+        $this->redirectBack('payments.index');
     }
 
     public function cancel(): void
     {
-        $this->redirect(route('payments.index'), navigate: true);
+        $this->redirectBack('payments.index');
     }
 
     public function render()

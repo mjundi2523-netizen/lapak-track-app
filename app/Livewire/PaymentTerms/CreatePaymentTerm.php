@@ -2,6 +2,7 @@
 
 namespace App\Livewire\PaymentTerms;
 
+use App\Livewire\Concerns\ReturnsBack;
 use App\Models\PaymentTerm;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -13,6 +14,7 @@ use Mary\Traits\Toast;
 #[Layout('layouts.app')]
 class CreatePaymentTerm extends Component
 {
+    use ReturnsBack;
     use Toast;
 
     #[Validate('required|string|max:255|unique:payment_terms,term_name')]
@@ -66,7 +68,7 @@ class CreatePaymentTerm extends Component
         });
 
         $this->success('Aturan bayar berhasil ditambahkan.');
-        $this->redirect(route('payment-terms.index'), navigate: true);
+        $this->redirectBack('payment-terms.index');
     }
 
     public function render()

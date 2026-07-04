@@ -84,7 +84,7 @@
             @endunless
 
             <x-slot:actions>
-                <x-button label="Batal" link="{{ route('dealers.index') }}" class="btn-ghost" />
+                <x-button label="Batal" link="{{ $this->backHref('dealers.index') }}" class="btn-ghost" />
                 <x-button label="Simpan" type="submit" class="btn-primary" spinner="save" />
             </x-slot:actions>
         </x-form>

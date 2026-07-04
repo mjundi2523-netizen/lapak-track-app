@@ -2,6 +2,7 @@
 
 namespace App\Livewire\AddOns;
 
+use App\Livewire\Concerns\ReturnsBack;
 use App\Models\AddOn;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -12,6 +13,7 @@ use Mary\Traits\Toast;
 #[Layout('layouts.app')]
 class EditAddOn extends Component
 {
+    use ReturnsBack;
     use Toast;
 
     public AddOn $addOn;
@@ -63,7 +65,7 @@ class EditAddOn extends Component
         });
 
         $this->success('Biaya lain-lain berhasil diperbarui.');
-        $this->redirect(route('add-ons.index'), navigate: true);
+        $this->redirectBack('add-ons.index');
     }
 
     public function render()

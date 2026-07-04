@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Dealers;
 
+use App\Livewire\Concerns\ReturnsBack;
 use App\Models\Dealer;
 use App\Models\DealerStall;
 use App\Models\ExternalDealer;
@@ -19,6 +20,7 @@ use Mary\Traits\Toast;
 #[Layout('layouts.app')]
 class CreateDealer extends Component
 {
+    use ReturnsBack;
     use Toast;
     use WithFileUploads;
 
@@ -214,7 +216,7 @@ class CreateDealer extends Component
         });
 
         $this->success('Pedagang berhasil ditambahkan.');
-        $this->redirect(route('dealers.index'), navigate: true);
+        $this->redirectBack('dealers.index');
     }
 
     public function render()

@@ -44,7 +44,7 @@
                 hint="Aturan ini khusus pedagang eksternal (tukang gerobak/keliling). Tanpa dicentang = pedagang reguler." />
 
             <x-slot:actions>
-                <x-button label="Batal" link="{{ route('payment-terms.index') }}" class="btn-ghost" />
+                <x-button label="Batal" link="{{ $this->backHref('payment-terms.index') }}" class="btn-ghost" />
                 <x-button label="Simpan" type="submit" class="btn-primary" spinner="save" />
             </x-slot:actions>
         </x-form>

@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Payments;
 
+use App\Livewire\Concerns\ReturnsBack;
 use App\Models\DealerBill;
 use App\Models\DealerPayment;
 use App\Services\BillIdGenerator;
@@ -16,6 +17,7 @@ use Mary\Traits\Toast;
 #[Layout('layouts.app')]
 class CreatePayment extends Component
 {
+    use ReturnsBack;
     use Toast;
 
     public ?int $selectedDbid = null;
@@ -120,7 +122,7 @@ class CreatePayment extends Component
         });
 
         $this->success('Pembayaran berhasil ditambahkan.');
-        $this->redirect(route('payments.index'), navigate: true);
+        $this->redirectBack('payments.index');
     }
 
     public function render()

@@ -63,7 +63,7 @@
     <x-textarea label="Keterangan (opsional)" wire:model="note" rows="2" />
 
     <x-slot:actions>
-        <x-button label="Batal" link="{{ route('recurring-expenses.index') }}" class="btn-ghost" />
+        <x-button label="Batal" link="{{ $this->backHref('recurring-expenses.index') }}" class="btn-ghost" />
         <x-button label="Simpan" type="submit" class="btn-primary" spinner="save" />
     </x-slot:actions>
 </x-form>

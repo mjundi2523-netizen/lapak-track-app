@@ -7,6 +7,7 @@ use App\Models\DealerBill;
 use App\Services\BillGenerationService;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Mary\Traits\Toast;
@@ -17,13 +18,25 @@ class IndexBills extends Component
     use Toast;
     use WithPagination;
 
+    // Filter disimpan di query string (#[Url]) supaya bisa dipulihkan saat
+    // kembali dari halaman form (pola "back" — lihat trait ReturnsBack).
+    #[Url(except: '')]
     public string $search = '';
+
+    #[Url(except: '')]
     public string $statusFilter = '';
+
+    #[Url(except: '')]
     public string $frequencyFilter = '';
+
+    #[Url(except: null)]
     public ?int $dealerId = null;
 
     // Filter rentang tanggal jatuh tempo (kosong = semua).
+    #[Url(except: '')]
     public string $from = '';
+
+    #[Url(except: '')]
     public string $to = '';
 
     /** Kandidat opsi untuk autocomplete pedagang (x-choices searchable). */

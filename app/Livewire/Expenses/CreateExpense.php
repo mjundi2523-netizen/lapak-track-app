@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Expenses;
 
+use App\Livewire\Concerns\ReturnsBack;
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
 use Illuminate\Support\Carbon;
@@ -13,6 +14,7 @@ use Mary\Traits\Toast;
 #[Layout('layouts.app')]
 class CreateExpense extends Component
 {
+    use ReturnsBack;
     use Toast;
 
     public string $title = '';
@@ -55,7 +57,7 @@ class CreateExpense extends Component
         ]);
 
         $this->success('Pengeluaran berhasil dicatat.');
-        $this->redirect(route('expenses.index'), navigate: true);
+        $this->redirectBack('expenses.index');
     }
 
     public function render()

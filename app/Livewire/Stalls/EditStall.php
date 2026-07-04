@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Stalls;
 
+use App\Livewire\Concerns\ReturnsBack;
 use App\Models\AddOn;
 use App\Models\PaymentTerm;
 use App\Models\Stall;
@@ -15,6 +16,7 @@ use Mary\Traits\Toast;
 #[Layout('layouts.app')]
 class EditStall extends Component
 {
+    use ReturnsBack;
     use Toast;
 
     public Stall $stall;
@@ -92,7 +94,7 @@ class EditStall extends Component
         });
 
         $this->success('Lapak berhasil diperbarui.');
-        $this->redirect(route('stalls.index'), navigate: true);
+        $this->redirectBack('stalls.index');
     }
 
     public function render()

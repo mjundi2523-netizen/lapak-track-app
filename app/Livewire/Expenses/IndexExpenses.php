@@ -6,6 +6,7 @@ use App\Models\Expense;
 use App\Models\ExpenseCategory;
 use App\Services\ExpenseGenerationService;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Mary\Traits\Toast;
@@ -16,10 +17,20 @@ class IndexExpenses extends Component
     use Toast;
     use WithPagination;
 
+    // Filter di query string agar dipulihkan saat kembali dari form (ReturnsBack).
+    #[Url(except: '')]
     public string $search = '';
+
+    #[Url(except: '')]
     public string $categoryFilter = '';
+
+    #[Url(except: '')]
     public string $dateFrom = '';
+
+    #[Url(except: '')]
     public string $dateTo = '';
+
+    #[Url(except: 'active')]
     public string $voidedFilter = 'active';
 
     public function mount(ExpenseGenerationService $gen): void

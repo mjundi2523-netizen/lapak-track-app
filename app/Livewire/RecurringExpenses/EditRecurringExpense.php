@@ -2,6 +2,7 @@
 
 namespace App\Livewire\RecurringExpenses;
 
+use App\Livewire\Concerns\ReturnsBack;
 use App\Models\ExpenseCategory;
 use App\Models\RecurringExpense;
 use App\Services\ExpenseGenerationService;
@@ -13,6 +14,7 @@ use Mary\Traits\Toast;
 #[Layout('layouts.app')]
 class EditRecurringExpense extends Component
 {
+    use ReturnsBack;
     use Toast;
 
     public RecurringExpense $recurringExpense;
@@ -81,7 +83,7 @@ class EditRecurringExpense extends Component
         $gen->ensureForTemplate($this->recurringExpense->refresh());
 
         $this->success('Pengeluaran rutin berhasil diperbarui.');
-        $this->redirect(route('recurring-expenses.index'), navigate: true);
+        $this->redirectBack('recurring-expenses.index');
     }
 
     public function render()

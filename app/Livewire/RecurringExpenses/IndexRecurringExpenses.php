@@ -8,6 +8,7 @@ use App\Services\ExpenseGenerationService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Mary\Traits\Toast;
@@ -18,7 +19,9 @@ class IndexRecurringExpenses extends Component
     use Toast;
     use WithPagination;
 
+    #[Url(except: '')]
     public string $search = '';
+    #[Url(except: '')]
     public string $activeFilter = '';
 
     // --- Popup konfirmasi occurrence pending yang sudah jatuh waktu ---
