@@ -4,6 +4,7 @@ namespace App\Livewire\Expenses;
 
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
+use App\Services\ExpenseGenerationService;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -20,6 +21,12 @@ class IndexExpenses extends Component
     public string $dateFrom = '';
     public string $dateTo = '';
     public string $voidedFilter = 'active';
+
+    public function mount(ExpenseGenerationService $gen): void
+    {
+        // Lazy roll-forward pengeluaran rutin agar occurrence periode berjalan muncul di daftar.
+        $gen->ensureAllActive();
+    }
 
     public function updated($prop): void
     {
@@ -48,8 +55,11 @@ class IndexExpenses extends Component
             ->orderByDesc('xpid')
             ->paginate(10);
 
-        // Total hanya dari yang TIDAK di-void (pengeluaran sah) dalam filter aktif.
-        $total = (int) $this->baseQuery()->where('is_voided', false)->sum('amount');
+        // Total: hanya yang TIDAK di-void DAN sudah posted (pending = draft belum dihitung).
+        $total = (int) $this->baseQuery()
+            ->where('is_voided', false)
+            ->where('status', 'posted')
+            ->sum('amount');
 
         return view('livewire.expenses.index', [
             'expenses' => $expenses,

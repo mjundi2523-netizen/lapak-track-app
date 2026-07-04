@@ -4,25 +4,25 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Expense extends Model
+class RecurringExpense extends Model
 {
-    protected $table = 'expenses';
-    protected $primaryKey = 'xpid';
+    protected $table = 'recurring_expenses';
+    protected $primaryKey = 'rxid';
 
     protected $fillable = [
         'ecid',
-        'rxid',
         'title',
         'amount',
-        'expense_date',
+        'frequency',
+        'interval_count',
         'payment_method',
+        'start_date',
+        'auto_post',
+        'is_active',
+        'generated_until',
         'note',
-        'status',
-        'is_voided',
-        'voided_reason',
-        'voided_at',
-        'voided_by',
         'created_by',
         'modified_by',
     ];
@@ -31,9 +31,11 @@ class Expense extends Model
     {
         return [
             'amount' => 'integer',
-            'expense_date' => 'date',
-            'is_voided' => 'boolean',
-            'voided_at' => 'datetime',
+            'interval_count' => 'integer',
+            'start_date' => 'date',
+            'generated_until' => 'date',
+            'auto_post' => 'boolean',
+            'is_active' => 'boolean',
         ];
     }
 
@@ -42,14 +44,9 @@ class Expense extends Model
         return $this->belongsTo(ExpenseCategory::class, 'ecid', 'ecid');
     }
 
-    public function recurring(): BelongsTo
+    public function expenses(): HasMany
     {
-        return $this->belongsTo(RecurringExpense::class, 'rxid', 'rxid');
-    }
-
-    public function voidedBy(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'voided_by');
+        return $this->hasMany(Expense::class, 'rxid', 'rxid');
     }
 
     public function createdBy(): BelongsTo
@@ -59,6 +56,6 @@ class Expense extends Model
 
     public function getRouteKeyName(): string
     {
-        return 'xpid';
+        return 'rxid';
     }
 }

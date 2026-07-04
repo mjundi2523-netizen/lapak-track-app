@@ -8,6 +8,7 @@ use App\Models\DealerPayment;
 use App\Models\Expense;
 use App\Models\Stall;
 use App\Services\BillGenerationService;
+use App\Services\ExpenseGenerationService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
@@ -19,10 +20,12 @@ class Dashboard extends Component
 {
     use WithPagination;
 
-    public function mount(BillGenerationService $bills): void
+    public function mount(BillGenerationService $bills, ExpenseGenerationService $expenses): void
     {
         // Lazy roll-forward: pastikan tagihan periode berjalan sudah ada saat dashboard dibuka.
         $bills->ensureAllActive();
+        // Sama untuk pengeluaran rutin (auto-post langsung masuk hitungan).
+        $expenses->ensureAllActive();
     }
 
     public function render()
@@ -54,6 +57,7 @@ class Dashboard extends Component
 
         // Pengeluaran bulan ini & laba bersih (terbayar - pengeluaran).
         $heroExpense = (float) Expense::where('is_voided', false)
+            ->where('status', 'posted')
             ->whereBetween('expense_date', [$monthStart, $monthEnd])
             ->sum('amount');
         $heroNet = $heroPaid - $heroExpense;
@@ -157,6 +161,7 @@ class Dashboard extends Component
             ->groupBy('ym')->pluck('t', 'ym');
 
         $spent = Expense::where('is_voided', false)
+            ->where('status', 'posted')
             ->selectRaw("DATE_FORMAT(expense_date, '%Y-%m') ym, SUM(amount) t")
             ->whereBetween('expense_date', [$first, $rangeEnd])
             ->groupBy('ym')->pluck('t', 'ym');

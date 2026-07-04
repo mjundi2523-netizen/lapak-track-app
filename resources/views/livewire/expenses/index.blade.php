@@ -58,15 +58,22 @@
                         <td class="lt-td">
                             @if($row->is_voided)
                                 <span class="lt-pill" style="background:#fee2e2; color:#b91c1c;">Dibatalkan</span>
+                            @elseif($row->status === 'pending')
+                                <span class="lt-pill" style="background:#fef9c3; color:#a16207;">Menunggu Konfirmasi</span>
                             @else
                                 <span class="lt-pill" style="background:#dcfce7; color:#15803d;">Aktif</span>
+                            @endif
+                            @if($row->rxid)
+                                <span class="lt-pill ml-1" style="background:#cffafe; color:#0e7490;">Rutin</span>
                             @endif
                         </td>
                         <td class="lt-td">
                             <div class="flex gap-1 justify-end">
-                                @unless($row->is_voided)
+                                @if($row->status === 'pending' && ! $row->is_voided)
+                                    <a href="{{ route('recurring-expenses.index') }}" wire:navigate class="lt-act text-primary" title="Konfirmasi di Pengeluaran Rutin"><x-icon name="o-bell-alert" class="w-[18px] h-[18px]" /></a>
+                                @elseif(! $row->is_voided)
                                     <a href="{{ route('expenses.void', $row) }}" wire:navigate class="lt-act text-error" title="Batalkan"><x-icon name="o-x-mark" class="w-[18px] h-[18px]" /></a>
-                                @endunless
+                                @endif
                             </div>
                         </td>
                     </tr>

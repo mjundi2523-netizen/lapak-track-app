@@ -12,6 +12,7 @@
             ['label' => 'Lapak',          'icon' => 'o-building-storefront','route' => 'stalls.index',         'active' => ['stalls.index', 'stalls.create', 'stalls.edit', 'stalls.show']],
             ['label' => 'Mapping Lapak',  'icon' => 'o-map',                'route' => 'stalls.map',           'active' => 'stalls.map', 'premium' => true],
             ['label' => 'Kategori Pengeluaran','icon' => 'o-tag',          'route' => 'expense-categories.index', 'active' => 'expense-categories.*', 'premium' => true],
+            ['label' => 'Pengeluaran Rutin','icon' => 'o-arrow-path',       'route' => 'recurring-expenses.index','active' => 'recurring-expenses.*', 'premium' => true],
         ],
         'Transaksi' => [
             ['label' => 'Tagihan',        'icon' => 'o-document-text',      'route' => 'bills.index',          'active' => 'bills.*'],

@@ -32,6 +32,7 @@ class CashFlow extends Component
             ->groupBy('m')->pluck('t', 'm');
 
         $expense = Expense::where('is_voided', false)
+            ->where('status', 'posted')
             ->whereYear('expense_date', $year)
             ->when($this->month, fn ($q) => $q->whereMonth('expense_date', $this->month))
             ->selectRaw('MONTH(expense_date) m, SUM(amount) t')
@@ -58,6 +59,7 @@ class CashFlow extends Component
         // Rincian pengeluaran per kategori (mengikuti filter tahun/bulan).
         $catNames = ExpenseCategory::pluck('name', 'ecid');
         $byCategory = Expense::where('is_voided', false)
+            ->where('status', 'posted')
             ->whereYear('expense_date', $year)
             ->when($this->month, fn ($q) => $q->whereMonth('expense_date', $this->month))
             ->selectRaw('ecid, SUM(amount) t')

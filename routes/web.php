@@ -61,6 +61,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/pengeluaran/create', App\Livewire\Expenses\CreateExpense::class)->name('expenses.create');
         Route::get('/pengeluaran/{expense}/void', App\Livewire\Expenses\VoidExpense::class)->name('expenses.void');
 
+        // Pengeluaran Rutin (template + generator otomatis)
+        Route::get('/pengeluaran-rutin', App\Livewire\RecurringExpenses\IndexRecurringExpenses::class)->name('recurring-expenses.index');
+        Route::get('/pengeluaran-rutin/create', App\Livewire\RecurringExpenses\CreateRecurringExpense::class)->name('recurring-expenses.create');
+        Route::get('/pengeluaran-rutin/{recurringExpense}/edit', App\Livewire\RecurringExpenses\EditRecurringExpense::class)->name('recurring-expenses.edit');
+
         // Laporan
         Route::get('/laporan/arus-kas', App\Livewire\Reports\CashFlow::class)->name('reports.cash-flow');
         Route::get('/laporan/rekap-penerimaan', App\Livewire\Reports\Collection::class)->name('reports.collection');
