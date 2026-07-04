@@ -1,9 +1,9 @@
 @php
     $typePill = [
         'MTR' => ['Sewa',          '#ede9fe', '#6d28d9'],
-        'MAT' => ['Sewa + Add-on', '#fce7f3', '#be185d'],
-        'AAT' => ['Add-on',        '#dbeafe', '#1d4ed8'],
-        'ATR' => ['Add-on (jadwal)','#cffafe', '#0e7490'],
+        'MAT' => ['Sewa + Tambahan', '#fce7f3', '#be185d'],
+        'AAT' => ['Tambahan',        '#dbeafe', '#1d4ed8'],
+        'ATR' => ['Tambahan (jadwal)','#cffafe', '#0e7490'],
         'EXT' => ['Eksternal',      '#fae8ff', '#86198f'],
     ];
     $freqLabel = ['daily' => 'Harian', 'weekly' => 'Mingguan', 'monthly' => 'Bulanan', 'annual' => 'Tahunan'];
