@@ -33,6 +33,9 @@ class CreatePayment extends Component
     #[Validate('required|in:tunai,transfer,lainnya')]
     public string $payment_method = 'tunai';
 
+    /** Checkbox "Lunasi": nominal dikunci = sisa tagihan (input nominal di-disable). */
+    public bool $payInFull = false;
+
     public function mount(): void
     {
         $this->payment_date = Carbon::now()->format('Y-m-d');
@@ -50,11 +53,17 @@ class CreatePayment extends Component
     {
         $this->selectedDbid = $dbid;
         $this->showBillModal = false;
+
+        // Mode "Lunasi" aktif → sinkronkan nominal ke sisa tagihan yang baru dipilih.
+        if ($this->payInFull) {
+            $this->syncFullAmount();
+        }
     }
 
     public function clearBill(): void
     {
         $this->selectedDbid = null;
+        $this->payInFull = false;
     }
 
     /** Sisa tagihan terpilih = total - Σ pembayaran non-void. */
@@ -65,8 +74,15 @@ class CreatePayment extends Component
         return max((float) $bill->total_amount - $paid, 0);
     }
 
-    /** Isi nominal dengan sisa tagihan (bayar lunas). */
-    public function payFull(): void
+    public function updatedPayInFull(bool $value): void
+    {
+        if ($value) {
+            $this->syncFullAmount();
+        }
+    }
+
+    /** Set nominal = sisa tagihan terpilih (dipakai mode "Lunasi"). */
+    protected function syncFullAmount(): void
     {
         if (! $this->selectedDbid) {
             return;
@@ -95,6 +111,11 @@ class CreatePayment extends Component
             $this->addError('paid_amount', 'Tagihan ini sudah lunas atau dibatalkan, tidak bisa dibayar.');
 
             return;
+        }
+
+        // Mode "Lunasi": kunci nominal ke sisa tagihan TERKINI (hindari state basi).
+        if ($this->payInFull) {
+            $this->paid_amount = $this->remainingFor($bill);
         }
 
         // Blocking: nominal tidak boleh melebihi sisa tagihan.

@@ -48,7 +48,8 @@
                 }">
                 <label class="label"><span class="label-text font-semibold">Jumlah Bayar</span></label>
                 <input type="text" inputmode="numeric" x-ref="amtInput" @input="onInput($event)"
-                    class="input input-bordered w-full" placeholder="0" required />
+                    class="input input-bordered w-full {{ $payInFull ? 'opacity-60 cursor-not-allowed' : '' }}"
+                    placeholder="0" required @disabled($payInFull) />
                 @error('paid_amount')
                     <label class="label"><span class="label-text-alt text-error">{{ $message }}</span></label>
                 @enderror
@@ -58,9 +59,10 @@
                     </label>
                 @endif
                 @if($remaining !== null && $remaining > 0)
-                    <button type="button" wire:click="payFull" class="text-sm font-semibold mt-0.5" style="color:var(--lt-p);">
-                        Bayar penuh (Rp {{ number_format($remaining, 0, ',', '.') }})
-                    </button>
+                    <label class="flex items-center gap-2 mt-1 cursor-pointer select-none w-fit">
+                        <input type="checkbox" wire:model.live="payInFull" class="checkbox checkbox-sm" style="accent-color:var(--lt-p);" />
+                        <span class="text-sm font-semibold" style="color:var(--lt-p);">Lunasi (Rp {{ number_format($remaining, 0, ',', '.') }})</span>
+                    </label>
                 @endif
             </div>
             <x-input label="Tanggal Bayar" wire:model="payment_date" type="date" :max="now()->format('Y-m-d')" required />
