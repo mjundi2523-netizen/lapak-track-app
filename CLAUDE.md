@@ -91,7 +91,8 @@ Lihat `.qoder/specs/LapakTrack_MVP_Plan.md` — logika billing (lazy roll-forwar
 ## Pengeluaran & Laporan (ditambah 2026-06-29)
 - **`expense_categories`** (ecid, name) = master kategori. CRUD di Master Data (`expense-categories.*`).
 - **`expenses`** (xpid, ecid, title, amount, expense_date, payment_method, note, **void: is_voided/voided_reason/voided_at/voided_by**). **Create + Void, tanpa Edit** (pola sama `dealer_payment`). Menu Transaksi → "Pengeluaran" (`expenses.*`): Index filter (cari/kategori/rentang tanggal/status) + kartu total + Void.
-- **Laporan Arus Kas** (`reports.cash-flow`, grup Laporan): pilih tahun → tabel bulanan **Pemasukan** (Σ `dealer_payment` non-void by `payment_date`) vs **Pengeluaran** (Σ `expenses` non-void by `expense_date`) vs **Laba/Rugi** + rincian per kategori. Pemasukan mencakup tagihan sewa & eksternal (pembayaran seragam).
+- **Laporan Arus Kas** (`reports.cash-flow`, grup Laporan): pilih tahun → tabel bulanan **Pemasukan** (Σ `dealer_payment` non-void by `payment_date`) vs **Pengeluaran** (Σ `expenses` non-void by `expense_date`) vs **Laba/Rugi** + rincian per kategori. Pemasukan mencakup tagihan sewa & eksternal (pembayaran seragam). `year`/`month` `#[Url]` (bisa dari drilldown dashboard).
+- **Laporan Rekap Pengeluaran** (`reports.expense-summary`, grup Laporan, premium): filter tahun/bulan/kategori (`#[Url]`) → kartu Total + Rata-rata/transaksi + rincian metode; tabel per bulan; per kategori (dgn %/count + bar); tabel detail; **Export Excel** (`reports.expense-summary.export` → `ExpenseSummaryExport`). Semua hitungan **hanya `status='posted'` & non-void**.
 - **Dashboard**: kartu "Pengeluaran Bulan Ini" + "Laba Bersih" (terbayar − pengeluaran) + garis pengeluaran (merah putus-putus) di chart.
 - Foto/nota belum ada (kolom `proof_path` bisa ditambah nanti).
 

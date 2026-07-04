@@ -72,6 +72,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/laporan/rekap-penerimaan-export', App\Http\Controllers\CollectionExportController::class)->name('reports.collection.export');
         Route::get('/laporan/rekap-pedagang', App\Livewire\Reports\DealerSummary::class)->name('reports.dealer-summary');
         Route::get('/laporan/rekap-pedagang-export', App\Http\Controllers\DealerSummaryExportController::class)->name('reports.dealer-summary.export');
+
+        Route::get('/laporan/rekap-pengeluaran', App\Livewire\Reports\ExpenseSummary::class)->name('reports.expense-summary');
+        Route::get('/laporan/rekap-pengeluaran-export', App\Http\Controllers\ExpenseSummaryExportController::class)->name('reports.expense-summary.export');
     });
 });
 
