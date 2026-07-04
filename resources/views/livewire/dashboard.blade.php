@@ -17,49 +17,73 @@
         <div class="text-[13px] text-[#9aa3b2]">Beranda&nbsp;/&nbsp;Dashboard</div>
     </div>
 
-    {{-- Hero cards --}}
+    @php
+        // Drilldown: rentang bulan berjalan (sama dengan query kartu hero).
+        $mStart = \Illuminate\Support\Carbon::today()->startOfMonth()->toDateString();
+        $mEnd = \Illuminate\Support\Carbon::today()->endOfMonth()->toDateString();
+        $isPremiumUser = auth()->user()->isPremium();
+        // Kelas interaksi kartu drilldown.
+        $cardHover = 'block cursor-pointer transition hover:-translate-y-0.5 hover:brightness-[0.97]';
+    @endphp
+
+    {{-- Hero cards (klik = drilldown ke data acuan) --}}
     <div class="grid grid-cols-2 md:grid-cols-4 gap-5 mb-5">
-        <div class="relative overflow-hidden rounded-[14px] px-6 py-[22px] text-white min-h-[120px]"
-             style="background:linear-gradient(135deg,#14a07a,#21c08f); box-shadow:0 10px 24px rgba(20,160,122,0.22);">
+        <a href="{{ route('bills.index', ['from' => $mStart, 'to' => $mEnd]) }}" wire:navigate
+           title="Lihat tagihan bulan ini"
+           class="{{ $cardHover }} relative overflow-hidden rounded-[14px] px-6 py-[22px] text-white min-h-[120px]"
+           style="background:linear-gradient(135deg,#14a07a,#21c08f); box-shadow:0 10px 24px rgba(20,160,122,0.22);">
             <div class="text-sm font-medium opacity-90 mb-3 relative z-10">Total Tagihan Bulan Ini</div>
             <div class="text-[28px] font-bold leading-none relative z-10">{{ $rp($heroTotal) }}</div>
             <span class="absolute right-[22px] -bottom-2.5 text-[90px] font-extrabold leading-none" style="color:rgba(255,255,255,0.15);">Rp</span>
-        </div>
-        <div class="relative overflow-hidden rounded-[14px] px-6 py-[22px] text-white min-h-[120px]"
-             style="background:linear-gradient(135deg,#2b7fc2,#3ea7dc); box-shadow:0 10px 24px rgba(43,127,194,0.22);">
+        </a>
+        <a href="{{ route('payments.index', ['from' => $mStart, 'to' => $mEnd]) }}" wire:navigate
+           title="Lihat pembayaran bulan ini"
+           class="{{ $cardHover }} relative overflow-hidden rounded-[14px] px-6 py-[22px] text-white min-h-[120px]"
+           style="background:linear-gradient(135deg,#2b7fc2,#3ea7dc); box-shadow:0 10px 24px rgba(43,127,194,0.22);">
             <div class="text-sm font-medium opacity-90 mb-3 relative z-10">Sudah Terbayar</div>
             <div class="text-[28px] font-bold leading-none relative z-10">{{ $rp($heroPaid) }}</div>
             <span class="absolute right-[22px] -bottom-2.5 text-[90px] font-extrabold leading-none" style="color:rgba(255,255,255,0.15);">Rp</span>
-        </div>
-        <div class="relative overflow-hidden rounded-[14px] px-6 py-[22px] text-white min-h-[120px]"
-             style="background:linear-gradient(135deg, var(--lt-p), color-mix(in srgb, var(--lt-p) 55%, #7aa0ff)); box-shadow:0 10px 24px color-mix(in srgb, var(--lt-p) 30%, transparent);">
+        </a>
+        <a href="{{ route('bills.index', ['statusFilter' => 'unpaid', 'from' => $mStart, 'to' => $mEnd]) }}" wire:navigate
+           title="Lihat tagihan belum bayar bulan ini"
+           class="{{ $cardHover }} relative overflow-hidden rounded-[14px] px-6 py-[22px] text-white min-h-[120px]"
+           style="background:linear-gradient(135deg, var(--lt-p), color-mix(in srgb, var(--lt-p) 55%, #7aa0ff)); box-shadow:0 10px 24px color-mix(in srgb, var(--lt-p) 30%, transparent);">
             <div class="text-sm font-medium opacity-90 mb-3 relative z-10">Belum Terbayar</div>
             <div class="text-[28px] font-bold leading-none relative z-10">{{ $rp($heroUnpaid) }}</div>
             <span class="absolute right-[22px] -bottom-2.5 text-[90px] font-extrabold leading-none" style="color:rgba(255,255,255,0.15);">Rp</span>
-        </div>
-        <div class="relative overflow-hidden rounded-[14px] px-6 py-[22px] text-white min-h-[120px]"
-             style="background:linear-gradient(135deg,#dc2626,#f87171); box-shadow:0 10px 24px rgba(220,38,38,0.22);">
+        </a>
+        <a @if($isPremiumUser) href="{{ route('reports.dealer-summary') }}" wire:navigate
+           @else href="#" @click.prevent="$dispatch('premium-required')" @endif
+           title="Lihat rekap tunggakan per pedagang"
+           class="{{ $cardHover }} relative overflow-hidden rounded-[14px] px-6 py-[22px] text-white min-h-[120px]"
+           style="background:linear-gradient(135deg,#dc2626,#f87171); box-shadow:0 10px 24px rgba(220,38,38,0.22);">
             <div class="text-sm font-medium opacity-90 mb-3 relative z-10">Pedagang Menunggak</div>
             <div class="text-[44px] font-bold leading-none relative z-10">{{ $dealersWithDebt }}</div>
             <span class="absolute right-[18px] -bottom-2.5 text-[90px] font-extrabold leading-none" style="color:rgba(255,255,255,0.15);">!</span>
             <div class="text-xs opacity-75 mt-2 relative z-10">pedagang</div>
-        </div>
+        </a>
     </div>
 
-    {{-- Pengeluaran & Laba bersih bulan ini --}}
+    {{-- Pengeluaran & Laba bersih bulan ini (drilldown; keduanya fitur premium) --}}
     <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
-        <div class="relative overflow-hidden rounded-[14px] px-6 py-[22px] text-white min-h-[110px]"
-             style="background:linear-gradient(135deg,#ef4444,#f97316); box-shadow:0 10px 24px rgba(239,68,68,0.22);">
+        <a @if($isPremiumUser) href="{{ route('expenses.index', ['dateFrom' => $mStart, 'dateTo' => $mEnd]) }}" wire:navigate
+           @else href="#" @click.prevent="$dispatch('premium-required')" @endif
+           title="Lihat pengeluaran bulan ini"
+           class="{{ $cardHover }} relative overflow-hidden rounded-[14px] px-6 py-[22px] text-white min-h-[110px]"
+           style="background:linear-gradient(135deg,#ef4444,#f97316); box-shadow:0 10px 24px rgba(239,68,68,0.22);">
             <div class="text-sm font-medium opacity-90 mb-3 relative z-10">Pengeluaran Bulan Ini</div>
             <div class="text-[30px] font-bold leading-none relative z-10">{{ $rp($heroExpense) }}</div>
             <span class="absolute right-[22px] -bottom-2.5 text-[80px] font-extrabold leading-none" style="color:rgba(255,255,255,0.15);">Rp</span>
-        </div>
-        <div class="relative overflow-hidden rounded-[14px] px-6 py-[22px] text-white min-h-[110px]"
-             style="background:linear-gradient(135deg, {{ $heroNet >= 0 ? '#0f766e,#14b8a6' : '#b91c1c,#ef4444' }}); box-shadow:0 10px 24px rgba(15,118,110,0.22);">
+        </a>
+        <a @if($isPremiumUser) href="{{ route('reports.cash-flow') }}" wire:navigate
+           @else href="#" @click.prevent="$dispatch('premium-required')" @endif
+           title="Lihat laporan arus kas"
+           class="{{ $cardHover }} relative overflow-hidden rounded-[14px] px-6 py-[22px] text-white min-h-[110px]"
+           style="background:linear-gradient(135deg, {{ $heroNet >= 0 ? '#0f766e,#14b8a6' : '#b91c1c,#ef4444' }}); box-shadow:0 10px 24px rgba(15,118,110,0.22);">
             <div class="text-sm font-medium opacity-90 mb-3 relative z-10">Laba Bersih Bulan Ini <span class="opacity-75">(terbayar − pengeluaran)</span></div>
             <div class="text-[30px] font-bold leading-none relative z-10">{{ $rp($heroNet) }}</div>
             <span class="absolute right-[22px] -bottom-2.5 text-[80px] font-extrabold leading-none" style="color:rgba(255,255,255,0.15);">Rp</span>
-        </div>
+        </a>
     </div>
 
     {{-- Two-column grid --}}
@@ -223,22 +247,26 @@
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
-                    <div class="rounded-[11px] p-3.5" style="background:#f6f7fb;">
+                    <a href="{{ route('dealers.index') }}" wire:navigate title="Lihat daftar pedagang"
+                       class="block rounded-[11px] p-3.5 transition hover:brightness-[0.97]" style="background:#f6f7fb;">
                         <div class="text-xs text-[#71717a] mb-1.5">Pedagang Aktif</div>
                         <div class="text-[22px] font-bold text-[#15803d]">{{ $dealerActive }}</div>
-                    </div>
-                    <div class="rounded-[11px] p-3.5" style="background:#f6f7fb;">
+                    </a>
+                    <a href="{{ route('stalls.index') }}" wire:navigate title="Lihat daftar lapak"
+                       class="block rounded-[11px] p-3.5 transition hover:brightness-[0.97]" style="background:#f6f7fb;">
                         <div class="text-xs text-[#71717a] mb-1.5">Lapak Terisi</div>
                         <div class="text-[22px] font-bold" style="color:var(--lt-p);">{{ $stallOccupied }}</div>
-                    </div>
-                    <div class="rounded-[11px] p-3.5" style="background:#f6f7fb;">
+                    </a>
+                    <a href="{{ route('bills.index', ['statusFilter' => 'paid']) }}" wire:navigate title="Lihat tagihan lunas"
+                       class="block rounded-[11px] p-3.5 transition hover:brightness-[0.97]" style="background:#f6f7fb;">
                         <div class="text-xs text-[#71717a] mb-1.5">Tagihan Lunas</div>
                         <div class="text-[22px] font-bold text-[#15803d]">{{ $billPaid }}</div>
-                    </div>
-                    <div class="rounded-[11px] p-3.5" style="background:#f6f7fb;">
+                    </a>
+                    <a href="{{ route('bills.index', ['statusFilter' => 'unpaid']) }}" wire:navigate title="Lihat tagihan belum bayar"
+                       class="block rounded-[11px] p-3.5 transition hover:brightness-[0.97]" style="background:#f6f7fb;">
                         <div class="text-xs text-[#71717a] mb-1.5">Belum Bayar</div>
                         <div class="text-[22px] font-bold text-[#b91c1c]">{{ $billUnpaid }}</div>
-                    </div>
+                    </a>
                 </div>
             </div>
         </div>
