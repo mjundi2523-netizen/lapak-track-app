@@ -75,12 +75,12 @@
             <div class="text-[30px] font-bold leading-none relative z-10">{{ $rp($heroExpense) }}</div>
             <span class="absolute right-[22px] -bottom-2.5 text-[80px] font-extrabold leading-none" style="color:rgba(255,255,255,0.15);">Rp</span>
         </a>
-        <a @if($isPremiumUser) href="{{ route('reports.cash-flow') }}" wire:navigate
+        <a @if($isPremiumUser) href="{{ route('reports.cash-flow', ['year' => now()->year, 'month' => now()->month]) }}" wire:navigate
            @else href="#" @click.prevent="$dispatch('premium-required')" @endif
            title="Lihat laporan arus kas"
            class="{{ $cardHover }} relative overflow-hidden rounded-[14px] px-6 py-[22px] text-white min-h-[110px]"
            style="background:linear-gradient(135deg, {{ $heroNet >= 0 ? '#0f766e,#14b8a6' : '#b91c1c,#ef4444' }}); box-shadow:0 10px 24px rgba(15,118,110,0.22);">
-            <div class="text-sm font-medium opacity-90 mb-3 relative z-10">Laba Bersih Bulan Ini <span class="opacity-75">(terbayar − pengeluaran)</span></div>
+            <div class="text-sm font-medium opacity-90 mb-3 relative z-10">Laba Bersih Bulan Ini <span class="opacity-75">(pemasukan − pengeluaran)</span></div>
             <div class="text-[30px] font-bold leading-none relative z-10">{{ $rp($heroNet) }}</div>
             <span class="absolute right-[22px] -bottom-2.5 text-[80px] font-extrabold leading-none" style="color:rgba(255,255,255,0.15);">Rp</span>
         </a>

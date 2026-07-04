@@ -55,12 +55,19 @@ class Dashboard extends Component
 
         $totalPemasukan = (float) DealerPayment::where('is_voided', false)->sum('paid_amount');
 
-        // Pengeluaran bulan ini & laba bersih (terbayar - pengeluaran).
+        // Kas masuk bulan ini (basis payment_date) — sama dengan "Pemasukan" di Arus Kas.
+        // Beda dari $heroPaid (yang berbasis due_date tagihan bulan ini) supaya Laba Bersih
+        // konsisten dgn laporan Arus Kas & mencerminkan uang yang benar-benar diterima.
+        $heroCashIn = (float) DealerPayment::where('is_voided', false)
+            ->whereBetween('payment_date', [$monthStart, $monthEnd])
+            ->sum('paid_amount');
+
+        // Pengeluaran bulan ini & laba bersih (kas masuk - pengeluaran).
         $heroExpense = (float) Expense::where('is_voided', false)
             ->where('status', 'posted')
             ->whereBetween('expense_date', [$monthStart, $monthEnd])
             ->sum('amount');
-        $heroNet = $heroPaid - $heroExpense;
+        $heroNet = $heroCashIn - $heroExpense;
 
         // --- Jatuh tempo & terlambat (paginated, badge = count asli) ---
         $overdueQuery = DealerBill::with(['dealerStall.dealer', 'dealerStall.stall', 'externalDealer.dealer'])

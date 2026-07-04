@@ -7,18 +7,24 @@ use App\Models\Expense;
 use App\Models\ExpenseCategory;
 use Illuminate\Support\Carbon;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
 class CashFlow extends Component
 {
-    public int $year;
+    // #[Url] agar filter bisa diisi dari link (mis. drilldown dashboard) & tetap di URL.
+    #[Url]
+    public int $year = 0;
 
+    #[Url(except: 0)]
     public int $month = 0; // 0 = semua bulan
 
     public function mount(): void
     {
-        $this->year = (int) Carbon::today()->year;
+        if (! $this->year) {
+            $this->year = (int) Carbon::today()->year;
+        }
     }
 
     public function render()
