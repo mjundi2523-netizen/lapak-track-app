@@ -8,10 +8,10 @@
         <table class="lt-table">
             <thead>
                 <tr>
-                    <th class="lt-th">Nama</th>
-                    <th class="lt-th">Kondisi Pedagang</th>
-                    <th class="lt-th">Frekuensi</th>
-                    <th class="lt-th text-right">Harga</th>
+                    @include('partials.sort-th', ['field' => 'term_name', 'label' => 'Nama'])
+                    @include('partials.sort-th', ['field' => 'dealer_condition', 'label' => 'Kondisi Pedagang'])
+                    @include('partials.sort-th', ['field' => 'frequency', 'label' => 'Frekuensi'])
+                    @include('partials.sort-th', ['field' => 'price', 'label' => 'Harga', 'align' => 'right'])
                     <th class="lt-th"></th>
                 </tr>
             </thead>

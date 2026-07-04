@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Payments;
 
+use App\Livewire\Concerns\Sortable;
 use App\Models\Dealer;
 use App\Models\DealerPayment;
 use App\Services\BillGenerationService;
@@ -15,6 +16,7 @@ use Mary\Traits\Toast;
 #[Layout('layouts.app')]
 class IndexPayments extends Component
 {
+    use Sortable;
     use Toast;
     use WithPagination;
 
@@ -98,6 +100,22 @@ class IndexPayments extends Component
         $this->receiptId = null;
     }
 
+    /** Kolom sortable (klik header). Kolom relasi pakai subquery. */
+    protected function sortColumns(): array
+    {
+        return [
+            'bill_id' => 'bill_id',
+            'holder' => "COALESCE(
+                (SELECT d.name FROM dealer d JOIN dealer_stall ds ON ds.did = d.did JOIN dealer_bills db ON db.dsid = ds.dsid WHERE db.dbid = dealer_payment.dbid),
+                (SELECT d2.name FROM dealer d2 JOIN external_dealers ed ON ed.did = d2.did JOIN dealer_bills db2 ON db2.edid = ed.edid WHERE db2.dbid = dealer_payment.dbid)
+            )",
+            'bill_type' => '(SELECT db.bill_type FROM dealer_bills db WHERE db.dbid = dealer_payment.dbid)',
+            'paid_amount' => 'paid_amount',
+            'payment_date' => 'payment_date',
+            'payment_method' => 'payment_method',
+            'is_voided' => 'is_voided',
+        ];
+    }
     public function render()
     {
         $receiptPayment = $this->showReceipt && $this->receiptId
@@ -122,8 +140,11 @@ class IndexPayments extends Component
                 ->whereHas('dealerBill.dealerStall', fn ($q2) => $q2->where('did', $this->dealerId))
                 ->orWhereHas('dealerBill.externalDealer', fn ($q2) => $q2->where('did', $this->dealerId))
             ))
-            ->orderBy('payment_date', 'desc')
-            ->paginate(10);
+;
+
+        $this->applySort($payments, fn ($q) => $q->orderBy('payment_date', 'desc'));
+
+        $payments = $payments->paginate(10);
 
         return view('livewire.payments.index', [
             'payments' => $payments,

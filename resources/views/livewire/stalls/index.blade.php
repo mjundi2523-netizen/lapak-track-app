@@ -8,10 +8,10 @@
         <table class="lt-table">
             <thead>
                 <tr>
-                    <th class="lt-th">Lokasi</th>
-                    <th class="lt-th">Ukuran</th>
-                    <th class="lt-th">Aturan Bayar</th>
-                    <th class="lt-th">Status</th>
+                    @include('partials.sort-th', ['field' => 'location', 'label' => 'Lokasi'])
+                    @include('partials.sort-th', ['field' => 'size', 'label' => 'Ukuran'])
+                    @include('partials.sort-th', ['field' => 'term', 'label' => 'Aturan Bayar'])
+                    @include('partials.sort-th', ['field' => 'is_active', 'label' => 'Status'])
                     <th class="lt-th"></th>
                 </tr>
             </thead>

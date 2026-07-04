@@ -8,8 +8,8 @@
         <table class="lt-table">
             <thead>
                 <tr>
-                    <th class="lt-th">Nama Kategori</th>
-                    <th class="lt-th text-right">Jumlah Pengeluaran</th>
+                    @include('partials.sort-th', ['field' => 'name', 'label' => 'Nama Kategori'])
+                    @include('partials.sort-th', ['field' => 'expenses_count', 'label' => 'Jumlah Pengeluaran', 'align' => 'right'])
                     <th class="lt-th"></th>
                 </tr>
             </thead>

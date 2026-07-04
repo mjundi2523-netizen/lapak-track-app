@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Bills;
 
+use App\Livewire\Concerns\Sortable;
 use App\Models\Dealer;
 use App\Models\DealerBill;
 use App\Services\BillGenerationService;
@@ -15,6 +16,7 @@ use Mary\Traits\Toast;
 #[Layout('layouts.app')]
 class IndexBills extends Component
 {
+    use Sortable;
     use Toast;
     use WithPagination;
 
@@ -63,6 +65,27 @@ class IndexBills extends Component
         $this->searchDealer();
     }
 
+    /** Kolom sortable (klik header). Kolom relasi/terhitung pakai subquery. */
+    protected function sortColumns(): array
+    {
+        $paidSub = '(SELECT COALESCE(SUM(dp.paid_amount), 0) FROM dealer_payment dp WHERE dp.dbid = dealer_bills.dbid AND dp.is_voided = 0)';
+
+        return [
+            'bill_id' => 'bill_id',
+            'bill_type' => 'bill_type',
+            'holder' => "COALESCE(
+                (SELECT d.name FROM dealer d JOIN dealer_stall ds ON ds.did = d.did WHERE ds.dsid = dealer_bills.dsid),
+                (SELECT d2.name FROM dealer d2 JOIN external_dealers ed ON ed.did = d2.did WHERE ed.edid = dealer_bills.edid)
+            )",
+            'location' => "(SELECT CONCAT(s.block, '/', s.number) FROM stall s JOIN dealer_stall ds2 ON ds2.sid = s.sid WHERE ds2.dsid = dealer_bills.dsid)",
+            'total_amount' => 'total_amount',
+            'paid' => $paidSub,
+            'remaining' => "total_amount - {$paidSub}",
+            'due_date' => 'due_date',
+            'billing_status' => 'billing_status',
+        ];
+    }
+
     /** Dipanggil x-choices saat user mengetik; jaga pedagang terpilih tetap muncul. */
     public function searchDealer(string $value = ''): void
     {
@@ -101,8 +124,9 @@ class IndexBills extends Component
             ->when($this->dealerId, fn ($q) => $q->where(fn ($w) => $w
                 ->whereHas('dealerStall', fn ($q2) => $q2->where('did', $this->dealerId))
                 ->orWhereHas('externalDealer', fn ($q2) => $q2->where('did', $this->dealerId))
-            ))
-            ->orderBy('created_at', 'desc');
+            ));
+
+        $this->applySort($query, fn ($q) => $q->orderBy('created_at', 'desc'));
 
         $bills = $query->paginate(10);
 

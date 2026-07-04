@@ -8,11 +8,11 @@
         <table class="lt-table">
             <thead>
                 <tr>
-                    <th class="lt-th">NIK</th>
-                    <th class="lt-th">Nama</th>
-                    <th class="lt-th">Kondisi</th>
-                    <th class="lt-th">Telepon</th>
-                    <th class="lt-th">Status</th>
+                    @include('partials.sort-th', ['field' => 'nik', 'label' => 'NIK'])
+                    @include('partials.sort-th', ['field' => 'name', 'label' => 'Nama'])
+                    @include('partials.sort-th', ['field' => 'dealer_condition', 'label' => 'Kondisi'])
+                    @include('partials.sort-th', ['field' => 'phone', 'label' => 'Telepon'])
+                    @include('partials.sort-th', ['field' => 'status', 'label' => 'Status'])
                     <th class="lt-th"></th>
                 </tr>
             </thead>

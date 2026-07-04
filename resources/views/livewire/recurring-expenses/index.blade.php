@@ -22,13 +22,13 @@
         <table class="lt-table">
             <thead>
                 <tr>
-                    <th class="lt-th">Judul</th>
-                    <th class="lt-th">Kategori</th>
-                    <th class="lt-th">Frekuensi</th>
-                    <th class="lt-th text-right">Nominal</th>
-                    <th class="lt-th">Mode</th>
-                    <th class="lt-th">Mulai</th>
-                    <th class="lt-th">Status</th>
+                    @include('partials.sort-th', ['field' => 'title', 'label' => 'Judul'])
+                    @include('partials.sort-th', ['field' => 'category', 'label' => 'Kategori'])
+                    @include('partials.sort-th', ['field' => 'frequency', 'label' => 'Frekuensi'])
+                    @include('partials.sort-th', ['field' => 'amount', 'label' => 'Nominal', 'align' => 'right'])
+                    @include('partials.sort-th', ['field' => 'auto_post', 'label' => 'Mode'])
+                    @include('partials.sort-th', ['field' => 'start_date', 'label' => 'Mulai'])
+                    @include('partials.sort-th', ['field' => 'is_active', 'label' => 'Status'])
                     <th class="lt-th"></th>
                 </tr>
             </thead>

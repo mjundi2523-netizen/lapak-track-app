@@ -50,13 +50,13 @@
         <table class="lt-table">
             <thead>
                 <tr>
-                    <th class="lt-th">No. Bayar</th>
-                    <th class="lt-th">Pedagang</th>
-                    <th class="lt-th">Jenis</th>
-                    <th class="lt-th text-right">Jumlah</th>
-                    <th class="lt-th">Tanggal</th>
-                    <th class="lt-th">Metode</th>
-                    <th class="lt-th">Status</th>
+                    @include('partials.sort-th', ['field' => 'bill_id', 'label' => 'No. Bayar'])
+                    @include('partials.sort-th', ['field' => 'holder', 'label' => 'Pedagang'])
+                    @include('partials.sort-th', ['field' => 'bill_type', 'label' => 'Jenis'])
+                    @include('partials.sort-th', ['field' => 'paid_amount', 'label' => 'Jumlah', 'align' => 'right'])
+                    @include('partials.sort-th', ['field' => 'payment_date', 'label' => 'Tanggal'])
+                    @include('partials.sort-th', ['field' => 'payment_method', 'label' => 'Metode'])
+                    @include('partials.sort-th', ['field' => 'is_voided', 'label' => 'Status'])
                     <th class="lt-th"></th>
                 </tr>
             </thead>

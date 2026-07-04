@@ -2,6 +2,7 @@
 
 namespace App\Livewire\AddOns;
 
+use App\Livewire\Concerns\Sortable;
 use App\Models\AddOn;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
@@ -13,6 +14,7 @@ use Mary\Traits\Toast;
 #[Layout('layouts.app')]
 class IndexAddOns extends Component
 {
+    use Sortable;
     use Toast;
     use WithPagination;
 
@@ -26,12 +28,23 @@ class IndexAddOns extends Component
         $this->success('Biaya lain-lain berhasil dihapus.');
     }
 
+    /** Kolom sortable (klik header). */
+    protected function sortColumns(): array
+    {
+        return [
+            'add_on' => 'add_on',
+            'frequency' => 'frequency',
+            'price' => 'price',
+        ];
+    }
     public function render()
     {
         $addOns = AddOn::query()
-            ->when($this->search, fn ($q) => $q->where('add_on', 'like', "%{$this->search}%"))
-            ->orderBy('add_on')
-            ->paginate(10);
+            ->when($this->search, fn ($q) => $q->where('add_on', 'like', "%{$this->search}%"));
+
+        $this->applySort($addOns, fn ($q) => $q->orderBy('add_on'));
+
+        $addOns = $addOns->paginate(10);
 
         return view('livewire.add-ons.index', [
             'addOns' => $addOns,

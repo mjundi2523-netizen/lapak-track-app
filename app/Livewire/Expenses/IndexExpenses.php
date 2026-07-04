@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Expenses;
 
+use App\Livewire\Concerns\Sortable;
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
 use App\Services\ExpenseGenerationService;
@@ -14,6 +15,7 @@ use Mary\Traits\Toast;
 #[Layout('layouts.app')]
 class IndexExpenses extends Component
 {
+    use Sortable;
     use Toast;
     use WithPagination;
 
@@ -58,13 +60,25 @@ class IndexExpenses extends Component
             ->when($this->voidedFilter === 'voided', fn ($q) => $q->where('is_voided', true));
     }
 
+    /** Kolom sortable (klik header). */
+    protected function sortColumns(): array
+    {
+        return [
+            'expense_date' => 'expense_date',
+            'title' => 'title',
+            'category' => '(SELECT ec.name FROM expense_categories ec WHERE ec.ecid = expenses.ecid)',
+            'payment_method' => 'payment_method',
+            'amount' => 'amount',
+            'status' => "CONCAT(is_voided, '-', status)",
+        ];
+    }
     public function render()
     {
-        $expenses = $this->baseQuery()
-            ->with('category')
-            ->orderByDesc('expense_date')
-            ->orderByDesc('xpid')
-            ->paginate(10);
+        $expenses = $this->baseQuery()->with('category');
+
+        $this->applySort($expenses, fn ($q) => $q->orderByDesc('expense_date')->orderByDesc('xpid'));
+
+        $expenses = $expenses->paginate(10);
 
         // Total: hanya yang TIDAK di-void DAN sudah posted (pending = draft belum dihitung).
         $total = (int) $this->baseQuery()

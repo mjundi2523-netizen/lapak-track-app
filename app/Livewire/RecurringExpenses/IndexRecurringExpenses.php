@@ -2,6 +2,7 @@
 
 namespace App\Livewire\RecurringExpenses;
 
+use App\Livewire\Concerns\Sortable;
 use App\Models\Expense;
 use App\Models\RecurringExpense;
 use App\Services\ExpenseGenerationService;
@@ -16,6 +17,7 @@ use Mary\Traits\Toast;
 #[Layout('layouts.app')]
 class IndexRecurringExpenses extends Component
 {
+    use Sortable;
     use Toast;
     use WithPagination;
 
@@ -149,6 +151,19 @@ class IndexRecurringExpenses extends Component
         }
     }
 
+    /** Kolom sortable (klik header). */
+    protected function sortColumns(): array
+    {
+        return [
+            'title' => 'title',
+            'category' => '(SELECT ec.name FROM expense_categories ec WHERE ec.ecid = recurring_expenses.ecid)',
+            'frequency' => 'frequency',
+            'amount' => 'amount',
+            'auto_post' => 'auto_post',
+            'start_date' => 'start_date',
+            'is_active' => 'is_active',
+        ];
+    }
     public function render()
     {
         $templates = RecurringExpense::query()
@@ -156,9 +171,11 @@ class IndexRecurringExpenses extends Component
             ->when($this->search, fn ($q) => $q->where('title', 'like', "%{$this->search}%"))
             ->when($this->activeFilter === 'active', fn ($q) => $q->where('is_active', true))
             ->when($this->activeFilter === 'inactive', fn ($q) => $q->where('is_active', false))
-            ->orderByDesc('is_active')
-            ->orderBy('title')
-            ->paginate(10);
+;
+
+        $this->applySort($templates, fn ($q) => $q->orderByDesc('is_active')->orderBy('title'));
+
+        $templates = $templates->paginate(10);
 
         $duePending = $this->showConfirm ? $this->duePending()->get() : collect();
 

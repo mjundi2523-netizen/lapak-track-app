@@ -71,15 +71,15 @@
         <table class="lt-table">
             <thead>
                 <tr>
-                    <th class="lt-th">No. Tagihan</th>
-                    <th class="lt-th">Jenis</th>
-                    <th class="lt-th">Pedagang</th>
-                    <th class="lt-th">Lapak</th>
-                    <th class="lt-th text-right">Jumlah</th>
-                    <th class="lt-th text-right">Terbayar</th>
-                    <th class="lt-th text-right">Sisa</th>
-                    <th class="lt-th">Jatuh Tempo</th>
-                    <th class="lt-th">Status</th>
+                    @include('partials.sort-th', ['field' => 'bill_id', 'label' => 'No. Tagihan'])
+                    @include('partials.sort-th', ['field' => 'bill_type', 'label' => 'Jenis'])
+                    @include('partials.sort-th', ['field' => 'holder', 'label' => 'Pedagang'])
+                    @include('partials.sort-th', ['field' => 'location', 'label' => 'Lapak'])
+                    @include('partials.sort-th', ['field' => 'total_amount', 'label' => 'Jumlah', 'align' => 'right'])
+                    @include('partials.sort-th', ['field' => 'paid', 'label' => 'Terbayar', 'align' => 'right'])
+                    @include('partials.sort-th', ['field' => 'remaining', 'label' => 'Sisa', 'align' => 'right'])
+                    @include('partials.sort-th', ['field' => 'due_date', 'label' => 'Jatuh Tempo'])
+                    @include('partials.sort-th', ['field' => 'billing_status', 'label' => 'Status'])
                     <th class="lt-th"></th>
                 </tr>
             </thead>

@@ -35,12 +35,12 @@
         <table class="lt-table">
             <thead>
                 <tr>
-                    <th class="lt-th">Tanggal</th>
-                    <th class="lt-th">Judul</th>
-                    <th class="lt-th">Kategori</th>
-                    <th class="lt-th">Metode</th>
-                    <th class="lt-th text-right">Jumlah</th>
-                    <th class="lt-th">Status</th>
+                    @include('partials.sort-th', ['field' => 'expense_date', 'label' => 'Tanggal'])
+                    @include('partials.sort-th', ['field' => 'title', 'label' => 'Judul'])
+                    @include('partials.sort-th', ['field' => 'category', 'label' => 'Kategori'])
+                    @include('partials.sort-th', ['field' => 'payment_method', 'label' => 'Metode'])
+                    @include('partials.sort-th', ['field' => 'amount', 'label' => 'Jumlah', 'align' => 'right'])
+                    @include('partials.sort-th', ['field' => 'status', 'label' => 'Status'])
                     <th class="lt-th"></th>
                 </tr>
             </thead>
