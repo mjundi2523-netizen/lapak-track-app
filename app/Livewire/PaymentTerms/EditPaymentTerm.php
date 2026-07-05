@@ -6,6 +6,7 @@ use App\Livewire\Concerns\ReturnsBack;
 use App\Models\PaymentTerm;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
@@ -54,6 +55,14 @@ class EditPaymentTerm extends Component
 
     public function updatedCondExternal($value): void
     {
+        // Fitur "pedagang eksternal" = premium (aturan yang SUDAH eksternal tetap boleh disimpan).
+        if ($value && ! auth()->user()->isPremium()) {
+            $this->cond_external = false;
+            $this->dispatch('premium-required');
+
+            return;
+        }
+
         if ($value) {
             $this->cond_new = false;
         }
@@ -66,8 +75,22 @@ class EditPaymentTerm extends Component
 
     public function save(): void
     {
+        // Guard premium: non-premium tak boleh MENGUBAH aturan jadi eksternal
+        // (aturan yang memang sudah eksternal boleh tetap disimpan apa adanya).
+        if ($this->cond_external
+            && $this->paymentTerm->dealer_condition !== 'external'
+            && ! auth()->user()->isPremium()) {
+            $this->cond_external = false;
+            $this->dispatch('premium-required');
+
+            return;
+        }
+
         $this->validate([
-            'term_name' => 'required|string|max:255|unique:payment_terms,term_name,' . $this->paymentTerm->ptid . ',ptid',
+            'term_name' => ['required', 'string', 'max:255',
+                Rule::unique('payment_terms', 'term_name')
+                    ->where('market_id', Auth::user()->market_id)
+                    ->ignore($this->paymentTerm->ptid, 'ptid')],
             'frequency' => 'required|in:daily,weekly,monthly,annual',
             'interval_count' => 'required|integer|min:1',
             'price' => 'required|integer|min:0',

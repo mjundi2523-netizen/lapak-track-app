@@ -40,8 +40,15 @@
 
             <x-checkbox label="Untuk pedagang baru" wire:model.live="cond_new"
                 hint="Aturan ini khusus pedagang baru." />
-            <x-checkbox label="Untuk pedagang eksternal" wire:model.live="cond_external"
-                hint="Aturan ini khusus pedagang eksternal (tukang gerobak/keliling). Tanpa dicentang = pedagang reguler." />
+            <div class="flex items-start gap-1.5">
+                <x-checkbox label="Untuk pedagang eksternal" wire:model.live="cond_external"
+                    hint="Aturan ini khusus pedagang eksternal (tukang gerobak/keliling). Tanpa dicentang = pedagang reguler." />
+                @unless(auth()->user()->isPremium())
+                    <span class="inline-flex items-center gap-1 mt-0.5 px-2 py-0.5 rounded-full text-[11px] font-semibold" style="background:#fef3c7; color:#b45309;">
+                        <x-icon name="s-lock-closed" class="w-3 h-3" /> Premium
+                    </span>
+                @endunless
+            </div>
 
             <x-slot:actions>
                 <x-button label="Batal" link="{{ $this->backHref('payment-terms.index') }}" class="btn-ghost" />

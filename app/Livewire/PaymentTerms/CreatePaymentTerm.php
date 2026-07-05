@@ -6,6 +6,7 @@ use App\Livewire\Concerns\ReturnsBack;
 use App\Models\PaymentTerm;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
@@ -17,7 +18,7 @@ class CreatePaymentTerm extends Component
     use ReturnsBack;
     use Toast;
 
-    #[Validate('required|string|max:255|unique:payment_terms,term_name')]
+    // Unik per-market → divalidasi di save() (butuh market_id user).
     public string $term_name = '';
 
     #[Validate('required|in:daily,weekly,monthly,annual')]
@@ -42,6 +43,14 @@ class CreatePaymentTerm extends Component
 
     public function updatedCondExternal($value): void
     {
+        // Fitur "pedagang eksternal" = premium.
+        if ($value && ! auth()->user()->isPremium()) {
+            $this->cond_external = false;
+            $this->dispatch('premium-required');
+
+            return;
+        }
+
         if ($value) {
             $this->cond_new = false;
         }
@@ -54,6 +63,18 @@ class CreatePaymentTerm extends Component
 
     public function save(): void
     {
+        // Guard premium: cegah pembuatan aturan bayar eksternal oleh akun non-premium.
+        if ($this->cond_external && ! auth()->user()->isPremium()) {
+            $this->cond_external = false;
+            $this->dispatch('premium-required');
+
+            return;
+        }
+
+        $this->validate([
+            'term_name' => ['required', 'string', 'max:255',
+                Rule::unique('payment_terms', 'term_name')->where('market_id', Auth::user()->market_id)],
+        ]);
         $this->validate();
 
         DB::transaction(function () {
