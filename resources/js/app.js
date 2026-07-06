@@ -1,6 +1,6 @@
 // Livewire 3 sudah membundel Alpine.js, jadi tidak perlu mengimpornya manual di sini.
 
-// ── Penjaga "form belum disimpan" ────────────────────────────────────────────
+// ── Penjaga "form belum tersimpan" ───────────────────────────────────────────
 // Form create/edit/void (semua <form wire:submit>) ditandai dirty saat diisi.
 // Meninggalkan halaman selagi dirty → minta konfirmasi dulu, baik lewat link
 // wire:navigate (sidebar, tombol Batal, dsb.) maupun reload/tutup tab.
@@ -23,21 +23,35 @@ document.addEventListener('submit', (e) => {
     }
 }, true);
 
-// Link wire:navigate: cegat di fase capture SEBELUM handler navigate Livewire.
-// Redirect programatik setelah simpan (redirectBack) tidak lewat sini → tak terganggu.
-document.addEventListener('click', (e) => {
-    if (!ltFormDirty) return;
+// Livewire menjalankan navigasi link dari mousedown→mouseup (bukan click), jadi
+// mencegat event click terlambat. Satu-satunya titik yang benar-benar bisa
+// membatalkan adalah event cancelable `livewire:navigate` — tapi event itu juga
+// dipicu redirect programatik setelah simpan. Pembeda: catat waktu interaksi
+// terakhir pada link wire:navigate; event yang muncul segera setelahnya = klik user.
+let ltNavIntentAt = 0;
 
-    const link = e.target.closest && e.target.closest('a[href][wire\\:navigate], a[href][wire\\:navigate\\.hover]');
-    if (!link) return;
+const ltFlagNavIntent = (e) => {
+    if (e.target.closest && e.target.closest('a[href][wire\\:navigate], a[href][wire\\:navigate\\.hover]')) {
+        ltNavIntentAt = Date.now();
+    }
+};
+document.addEventListener('mouseup', ltFlagNavIntent, true);
+document.addEventListener('keydown', ltFlagNavIntent, true);
+document.addEventListener('click', ltFlagNavIntent, true);
+
+document.addEventListener('livewire:navigate', (e) => {
+    const fromUser = Date.now() - ltNavIntentAt < 1000;
+    ltNavIntentAt = 0;
+
+    // Redirect programatik (redirectBack setelah simpan) → biarkan lewat.
+    if (!ltFormDirty || !fromUser) return;
 
     if (confirm('Perubahan pada form belum disimpan. Yakin ingin meninggalkan halaman ini?')) {
         ltFormDirty = false;
     } else {
         e.preventDefault();
-        e.stopPropagation();
     }
-}, true);
+});
 
 // Reload / tutup tab / navigasi full-page (browser menampilkan dialognya sendiri).
 window.addEventListener('beforeunload', (e) => {
