@@ -144,6 +144,12 @@
         </x-form>
     </x-card>
 
+    {{-- Modal Konfirmasi Simpan (hanya dipicu saat ada penyewaan/langganan baru) --}}
+    @include('dealers._save-confirm-modal', [
+        'confirmTitle' => 'Konfirmasi Penyewaan Baru',
+        'confirmIntro' => 'Penyewaan/langganan baru akan dibuat untuk pedagang "' . $name . '".',
+    ])
+
     @unless($hasActiveRental)
         {{-- Modal Pemilihan Lapak --}}
         <x-modal wire:model="showStallModal" title="Pilih Lapak" subtitle="Lapak yang sudah tersewa tidak dapat dipilih." box-class="max-w-2xl">

@@ -12,6 +12,7 @@ use App\Services\BillGenerationService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -50,6 +51,9 @@ class EditDealer extends Component
 
     public bool $showStallModal = false;
     public string $stallSearch = '';
+
+    /** Modal konfirmasi simpan — hanya saat ada penyewaan/langganan BARU (memicu tagihan otomatis). */
+    public bool $showSaveConfirm = false;
 
     public function mount(Dealer $dealer): void
     {
@@ -105,7 +109,7 @@ class EditDealer extends Component
     protected function rules(): array
     {
         return [
-            'nik' => 'required|string|max:255|unique:dealer,nik,' . $this->dealer->did . ',did',
+            'nik' => ['required', 'string', 'max:255', Rule::unique('dealer', 'nik')->where('market_id', Auth::user()->market_id)->ignore($this->dealer->did, 'did')],
             'name' => 'required|string|max:255',
             'birth_date' => 'required|date',
             'address' => 'required|string|max:255',
@@ -133,7 +137,42 @@ class EditDealer extends Component
         }
     }
 
+    /**
+     * Tahap 1: validasi penuh. Bila perubahan memicu tagihan otomatis
+     * (penyewaan/langganan baru) → minta konfirmasi dulu; selain itu langsung simpan.
+     */
     public function save(BillGenerationService $bills): void
+    {
+        $ctx = $this->validateForSave();
+        if ($ctx === null) {
+            return;
+        }
+
+        if ($ctx['addingRental'] || $ctx['addingExternal']) {
+            $this->showSaveConfirm = true;
+
+            return;
+        }
+
+        $this->persist($bills, $ctx);
+    }
+
+    /** Tahap 2: user mengonfirmasi pembuatan penyewaan/langganan baru + tagihannya. */
+    public function confirmSave(BillGenerationService $bills): void
+    {
+        $this->showSaveConfirm = false;
+
+        // Validasi ulang: kondisi bisa berubah selagi modal terbuka (mis. lapak keburu tersewa).
+        $ctx = $this->validateForSave();
+        if ($ctx === null) {
+            return;
+        }
+
+        $this->persist($bills, $ctx);
+    }
+
+    /** Seluruh validasi + guard. Return null bila gagal; selain itu konteks simpan. */
+    protected function validateForSave(): ?array
     {
         $this->validate();
 
@@ -144,7 +183,7 @@ class EditDealer extends Component
         if ($this->status === 'inactive' && ($hasActiveRental || $hasActiveExternal)) {
             $this->addError('status', 'Tidak bisa menonaktifkan pedagang yang masih menyewa / berlangganan aktif. Akhiri dulu.');
 
-            return;
+            return null;
         }
 
         // Tambah penyewaan (regular/new) hanya bila pedagang tidak punya rental aktif.
@@ -162,7 +201,7 @@ class EditDealer extends Component
                 $this->addError('selected_stalls', 'Ada lapak yang sudah tersewa, silakan pilih ulang.');
                 $this->selected_stalls = array_values(array_diff($this->selected_stalls, $occupied));
 
-                return;
+                return null;
             }
 
             // Lapak harus cocok dengan status pedagang (aturan bayar is_new = is_new pedagang).
@@ -175,7 +214,7 @@ class EditDealer extends Component
                 $this->addError('selected_stalls', 'Ada lapak yang aturan bayarnya tidak sesuai kondisi pedagang.');
                 $this->selected_stalls = array_values(array_diff($this->selected_stalls, $mismatch));
 
-                return;
+                return null;
             }
         }
 
@@ -186,7 +225,7 @@ class EditDealer extends Component
         if ($addingExternal && ! auth()->user()->isPremium()) {
             $this->dispatch('premium-required');
 
-            return;
+            return null;
         }
 
         if ($addingExternal) {
@@ -195,6 +234,14 @@ class EditDealer extends Component
                 'external_start_date' => 'required|date',
             ]);
         }
+
+        return ['addingRental' => $addingRental, 'addingExternal' => $addingExternal];
+    }
+
+    /** Simpan perubahan + buat penyewaan/langganan baru (bila ada) beserta tagihannya. */
+    protected function persist(BillGenerationService $bills, array $ctx): void
+    {
+        ['addingRental' => $addingRental, 'addingExternal' => $addingExternal] = $ctx;
 
         if ($this->scan_id_file) {
             $this->scan_id = $this->scan_id_file->store('scan-ids', 'public');

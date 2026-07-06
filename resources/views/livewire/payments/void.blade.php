@@ -16,7 +16,7 @@
             <div><span class="font-semibold">Lapak:</span> {{ $payment->dealerBill?->location_label }}</div>
         </div>
 
-        <x-form wire:submit="void">
+        <x-form wire:submit="void" wire:confirm="Batalkan pembayaran ini? Tindakan tidak dapat diurungkan.">
             <x-input label="Alasan Pembatalan" wire:model="voided_reason" required />
 
             <x-slot:actions>

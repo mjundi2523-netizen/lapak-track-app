@@ -15,7 +15,7 @@
             <div><span class="font-semibold">Metode:</span> {{ ucfirst($expense->payment_method) }}</div>
         </div>
 
-        <x-form wire:submit="void">
+        <x-form wire:submit="void" wire:confirm="Batalkan pengeluaran ini? Tindakan tidak dapat diurungkan.">
             <x-input label="Alasan Pembatalan" wire:model="voided_reason" required />
 
             <x-slot:actions>

@@ -90,6 +90,12 @@
         </x-form>
     </x-card>
 
+    {{-- Modal Konfirmasi Simpan --}}
+    @include('dealers._save-confirm-modal', [
+        'confirmTitle' => 'Konfirmasi Registrasi Pedagang',
+        'confirmIntro' => 'Pedagang "' . $name . '" akan didaftarkan.',
+    ])
+
     {{-- Modal Pemilihan Lapak --}}
     <x-modal wire:model="showStallModal" title="Pilih Lapak" subtitle="Lapak yang sudah tersewa tidak dapat dipilih." box-class="max-w-2xl">
         <x-input placeholder="Cari blok lapak..." wire:model.live.debounce="stallSearch" clearable icon="o-magnifying-glass" class="mb-4" />

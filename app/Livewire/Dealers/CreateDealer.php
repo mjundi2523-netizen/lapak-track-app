@@ -12,6 +12,7 @@ use App\Services\BillGenerationService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -48,6 +49,9 @@ class CreateDealer extends Component
     public bool $showStallModal = false;
     public string $stallSearch = '';
 
+    /** Modal konfirmasi simpan (menjelaskan tagihan yang akan dibuat otomatis). */
+    public bool $showSaveConfirm = false;
+
     public function mount(): void
     {
         $this->external_start_date = Carbon::today()->toDateString();
@@ -56,7 +60,7 @@ class CreateDealer extends Component
     protected function rules(): array
     {
         return [
-            'nik' => 'required|string|max:255|unique:dealer,nik',
+            'nik' => ['required', 'string', 'max:255', Rule::unique('dealer', 'nik')->where('market_id', Auth::user()->market_id)],
             'name' => 'required|string|max:255',
             'birth_date' => 'required|date',
             'address' => 'required|string|max:255',
@@ -116,54 +120,26 @@ class CreateDealer extends Component
         }
     }
 
-    public function save(BillGenerationService $billService): void
+    /**
+     * Tahap 1: validasi penuh lalu tampilkan modal konfirmasi.
+     * Data BELUM disimpan apa pun sampai user menekan konfirmasi.
+     */
+    public function save(): void
     {
-        // Guard premium: cegah pembuatan pedagang eksternal oleh akun non-premium.
-        if ($this->cond_external && ! auth()->user()->isPremium()) {
-            $this->cond_external = false;
-            $this->dispatch('premium-required');
-
+        if (! $this->validateForSave()) {
             return;
         }
 
-        $this->validate();
+        $this->showSaveConfirm = true;
+    }
 
-        // Tanggal mulai sewa wajib hanya bila ada lapak yang dipilih.
-        if (! empty($this->selected_stalls)) {
-            $this->validate(['rent_start_date' => 'required|date']);
-        }
+    /** Tahap 2: user mengonfirmasi → simpan pedagang + generate tagihan. */
+    public function confirmSave(BillGenerationService $billService): void
+    {
+        $this->showSaveConfirm = false;
 
-        // Pedagang eksternal: wajib pilih aturan bayar + tanggal mulai langganan.
-        if ($this->cond_external) {
-            $this->validate([
-                'selected_ptid' => 'required|integer|exists:payment_terms,ptid',
-                'external_start_date' => 'required|date',
-            ]);
-        }
-
-        // Tolak lapak yang sudah tersewa (jaga-jaga jika dipilih lewat manipulasi state).
-        $occupied = Stall::whereIn('sid', $this->selected_stalls)
-            ->whereHas('activeRentals')
-            ->pluck('sid')
-            ->all();
-
-        if ($occupied) {
-            $this->addError('selected_stalls', 'Ada lapak yang sudah tersewa, silakan pilih ulang.');
-            $this->selected_stalls = array_values(array_diff($this->selected_stalls, $occupied));
-
-            return;
-        }
-
-        // Lapak harus cocok kondisi pedagang: payment_terms.dealer_condition = dealer.dealer_condition.
-        $mismatch = Stall::whereIn('sid', $this->selected_stalls)
-            ->whereDoesntHave('paymentTerm', fn ($q) => $q->where('dealer_condition', $this->dealerCondition()))
-            ->pluck('sid')
-            ->all();
-
-        if ($mismatch) {
-            $this->addError('selected_stalls', 'Ada lapak yang aturan bayarnya tidak sesuai kondisi pedagang.');
-            $this->selected_stalls = array_values(array_diff($this->selected_stalls, $mismatch));
-
+        // Validasi ulang: kondisi bisa berubah selagi modal terbuka (mis. lapak keburu tersewa).
+        if (! $this->validateForSave()) {
             return;
         }
 
@@ -217,6 +193,61 @@ class CreateDealer extends Component
 
         $this->success('Pedagang berhasil ditambahkan.');
         $this->redirectBack('dealers.index');
+    }
+
+    /** Seluruh validasi + guard sebelum simpan. Return false bila ada yang gagal. */
+    protected function validateForSave(): bool
+    {
+        // Guard premium: cegah pembuatan pedagang eksternal oleh akun non-premium.
+        if ($this->cond_external && ! auth()->user()->isPremium()) {
+            $this->cond_external = false;
+            $this->dispatch('premium-required');
+
+            return false;
+        }
+
+        $this->validate();
+
+        // Tanggal mulai sewa wajib hanya bila ada lapak yang dipilih.
+        if (! empty($this->selected_stalls)) {
+            $this->validate(['rent_start_date' => 'required|date']);
+        }
+
+        // Pedagang eksternal: wajib pilih aturan bayar + tanggal mulai langganan.
+        if ($this->cond_external) {
+            $this->validate([
+                'selected_ptid' => 'required|integer|exists:payment_terms,ptid',
+                'external_start_date' => 'required|date',
+            ]);
+        }
+
+        // Tolak lapak yang sudah tersewa (jaga-jaga jika dipilih lewat manipulasi state).
+        $occupied = Stall::whereIn('sid', $this->selected_stalls)
+            ->whereHas('activeRentals')
+            ->pluck('sid')
+            ->all();
+
+        if ($occupied) {
+            $this->addError('selected_stalls', 'Ada lapak yang sudah tersewa, silakan pilih ulang.');
+            $this->selected_stalls = array_values(array_diff($this->selected_stalls, $occupied));
+
+            return false;
+        }
+
+        // Lapak harus cocok kondisi pedagang: payment_terms.dealer_condition = dealer.dealer_condition.
+        $mismatch = Stall::whereIn('sid', $this->selected_stalls)
+            ->whereDoesntHave('paymentTerm', fn ($q) => $q->where('dealer_condition', $this->dealerCondition()))
+            ->pluck('sid')
+            ->all();
+
+        if ($mismatch) {
+            $this->addError('selected_stalls', 'Ada lapak yang aturan bayarnya tidak sesuai kondisi pedagang.');
+            $this->selected_stalls = array_values(array_diff($this->selected_stalls, $mismatch));
+
+            return false;
+        }
+
+        return true;
     }
 
     public function render()
