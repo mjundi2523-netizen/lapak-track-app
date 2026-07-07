@@ -49,3 +49,6 @@ Thumbs.db
 # AI Docs (CLAUDE.md sengaja TETAP di-track)
 /.qoder
 /.claude
+
+# Obsidian vault (basic memory lokal — tidak ikut repo)
+/vault
