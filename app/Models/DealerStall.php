@@ -2,16 +2,20 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToMarket;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class DealerStall extends Model
 {
+    use BelongsToMarket;
+
     protected $table = 'dealer_stall';
     protected $primaryKey = 'dsid';
 
     protected $fillable = [
+        'market_id',
         'did',
         'sid',
         'rent_start_date',

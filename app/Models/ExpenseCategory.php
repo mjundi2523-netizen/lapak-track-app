@@ -2,16 +2,20 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToMarket;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ExpenseCategory extends Model
 {
+    use BelongsToMarket;
+
     protected $table = 'expense_categories';
     protected $primaryKey = 'ecid';
 
     protected $fillable = [
+        'market_id',
         'name',
         'created_by',
         'modified_by',

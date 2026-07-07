@@ -55,7 +55,7 @@ class EditStall extends Component
             'block' => [
                 'required',
                 'regex:/^[A-Z]\d{2}$/',
-                Rule::unique('stall', 'block')->where('number', $this->number)->ignore($this->stall->sid, 'sid'),
+                Rule::unique('stall', 'block')->where('number', $this->number)->where('market_id', Auth::user()->market_id)->ignore($this->stall->sid, 'sid'),
             ],
             'number' => ['required', 'regex:/^\d{2}$/'],
             'ptid' => ['nullable', 'exists:payment_terms,ptid'],
@@ -83,6 +83,7 @@ class EditStall extends Component
                 $userId = Auth::id();
                 foreach ($this->selectedAddOns as $aoid) {
                     DB::table('stall_add_ons')->insert([
+                        'market_id' => $this->stall->market_id,
                         'sid' => $this->stall->sid,
                         'aoid' => $aoid,
                         'created_by' => $userId,

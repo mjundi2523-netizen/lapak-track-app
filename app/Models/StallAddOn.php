@@ -2,15 +2,19 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToMarket;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class StallAddOn extends Model
 {
+    use BelongsToMarket;
+
     protected $table = 'stall_add_ons';
     protected $primaryKey = 'saoid';
 
     protected $fillable = [
+        'market_id',
         'sid',
         'aoid',
         'created_by',

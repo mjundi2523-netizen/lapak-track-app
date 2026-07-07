@@ -63,6 +63,7 @@ class ExpenseGenerationService
                 $guard++;
 
                 Expense::create([
+                    'market_id' => $r->market_id,
                     'ecid' => $r->ecid,
                     'rxid' => $r->rxid,
                     'title' => $r->title,

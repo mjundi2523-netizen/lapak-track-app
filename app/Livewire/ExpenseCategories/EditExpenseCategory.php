@@ -5,6 +5,7 @@ namespace App\Livewire\ExpenseCategories;
 use App\Livewire\Concerns\ReturnsBack;
 use App\Models\ExpenseCategory;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Mary\Traits\Toast;
@@ -28,7 +29,10 @@ class EditExpenseCategory extends Component
     public function save(): void
     {
         $this->validate([
-            'name' => 'required|string|max:255|unique:expense_categories,name,' . $this->expenseCategory->ecid . ',ecid',
+            'name' => ['required', 'string', 'max:255',
+                Rule::unique('expense_categories', 'name')
+                    ->where('market_id', Auth::user()->market_id)
+                    ->ignore($this->expenseCategory->ecid, 'ecid')],
         ]);
 
         $this->expenseCategory->update([

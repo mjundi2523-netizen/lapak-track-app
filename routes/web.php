@@ -5,15 +5,15 @@ use Illuminate\Support\Facades\Route;
 // Dashboard
 Route::get('/', fn () => redirect('/dashboard'));
 Route::get('/dashboard', App\Livewire\Dashboard::class)
-    ->middleware(['auth', 'verified'])->name('dashboard');
+    ->middleware(['auth', 'verified', 'approved'])->name('dashboard');
 
 // Profile (komponen Livewire full-page; ShowProfile sudah self-contained)
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'approved'])->group(function () {
     Route::get('/profile', App\Livewire\Profile\ShowProfile::class)->name('profile.edit');
 });
 
 // Livewire full-page routes
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified', 'approved'])->group(function () {
 
     // Payment Terms
     Route::get('/aturan-bayar', App\Livewire\PaymentTerms\IndexPaymentTerms::class)->name('payment-terms.index');

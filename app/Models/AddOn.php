@@ -2,16 +2,20 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToMarket;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class AddOn extends Model
 {
+    use BelongsToMarket;
+
     protected $table = 'add_ons';
     protected $primaryKey = 'aoid';
 
     protected $fillable = [
+        'market_id',
         'add_on',
         'price',
         'frequency',

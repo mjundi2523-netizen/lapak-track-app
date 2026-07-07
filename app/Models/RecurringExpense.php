@@ -2,16 +2,20 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToMarket;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class RecurringExpense extends Model
 {
+    use BelongsToMarket;
+
     protected $table = 'recurring_expenses';
     protected $primaryKey = 'rxid';
 
     protected $fillable = [
+        'market_id',
         'ecid',
         'title',
         'amount',

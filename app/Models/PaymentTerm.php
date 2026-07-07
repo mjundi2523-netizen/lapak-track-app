@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToMarket;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -9,10 +10,13 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class PaymentTerm extends Model
 {
+    use BelongsToMarket;
+
     protected $table = 'payment_terms';
     protected $primaryKey = 'ptid';
 
     protected $fillable = [
+        'market_id',
         'term_name',
         'frequency',
         'interval_count',

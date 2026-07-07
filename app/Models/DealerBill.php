@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToMarket;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -9,10 +10,13 @@ use Illuminate\Support\Carbon;
 
 class DealerBill extends Model
 {
+    use BelongsToMarket;
+
     protected $table = 'dealer_bills';
     protected $primaryKey = 'dbid';
 
     protected $fillable = [
+        'market_id',
         'bill_id',
         'bill_type',
         'frequency',

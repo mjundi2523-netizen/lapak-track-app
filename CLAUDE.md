@@ -15,8 +15,19 @@
 - Mesin billing tuntas: lazy roll-forward 4 tipe tagihan (MTR/MAT/AAT/ATR), skema add-on dengan anchor fleksibel (`is_rent_date`/`start_date`). Data sudah di-regen penuh. Lihat bagian "Mesin billing" di bawah. **Belum di-commit.**
 - ERD lama (`terms_add_ons`) **sudah usang**. Schema asli sekarang: add-ons menempel ke **stall** lewat pivot `stall_add_ons`, bukan ke payment_terms. `bill_id` sudah ditambahkan ke `dealer_bills` & `dealer_payment`.
 
+## Multi-tenancy (market) — ditambah 2026-07-05
+- **1 instance dipakai banyak pasar/perusahaan**; tiap klien hanya lihat datanya sendiri. Tabel **`markets`** (PK `mid`: name, owner_name, phone, address, is_active). **Market dibuat HANYA lewat DB langsung** (tak ada UI create market). Model `Market`.
+- **`market_id` (FK→`markets.mid`, NOT NULL) ada di SEMUA tabel domain**: payment_terms, add_ons, stall, dealer, dealer_stall, external_dealers, dealer_bills, dealer_payment, expense_categories, expenses, recurring_expenses, stall_add_ons. Data lama di-backfill ke **market default `mid=1` ("Pasar Default")**.
+- **Scoping otomatis via trait `App\Models\Concerns\BelongsToMarket`** (dipasang di 12 model domain). Global scope `market` menambah `WHERE <tabel>.market_id = Auth::user()->market_id` ke SEMUA query Eloquent + **auto-isi `market_id` saat create**. **JANGAN filter market_id manual** di query Eloquent — sudah otomatis. `market_id` ada di `$fillable` tiap model.
+  - **Scope inert bila tak ada user / user.market_id null** (developer/superadmin/console) → melihat/menggarap SEMUA market. Karena itu **command `bills:generate` (tanpa auth) jalan lintas market**, sedangkan catch-up lazy di `mount()` (ada auth) hanya untuk market user.
+  - **Route-model binding otomatis 404 lintas market** (mis. buka `bills/{dbid}` milik market lain) — bonus keamanan.
+- **Query mentah (`DB::table`/`DB::raw`) TIDAK kena scope** → filter manual: sudah ditangani di Dashboard (utang `$stallDebt`/`$extDebt` pakai `->when($marketId,...)`) & insert pivot `stall_add_ons` (Create/EditStall kirim `market_id`). `BillIdGenerator` sengaja global (nomor bill unik lintas market).
+- **Service generator set `market_id` eksplisit dari parent** (`BillGenerationService` dari `dsid`/`edid`, `ExpenseGenerationService` dari template) — wajib agar aman saat dijalankan di console (tanpa Auth).
+- **Beberapa unique jadi PER-MARKET** (komposit dgn `market_id`): `stall(block,number)`, `expense_categories.name`, `dealer.nik`, `payment_terms.term_name`. Validasi `Rule::unique(...)->where('market_id', Auth::user()->market_id)` di Create/Edit terkait. Email user tetap **unik global** (untuk login).
+- **Onboarding**: `users.market_id` (nullable; null = developer) + **`users.is_approved`** (bool, default false). Registrasi (`RegisteredUserController`) = user **pilih market dari dropdown** (market aktif), `is_approved=false`, `email_verified_at` diisi (gerbang = approval, bukan email), **tanpa auto-login**. **Multi-user per market.** Developer approve manual: `UPDATE users SET is_approved=1`. Gerbang: login diblok di `AuthenticatedSessionController` bila `!is_approved` + middleware **`approved`** (`EnsureApproved`, alias di `bootstrap/app.php`) di grup route app/profile/dashboard (lapis kedua).
+
 ## Konvensi schema
-- Custom PK per tabel (`ptid`, `aoid`, `sid`, `did`, `dsid`, `dbid`, `dpid`).
+- Custom PK per tabel (`ptid`, `aoid`, `sid`, `did`, `dsid`, `dbid`, `dpid`; market `mid`). Semua tabel domain punya `market_id` (lihat "Multi-tenancy").
 - `billing_status` enum: `paid | installment | unpaid | pending | cancelled`. `cancelled` = status terminal (tunggakan yang dibatalkan saat sewa diakhiri); `recalculateBillingStatus()` tidak menyentuhnya, dan dikecualikan dari hitungan/notifikasi/pemilih bayar. Ditambah 2026-06-27.
 - `frequency` enum: `daily | weekly | monthly | annual`.
 - `payment_terms.interval_count` (unsigned, default 1) = pengali periode: "setiap {interval_count} {frequency}". Ditambah 2026-06-23.
@@ -109,7 +120,10 @@ Lihat `.qoder/specs/LapakTrack_MVP_Plan.md` — logika billing (lazy roll-forwar
 - **Filter index di query string** via `#[Url(except: ...)]`: IndexBills, IndexPayments, IndexExpenses (semua filter + tanggal), plus `search` di IndexDealers/Stalls/PaymentTerms/AddOns/ExpenseCategories/RecurringExpenses (+`activeFilter`) — supaya URL referer membawa filter & terpulihkan saat kembali. `page` paginator sudah default di URL.
 - **Form baru wajib ikut pola ini**: `use ReturnsBack;` + `redirectBack()` + Batal pakai `backHref()`; filter index baru diberi `#[Url]`.
 
-## Pembayaran: aturan nominal
+## Konfirmasi aksi krusial — ditambah 2026-07-06
+- **Create/Edit Pedagang: simpan 2 tahap.** `save()` = `validateForSave()` (semua validasi + guard, return false/null bila gagal) lalu set `showSaveConfirm=true` → modal konfirmasi (partial **`dealers/_save-confirm-modal.blade.php`**, menjelaskan rentang tagihan otomatis: mulai s/d akhir sewa / hari ini, atau "tanpa tagihan"); **`confirmSave()`** validasi ULANG (kondisi bisa berubah selagi modal terbuka) baru persist. **Edit hanya minta konfirmasi bila ada penyewaan/langganan BARU** (memicu tagihan) — edit data biasa langsung simpan. Batal = tutup modal, tidak ada yang tersimpan.
+- **Aksi destruktif wajib konfirmasi**: void pembayaran/pengeluaran punya `wire:confirm` di `x-form` (lapis final di atas halaman void); delete master data (add-ons/kategori/aturan bayar) & `cancelPending` sudah `wire:confirm`; hapus rental & akhiri sewa via modal di ShowDealer. Aksi destruktif baru → minimal `wire:confirm`, yang berdampak tagihan → pola modal 2 tahap.
+- **Guard global "form belum disimpan"** di `resources/js/app.js`: semua `<form wire:submit>` ditandai dirty saat diisi (input/change); klik link `a[wire:navigate]` (sidebar/Batal/dll.) di-intercept fase capture → `confirm()`; reload/tutup tab → `beforeunload`. Submit form & `livewire:navigated` mereset flag; redirect programatik setelah simpan (redirectBack) tidak terganggu. Form baru otomatis terlindungi selama pakai `x-form wire:submit` — tak perlu apa-apa. Ubah `app.js` → `npm run build`.
 - **Blocking lebih-bayar**: `CreatePayment` menolak `paid_amount > sisa` (`sisa = total − Σ non-void`) + menolak tagihan `paid`/`cancelled`. Server-side (`addError`), plus `max` & tombol "Bayar penuh" (`payFull()`) di form. Belum ada konsep saldo/lebih-bayar — jangan diakali lewat over-payment.
 
 ## Pembayaran: detail & kwitansi

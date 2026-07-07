@@ -88,12 +88,15 @@ class Dashboard extends Component
 
         // --- Pedagang menunggak & top 10 tunggakan terbesar ---
         // Outstanding = total_amount - paid, untuk bill unpaid/installment.
+        // Query mentah (DB::table) TIDAK kena global scope market → filter manual per market.
+        $marketId = auth()->user()?->market_id;
         $paidSub = DB::raw('(SELECT dbid, SUM(paid_amount) as paid FROM dealer_payment WHERE is_voided = 0 GROUP BY dbid) pp');
 
         $stallDebt = DB::table('dealer_bills')
             ->join('dealer_stall', 'dealer_bills.dsid', '=', 'dealer_stall.dsid')
             ->leftJoin($paidSub, 'pp.dbid', '=', 'dealer_bills.dbid')
             ->whereIn('dealer_bills.billing_status', ['unpaid', 'installment'])
+            ->when($marketId, fn ($q) => $q->where('dealer_bills.market_id', $marketId))
             ->selectRaw('dealer_stall.did, SUM(dealer_bills.total_amount - COALESCE(pp.paid, 0)) as outstanding')
             ->groupBy('dealer_stall.did')
             ->get()->keyBy('did');
@@ -102,6 +105,7 @@ class Dashboard extends Component
             ->join('external_dealers', 'dealer_bills.edid', '=', 'external_dealers.edid')
             ->leftJoin($paidSub, 'pp.dbid', '=', 'dealer_bills.dbid')
             ->whereIn('dealer_bills.billing_status', ['unpaid', 'installment'])
+            ->when($marketId, fn ($q) => $q->where('dealer_bills.market_id', $marketId))
             ->selectRaw('external_dealers.did, SUM(dealer_bills.total_amount - COALESCE(pp.paid, 0)) as outstanding')
             ->groupBy('external_dealers.did')
             ->get()->keyBy('did');

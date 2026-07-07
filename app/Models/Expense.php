@@ -2,15 +2,19 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToMarket;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Expense extends Model
 {
+    use BelongsToMarket;
+
     protected $table = 'expenses';
     protected $primaryKey = 'xpid';
 
     protected $fillable = [
+        'market_id',
         'ecid',
         'rxid',
         'title',

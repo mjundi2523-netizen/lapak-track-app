@@ -2,15 +2,19 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToMarket;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class DealerPayment extends Model
 {
+    use BelongsToMarket;
+
     protected $table = 'dealer_payment';
     protected $primaryKey = 'dpid';
 
     protected $fillable = [
+        'market_id',
         'bill_id',
         'dbid',
         'paid_amount',

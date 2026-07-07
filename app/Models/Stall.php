@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToMarket;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -10,10 +11,13 @@ use Illuminate\Support\Carbon;
 
 class Stall extends Model
 {
+    use BelongsToMarket;
+
     protected $table = 'stall';
     protected $primaryKey = 'sid';
 
     protected $fillable = [
+        'market_id',
         'block',
         'number',
         'description',

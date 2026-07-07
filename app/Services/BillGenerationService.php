@@ -189,6 +189,7 @@ class BillGenerationService
                 $dueDate = $periodEnd->copy();
 
                 DealerBill::create([
+                    'market_id' => $ed->market_id,
                     'bill_id' => $this->billIdGenerator->generate('dealer_bills', 'EXT', Carbon::now()),
                     'bill_type' => 'EXT',
                     'frequency' => $frequency,
@@ -257,6 +258,7 @@ class BillGenerationService
             $status = DealerBill::deriveStatus(0, $amount, $dueDate);
 
             DealerBill::create([
+                'market_id' => $ds->market_id,
                 'bill_id' => $this->billIdGenerator->generate('dealer_bills', $type, Carbon::now()),
                 'bill_type' => $type,
                 'frequency' => $frequency,

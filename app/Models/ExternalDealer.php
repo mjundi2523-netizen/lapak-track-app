@@ -2,16 +2,20 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToMarket;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ExternalDealer extends Model
 {
+    use BelongsToMarket;
+
     protected $table = 'external_dealers';
     protected $primaryKey = 'edid';
 
     protected $fillable = [
+        'market_id',
         'did',
         'ptid',
         'start_date',

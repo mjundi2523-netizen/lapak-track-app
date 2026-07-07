@@ -21,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'premium' => \App\Http\Middleware\EnsurePremium::class,
+            'approved' => \App\Http\Middleware\EnsureApproved::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
