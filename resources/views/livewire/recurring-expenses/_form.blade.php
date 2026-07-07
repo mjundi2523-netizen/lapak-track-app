@@ -42,12 +42,15 @@
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <x-input label="Tanggal Mulai" wire:model="start_date" type="date" required />
-        <x-select label="Metode" wire:model="payment_method" :options="[
-            ['value' => 'tunai', 'label' => 'Tunai'],
-            ['value' => 'transfer', 'label' => 'Transfer'],
-            ['value' => 'lainnya', 'label' => 'Lainnya'],
-        ]" option-value="value" option-label="label" required />
+        <x-input label="Tanggal Berakhir (opsional)" wire:model="end_date" type="date"
+            hint="Kosongkan bila berjalan tanpa batas. Occurrence berhenti dibuat setelah tanggal ini." />
     </div>
+
+    <x-select label="Metode" wire:model="payment_method" :options="[
+        ['value' => 'tunai', 'label' => 'Tunai'],
+        ['value' => 'transfer', 'label' => 'Transfer'],
+        ['value' => 'lainnya', 'label' => 'Lainnya'],
+    ]" option-value="value" option-label="label" required />
 
     {{-- Mode pencatatan --}}
     <div class="rounded-xl p-4" style="border:1px solid #eceef2; background:#f7f8fb;">

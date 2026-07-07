@@ -25,6 +25,7 @@ class CreateRecurringExpense extends Component
     public int $interval_count = 1;
     public string $payment_method = 'tunai';
     public string $start_date = '';
+    public ?string $end_date = null;
     public bool $auto_post = true;
     public ?string $note = null;
 
@@ -43,6 +44,7 @@ class CreateRecurringExpense extends Component
             'interval_count' => 'required|integer|min:1|max:365',
             'payment_method' => 'required|in:tunai,transfer,lainnya',
             'start_date' => 'required|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
             'auto_post' => 'boolean',
             'note' => 'nullable|string|max:1000',
         ];
@@ -50,6 +52,9 @@ class CreateRecurringExpense extends Component
 
     public function save(ExpenseGenerationService $gen): void
     {
+        // Tanggal opsional kosong ('') → null (hindari insert '' ke kolom DATE).
+        $this->end_date = $this->end_date ?: null;
+
         $this->validate();
 
         $template = RecurringExpense::create([
@@ -60,6 +65,7 @@ class CreateRecurringExpense extends Component
             'interval_count' => $this->interval_count,
             'payment_method' => $this->payment_method,
             'start_date' => $this->start_date,
+            'end_date' => $this->end_date,
             'auto_post' => $this->auto_post,
             'is_active' => true,
             'note' => $this->note,

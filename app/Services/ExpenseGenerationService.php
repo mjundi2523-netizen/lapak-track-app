@@ -44,22 +44,25 @@ class ExpenseGenerationService
         }
 
         $start = Carbon::parse($r->start_date)->startOfDay();
-        $today = Carbon::today();
+        // Horizon = hari ini, tapi tidak melewati end_date bila diisi (template berbatas waktu).
+        $horizon = $r->end_date
+            ? Carbon::parse($r->end_date)->startOfDay()->min(Carbon::today())
+            : Carbon::today();
 
-        if ($start->gt($today)) {
+        if ($start->gt($horizon)) {
             return;
         }
 
         $interval = max(1, (int) ($r->interval_count ?? 1));
         $userId = Auth::id() ?? $r->created_by ?? 1;
 
-        DB::transaction(function () use ($r, $start, $today, $interval, $userId) {
+        DB::transaction(function () use ($r, $start, $horizon, $interval, $userId) {
             $next = $r->generated_until
                 ? $this->advance(Carbon::parse($r->generated_until)->startOfDay(), $r->frequency, $interval)
                 : $start->copy();
 
             $guard = 0;
-            while ($next->lte($today) && $guard < self::MAX_PERIODS_PER_RUN) {
+            while ($next->lte($horizon) && $guard < self::MAX_PERIODS_PER_RUN) {
                 $guard++;
 
                 Expense::create([
