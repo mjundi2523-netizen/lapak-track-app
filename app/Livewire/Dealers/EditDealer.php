@@ -189,8 +189,9 @@ class EditDealer extends Component
             return null;
         }
 
-        // Tambah penyewaan (regular/new) hanya bila pedagang tidak punya rental aktif.
-        $addingRental = ! $this->cond_external && ! $hasActiveRental && ! empty($this->selected_stalls);
+        // Tambah penyewaan (regular/new). Boleh menambah lapak baru walau sudah punya rental aktif
+        // (rental lama tetap readonly; yang ditambah di sini jadi rental baru + tagihannya).
+        $addingRental = ! $this->cond_external && ! empty($this->selected_stalls);
         if ($addingRental) {
             $this->validate(['rent_start_date' => 'required|date']);
 
@@ -306,8 +307,9 @@ class EditDealer extends Component
         $activeExternal = $this->dealer->activeExternal()->with('paymentTerm')->get();
         $hasActiveExternal = $activeExternal->isNotEmpty();
 
-        // Daftar lapak untuk modal (hanya relevan saat pedagang tidak punya rental aktif).
-        $stalls = $hasActiveRental
+        // Daftar lapak untuk modal (untuk pedagang non-eksternal; boleh menambah lapak baru
+        // walau sudah punya rental aktif — lapak yang sudah tersewa otomatis tidak bisa dipilih).
+        $stalls = $this->cond_external
             ? collect()
             : Stall::query()
                 ->where('is_active', true)

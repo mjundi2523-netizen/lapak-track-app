@@ -46,30 +46,7 @@
             <hr class="my-2" />
             <h3 class="font-bold text-base text-[#1b2433]">{{ $cond_external ? 'Aturan Bayar (Eksternal)' : 'Lapak Disewa' }}</h3>
 
-            @if($hasActiveRental)
-                {{-- Task 2: tampilkan readonly --}}
-                <div class="rounded-[10px] overflow-hidden" style="border:1px solid #f0f0f1;">
-                    <table class="w-full border-collapse text-sm">
-                        <thead>
-                            <tr style="background:#fafafa;">
-                                <th class="text-left px-4 py-2.5 text-[11px] font-bold text-[#a1a1aa] uppercase tracking-[0.04em]">Lapak</th>
-                                <th class="text-left px-4 py-2.5 text-[11px] font-bold text-[#a1a1aa] uppercase tracking-[0.04em]">Mulai Sewa</th>
-                                <th class="text-left px-4 py-2.5 text-[11px] font-bold text-[#a1a1aa] uppercase tracking-[0.04em]">Akhir Sewa</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($activeRentals as $r)
-                                <tr>
-                                    <td class="px-4 py-3 font-semibold text-[#18181b]" style="border-top:1px solid #f4f4f5;">{{ $r->stall?->code ?? '-' }}</td>
-                                    <td class="px-4 py-3 text-[#27272a]" style="border-top:1px solid #f4f4f5;">{{ $r->rent_start_date?->format('d-m-Y') ?? '-' }}</td>
-                                    <td class="px-4 py-3 text-[#27272a]" style="border-top:1px solid #f4f4f5;">{{ $r->rent_end_date?->format('d-m-Y') ?? '— (berjalan)' }}</td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-                <p class="text-xs text-[#9aa3b2]">Lapak hanya bisa diubah lewat aksi "Akhiri Sewa" di halaman detail pedagang.</p>
-            @elseif($cond_external)
+            @if($cond_external)
                 @if($hasActiveExternal)
                     <div class="rounded-[10px] overflow-hidden" style="border:1px solid #f0f0f1;">
                         <table class="w-full border-collapse text-sm">
@@ -103,8 +80,35 @@
                     </div>
                 @endif
             @else
-                {{-- Task 4: pedagang tanpa sewa aktif boleh memilih lapak lagi --}}
-                <p class="text-sm text-[#9aa3b2] -mt-1">Pedagang ini belum menyewa lapak. Pilih lapak untuk memulai sewa baru.</p>
+                {{-- Sewa aktif yang sudah ada: readonly (diubah lewat "Akhiri Sewa"). --}}
+                @if($hasActiveRental)
+                    <div class="rounded-[10px] overflow-hidden" style="border:1px solid #f0f0f1;">
+                        <table class="w-full border-collapse text-sm">
+                            <thead>
+                                <tr style="background:#fafafa;">
+                                    <th class="text-left px-4 py-2.5 text-[11px] font-bold text-[#a1a1aa] uppercase tracking-[0.04em]">Lapak</th>
+                                    <th class="text-left px-4 py-2.5 text-[11px] font-bold text-[#a1a1aa] uppercase tracking-[0.04em]">Mulai Sewa</th>
+                                    <th class="text-left px-4 py-2.5 text-[11px] font-bold text-[#a1a1aa] uppercase tracking-[0.04em]">Akhir Sewa</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($activeRentals as $r)
+                                    <tr>
+                                        <td class="px-4 py-3 font-semibold text-[#18181b]" style="border-top:1px solid #f4f4f5;">{{ $r->stall?->code ?? '-' }}</td>
+                                        <td class="px-4 py-3 text-[#27272a]" style="border-top:1px solid #f4f4f5;">{{ $r->rent_start_date?->format('d-m-Y') ?? '-' }}</td>
+                                        <td class="px-4 py-3 text-[#27272a]" style="border-top:1px solid #f4f4f5;">{{ $r->rent_end_date?->format('d-m-Y') ?? '— (berjalan)' }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="text-xs text-[#9aa3b2]">Sewa yang sedang berjalan hanya bisa diubah lewat aksi "Akhiri Sewa" di halaman detail pedagang. Kamu tetap bisa menambah lapak baru di bawah.</p>
+                @else
+                    <p class="text-sm text-[#9aa3b2] -mt-1">Pedagang ini belum menyewa lapak. Pilih lapak untuk memulai sewa baru.</p>
+                @endif
+
+                {{-- Tambah lapak baru (selalu tersedia; sama seperti form registrasi). --}}
+                <p class="text-sm font-semibold text-[#1b2433] mt-3 mb-1">{{ $hasActiveRental ? 'Tambah Lapak Baru' : 'Pilih Lapak' }}</p>
 
                 <div class="flex items-center gap-3">
                     <x-button label="Pilih Lapak" icon="o-building-storefront" wire:click="$set('showStallModal', true)" class="btn-outline" />
@@ -150,7 +154,7 @@
         'confirmIntro' => 'Penyewaan/langganan baru akan dibuat untuk pedagang "' . $name . '".',
     ])
 
-    @unless($hasActiveRental)
+    @unless($cond_external)
         {{-- Modal Pemilihan Lapak --}}
         <x-modal wire:model="showStallModal" title="Pilih Lapak" subtitle="Lapak yang sudah tersewa tidak dapat dipilih." box-class="max-w-2xl">
             <x-input placeholder="Cari blok lapak..." wire:model.live.debounce="stallSearch" clearable icon="o-magnifying-glass" class="mb-4" />
