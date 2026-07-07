@@ -49,7 +49,7 @@
                         @endif
                     </div>
                     <div class="text-sm"><span class="font-semibold">Ukuran:</span> {{ $stall->size ?: '-' }}</div>
-                    <div class="text-sm"><span class="font-semibold">Aturan Bayar:</span> {{ $stall->paymentTerm?->term_name ?? '-' }}</div>
+                    <div class="text-sm"><span class="font-semibold">Aturan Bayar Sewa:</span> {{ $stall->paymentTerm?->term_name ?? '-' }}</div>
                     @if($stall->description)
                         <div class="text-sm sm:col-span-2"><span class="font-semibold">Deskripsi:</span> {{ $stall->description }}</div>
                     @endif

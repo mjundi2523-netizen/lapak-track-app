@@ -1,5 +1,5 @@
 <div>
-    <x-page-heading title="Edit Aturan Bayar" />
+    <x-page-heading title="Edit Aturan Bayar Sewa" />
 
     <x-card class="max-w-[680px]">
         <x-form wire:submit="save">

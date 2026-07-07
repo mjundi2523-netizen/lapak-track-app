@@ -1,5 +1,5 @@
 <div>
-    <x-index-header title="Aturan Bayar">
+    <x-index-header title="Aturan Bayar Sewa">
         <x-input placeholder="Cari..." wire:model.live.debounce="search" clearable />
         <x-button label="Tambah" link="{{ route('payment-terms.create') }}" class="btn-primary" icon="o-plus" />
     </x-index-header>

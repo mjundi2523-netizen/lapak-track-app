@@ -10,7 +10,7 @@
                 <tr>
                     @include('partials.sort-th', ['field' => 'location', 'label' => 'Lokasi'])
                     @include('partials.sort-th', ['field' => 'size', 'label' => 'Ukuran'])
-                    @include('partials.sort-th', ['field' => 'term', 'label' => 'Aturan Bayar'])
+                    @include('partials.sort-th', ['field' => 'term', 'label' => 'Aturan Bayar Sewa'])
                     @include('partials.sort-th', ['field' => 'is_active', 'label' => 'Status'])
                     <th class="lt-th"></th>
                 </tr>

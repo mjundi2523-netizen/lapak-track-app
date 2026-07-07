@@ -7,7 +7,7 @@
     $sections = [
         'Master Data' => [
             ['label' => 'Pedagang',       'icon' => 'o-users',              'route' => 'dealers.index',        'active' => 'dealers.*'],
-            ['label' => 'Aturan Bayar',   'icon' => 'o-banknotes',          'route' => 'payment-terms.index',  'active' => 'payment-terms.*'],
+            ['label' => 'Aturan Bayar Sewa','icon' => 'o-banknotes',         'route' => 'payment-terms.index',  'active' => 'payment-terms.*'],
             ['label' => 'Biaya Tambahan', 'icon' => 'o-plus-circle',        'route' => 'add-ons.index',        'active' => 'add-ons.*'],
             ['label' => 'Lapak',          'icon' => 'o-building-storefront','route' => 'stalls.index',         'active' => ['stalls.index', 'stalls.create', 'stalls.edit', 'stalls.show']],
             ['label' => 'Mapping Lapak',  'icon' => 'o-map',                'route' => 'stalls.map',           'active' => 'stalls.map', 'premium' => true],

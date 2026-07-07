@@ -10,7 +10,7 @@
             <x-input label="Ukuran" wire:model="size" placeholder="Contoh: 3x4 m" />
             <x-input label="Deskripsi" wire:model="description" placeholder="Catatan tambahan (opsional)" />
 
-            <x-select label="Aturan Bayar" wire:model="ptid" :options="$paymentTerms->map(fn($pt) => ['value' => $pt->ptid, 'label' => $pt->term_name])->toArray()" option-value="value" option-label="label" placeholder="Pilih aturan bayar" />
+            <x-select label="Aturan Bayar Sewa" wire:model="ptid" :options="$paymentTerms->map(fn($pt) => ['value' => $pt->ptid, 'label' => $pt->term_name])->toArray()" option-value="value" option-label="label" placeholder="Pilih aturan bayar" />
 
             <x-checkbox label="Aktif" wire:model="is_active" />
 
