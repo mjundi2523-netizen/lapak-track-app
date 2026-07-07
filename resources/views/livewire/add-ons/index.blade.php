@@ -1,5 +1,5 @@
 <div>
-    <x-index-header title="Biaya Lain-lain">
+    <x-index-header title="Biaya Tambahan">
         <x-input placeholder="Cari..." wire:model.live.debounce="search" clearable />
         <x-button label="Tambah" link="{{ route('add-ons.create') }}" class="btn-primary" icon="o-plus" />
     </x-index-header>

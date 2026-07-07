@@ -15,7 +15,7 @@
             } . ')'])->toArray()" option-value="value" option-label="label" placeholder="Pilih aturan bayar" />
 
             <div>
-                <label class="label"><span class="label-text">Biaya Lain-lain</span></label>
+                <label class="label"><span class="label-text">Biaya Tambahan</span></label>
                 <div class="grid grid-cols-2 gap-2">
                     @foreach($addOns as $ao)
                         <label class="flex items-center gap-2 cursor-pointer">

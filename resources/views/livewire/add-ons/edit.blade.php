@@ -1,5 +1,5 @@
 <div>
-    <x-page-heading title="Edit Biaya Lain-lain" />
+    <x-page-heading title="Edit Biaya Tambahan" />
 
     <x-card class="max-w-[680px]">
         <x-form wire:submit="save">
