@@ -198,6 +198,10 @@ class CreateDealer extends Component
     /** Seluruh validasi + guard sebelum simpan. Return false bila ada yang gagal. */
     protected function validateForSave(): bool
     {
+        // Normalisasi tanggal opsional kosong ('') → null. Input date yang diisi lalu dikosongkan
+        // mengirim '' (lolos rule nullable|date) dan ditolak kolom DATE saat insert → 500.
+        $this->rent_end_date = $this->rent_end_date ?: null;
+
         // Guard premium: cegah pembuatan pedagang eksternal oleh akun non-premium.
         if ($this->cond_external && ! auth()->user()->isPremium()) {
             $this->cond_external = false;

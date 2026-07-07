@@ -174,6 +174,9 @@ class EditDealer extends Component
     /** Seluruh validasi + guard. Return null bila gagal; selain itu konteks simpan. */
     protected function validateForSave(): ?array
     {
+        // Normalisasi tanggal opsional kosong ('') → null (hindari insert '' ke kolom DATE → 500).
+        $this->rent_end_date = $this->rent_end_date ?: null;
+
         $this->validate();
 
         $hasActiveRental = $this->dealer->activeRentals()->exists();
