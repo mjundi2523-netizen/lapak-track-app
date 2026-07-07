@@ -11,7 +11,7 @@
 
 <div>
     <x-index-header title="Pembayaran">
-        <x-button label="Tambah" link="{{ route('payments.create') }}" class="btn-primary" icon="o-plus" />
+        <x-button label="Bayar Tagihan" link="{{ route('bills.index') }}" class="btn-primary" icon="o-credit-card" />
     </x-index-header>
 
     {{-- Segmen filter --}}

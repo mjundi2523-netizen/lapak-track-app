@@ -21,8 +21,6 @@ class CreatePayment extends Component
     use Toast;
 
     public ?int $selectedDbid = null;
-    public string $billSearch = '';
-    public bool $showBillModal = false;
 
     #[Validate('required|numeric|min:0.01')]
     public float $paid_amount = 0;
@@ -40,30 +38,17 @@ class CreatePayment extends Component
     {
         $this->payment_date = Carbon::now()->format('Y-m-d');
 
-        // Auto-select bill from URL ?bill=X
-        if (request()->has('bill')) {
-            $bill = DealerBill::where('dbid', request('bill'))->first();
-            if ($bill) {
-                $this->selectedDbid = $bill->dbid;
-            }
+        // Pembayaran SELALU untuk satu tagihan spesifik (dari ikon Bayar di Tagihan / detail tagihan).
+        // Tanpa ?bill= yang valid → arahkan ke daftar Tagihan untuk memilih dulu.
+        $bill = request()->has('bill') ? DealerBill::find(request('bill')) : null;
+
+        if (! $bill) {
+            $this->redirect(route('bills.index'), navigate: true);
+
+            return;
         }
-    }
 
-    public function selectBill(int $dbid): void
-    {
-        $this->selectedDbid = $dbid;
-        $this->showBillModal = false;
-
-        // Mode "Lunasi" aktif → sinkronkan nominal ke sisa tagihan yang baru dipilih.
-        if ($this->payInFull) {
-            $this->syncFullAmount();
-        }
-    }
-
-    public function clearBill(): void
-    {
-        $this->selectedDbid = null;
-        $this->payInFull = false;
+        $this->selectedDbid = $bill->dbid;
     }
 
     /** Sisa tagihan terpilih = total - Σ pembayaran non-void. */
@@ -158,22 +143,9 @@ class CreatePayment extends Component
             }
         }
 
-        $billResults = DealerBill::query()
-            ->with(['dealerStall.dealer', 'dealerStall.stall', 'externalDealer.dealer'])
-            ->whereNotIn('billing_status', ['paid', 'cancelled'])
-            ->when($this->billSearch, fn ($q) => $q
-                ->where('bill_id', 'like', "%{$this->billSearch}%")
-                ->orWhereHas('dealerStall.dealer', fn ($q2) => $q2->where('name', 'like', "%{$this->billSearch}%"))
-                ->orWhereHas('externalDealer.dealer', fn ($q2) => $q2->where('name', 'like', "%{$this->billSearch}%"))
-            )
-            ->orderBy('due_date')
-            ->limit(20)
-            ->get();
-
         return view('livewire.payments.create', [
             'selectedBill' => $selectedBill,
             'remaining' => $remaining,
-            'billResults' => $billResults,
         ]);
     }
 }
