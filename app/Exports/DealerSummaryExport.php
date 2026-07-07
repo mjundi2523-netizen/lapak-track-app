@@ -30,7 +30,7 @@ class DealerSummaryExport implements FromCollection, WithHeadings, WithMapping, 
 
     public function title(): string
     {
-        return 'Rekap Pedagang';
+        return 'Rekap Tagihan per Pedagang';
     }
 
     public function collection(): Collection

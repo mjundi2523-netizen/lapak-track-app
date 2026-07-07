@@ -11,7 +11,7 @@
     {{-- Heading --}}
     <div class="flex items-center justify-between gap-4 mb-5 pb-4" style="border-bottom:1px solid #e5e7eb;">
         <div>
-            <h1 class="text-[26px] font-bold tracking-tight text-[#1b2433] m-0">Rekap Tagihan Per Pedagang</h1>
+            <h1 class="text-[26px] font-bold tracking-tight text-[#1b2433] m-0">Rekap Tagihan per Pedagang</h1>
         </div>
         <a href="{{ route('reports.dealer-summary.export', array_filter([
                 'from'        => $this->from,
