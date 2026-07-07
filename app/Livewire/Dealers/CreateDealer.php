@@ -8,6 +8,7 @@ use App\Models\DealerStall;
 use App\Models\ExternalDealer;
 use App\Models\PaymentTerm;
 use App\Models\Stall;
+use App\Imports\DealersImport;
 use App\Services\BillGenerationService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -16,7 +17,9 @@ use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use Maatwebsite\Excel\Facades\Excel;
 use Mary\Traits\Toast;
+use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 
 #[Layout('layouts.app')]
 class CreateDealer extends Component
@@ -51,6 +54,11 @@ class CreateDealer extends Component
 
     /** Modal konfirmasi simpan (menjelaskan tagihan yang akan dibuat otomatis). */
     public bool $showSaveConfirm = false;
+
+    // --- Impor massal dari Excel (kebutuhan migrasi) ---
+    public $import_file = null;
+    /** Daftar error per-baris; impor batal total bila tidak kosong. */
+    public array $importErrors = [];
 
     public function mount(): void
     {
@@ -252,6 +260,212 @@ class CreateDealer extends Component
         }
 
         return true;
+    }
+
+    /**
+     * Impor massal pedagang dari Excel (migrasi). Semua baris divalidasi dulu; bila ada
+     * satu error saja, TIDAK ada yang disimpan (all-or-nothing) dan daftar error ditampilkan.
+     * Bila bersih, seluruh baris disimpan dalam 1 transaksi berikut penyewaan/langganan + tagihannya.
+     */
+    public function importExcel(BillGenerationService $bills): void
+    {
+        $this->importErrors = [];
+        $this->validate(['import_file' => 'required|file|mimes:xlsx,xls,csv|max:10240']);
+
+        $rows = Excel::toArray(new DealersImport, $this->import_file)[0] ?? [];
+
+        $parsed = [];        // baris valid siap simpan
+        $errors = [];
+        $seenNiks = [];      // NIK yang sudah muncul di file → deteksi duplikat dalam file
+        $claimedStalls = []; // sid yang sudah diklaim baris sebelumnya
+
+        foreach ($rows as $i => $row) {
+            $line = $i + 2; // +1 header, +1 index-0
+
+            // Lewati baris yang seluruh selnya kosong.
+            if (collect($row)->filter(fn ($v) => trim((string) $v) !== '')->isEmpty()) {
+                continue;
+            }
+
+            $nik = trim((string) ($row['nik'] ?? ''));
+            $name = trim((string) ($row['nama'] ?? ''));
+            $birth = $this->parseImportDate($row['tanggal_lahir'] ?? null);
+            $address = trim((string) ($row['alamat'] ?? ''));
+            $phone = trim((string) ($row['telepon'] ?? ''));
+            $phone2 = trim((string) ($row['telepon_2'] ?? '')) ?: null;
+            $product = trim((string) ($row['jenis_dagangan'] ?? '')) ?: null;
+            $letterNo = trim((string) ($row['no_surat'] ?? '')) ?: null;
+            $condition = strtolower(trim((string) ($row['kondisi'] ?? ''))) ?: 'regular';
+
+            $rowErrors = [];
+
+            if ($nik === '') {
+                $rowErrors[] = 'NIK wajib diisi';
+            } elseif (isset($seenNiks[$nik])) {
+                $rowErrors[] = "NIK $nik duplikat dengan baris {$seenNiks[$nik]}";
+            } elseif (Dealer::where('nik', $nik)->exists()) {
+                $rowErrors[] = "NIK $nik sudah terdaftar";
+            }
+
+            if ($name === '') {
+                $rowErrors[] = 'Nama wajib diisi';
+            }
+            if (! $birth) {
+                $rowErrors[] = 'Tanggal lahir kosong/format salah';
+            }
+            if ($address === '') {
+                $rowErrors[] = 'Alamat wajib diisi';
+            }
+            if ($phone === '') {
+                $rowErrors[] = 'Telepon wajib diisi';
+            }
+            if (! in_array($condition, ['regular', 'new', 'external'], true)) {
+                $rowErrors[] = "Kondisi '$condition' tidak valid (regular/new/external)";
+            }
+
+            $rental = null;   // ['sid','start','end']
+            $external = null; // ['ptid','start']
+
+            if ($condition === 'external') {
+                if (! auth()->user()->isPremium()) {
+                    $rowErrors[] = 'Pedagang eksternal butuh paket premium';
+                }
+                $termName = trim((string) ($row['aturan_bayar'] ?? ''));
+                $start = $this->parseImportDate($row['mulai_langganan'] ?? null);
+                if ($termName === '') {
+                    $rowErrors[] = 'Aturan bayar wajib untuk pedagang eksternal';
+                } else {
+                    $term = PaymentTerm::where('term_name', $termName)->where('dealer_condition', 'external')->first();
+                    if (! $term) {
+                        $rowErrors[] = "Aturan bayar eksternal '$termName' tidak ditemukan";
+                    } elseif (! $start) {
+                        $rowErrors[] = 'Mulai langganan kosong/format salah';
+                    } else {
+                        $external = ['ptid' => $term->ptid, 'start' => $start->toDateString()];
+                    }
+                }
+            } else {
+                // regular/new: lapak opsional (boleh impor data pedagang saja).
+                $lapak = trim((string) ($row['lapak'] ?? ''));
+                if ($lapak !== '') {
+                    $stall = $this->findStallByCode($lapak);
+                    $start = $this->parseImportDate($row['mulai_sewa'] ?? null);
+                    $endRaw = trim((string) ($row['akhir_sewa'] ?? ''));
+                    $end = $endRaw !== '' ? $this->parseImportDate($endRaw) : null;
+
+                    if (! $stall) {
+                        $rowErrors[] = "Lapak '$lapak' tidak ditemukan";
+                    } elseif (! $stall->paymentTerm || $stall->paymentTerm->dealer_condition !== $condition) {
+                        $rowErrors[] = "Aturan bayar lapak '$lapak' tidak sesuai kondisi '$condition'";
+                    } elseif (in_array($stall->sid, $claimedStalls, true)) {
+                        $rowErrors[] = "Lapak '$lapak' sudah diklaim baris lain di file ini";
+                    } elseif ($stall->activeRentals()->exists()) {
+                        $rowErrors[] = "Lapak '$lapak' sudah tersewa";
+                    } elseif (! $start) {
+                        $rowErrors[] = 'Mulai sewa kosong/format salah';
+                    } elseif ($endRaw !== '' && ! $end) {
+                        $rowErrors[] = 'Akhir sewa format salah';
+                    } elseif ($end && $end->lt($start)) {
+                        $rowErrors[] = 'Akhir sewa lebih awal dari mulai sewa';
+                    } else {
+                        $rental = ['sid' => $stall->sid, 'start' => $start->toDateString(), 'end' => $end?->toDateString()];
+                        $claimedStalls[] = $stall->sid;
+                    }
+                }
+            }
+
+            if ($rowErrors) {
+                $errors[] = "Baris $line: " . implode('; ', $rowErrors);
+
+                continue;
+            }
+
+            $seenNiks[$nik] = $line;
+            $parsed[] = [
+                'nik' => $nik, 'name' => $name, 'birth' => $birth->toDateString(),
+                'address' => $address, 'phone' => $phone, 'phone2' => $phone2,
+                'product' => $product, 'letter_no' => $letterNo, 'condition' => $condition,
+                'rental' => $rental, 'external' => $external,
+            ];
+        }
+
+        if (empty($parsed) && empty($errors)) {
+            $this->error('File tidak berisi data pedagang.');
+
+            return;
+        }
+
+        if ($errors) {
+            $this->importErrors = $errors;
+            $this->error(count($errors) . ' baris bermasalah — tidak ada yang diimpor. Perbaiki lalu ulangi.');
+
+            return;
+        }
+
+        DB::transaction(function () use ($parsed, $bills) {
+            foreach ($parsed as $p) {
+                $dealer = Dealer::create([
+                    'nik' => $p['nik'], 'name' => $p['name'], 'birth_date' => $p['birth'],
+                    'address' => $p['address'], 'phone_number_1' => $p['phone'],
+                    'phone_number_2' => $p['phone2'], 'product_type' => $p['product'],
+                    'status' => 'active', 'dealer_condition' => $p['condition'],
+                    'letter_no' => $p['letter_no'], 'created_by' => Auth::id(),
+                ]);
+
+                if ($p['rental']) {
+                    $ds = DealerStall::create([
+                        'did' => $dealer->did, 'sid' => $p['rental']['sid'],
+                        'rent_start_date' => $p['rental']['start'],
+                        'rent_end_date' => $p['rental']['end'],
+                        'deleted' => false, 'created_by' => Auth::id(),
+                    ]);
+                    $bills->ensureBillsUpToDate($ds);
+                } elseif ($p['external']) {
+                    $ed = ExternalDealer::create([
+                        'did' => $dealer->did, 'ptid' => $p['external']['ptid'],
+                        'start_date' => $p['external']['start'],
+                        'deleted' => false, 'created_by' => Auth::id(),
+                    ]);
+                    $bills->ensureExternalBillsUpToDate($ed);
+                }
+            }
+        });
+
+        $this->success(count($parsed) . ' pedagang berhasil diimpor.');
+        $this->redirectBack('dealers.index');
+    }
+
+    /** Cari lapak dari kode "A01/05" / "A01-05" / "A0105". Null bila tak ketemu. */
+    protected function findStallByCode(string $code): ?Stall
+    {
+        $raw = strtoupper(preg_replace('/\s+/', '', $code));
+        if (! preg_match('/^([A-Z]\d{2})[\/\-]?(\d{2})$/', $raw, $m)) {
+            return null;
+        }
+
+        return Stall::where('block', $m[1])->where('number', $m[2])->first();
+    }
+
+    /** Parse tanggal dari sel Excel (serial number atau string). Null bila kosong/invalid. */
+    protected function parseImportDate($value): ?Carbon
+    {
+        if ($value === null || trim((string) $value) === '') {
+            return null;
+        }
+
+        if (is_numeric($value)) {
+            try {
+                return Carbon::instance(ExcelDate::excelToDateTimeObject((float) $value));
+            } catch (\Throwable) {
+                return null;
+            }
+        }
+
+        try {
+            return Carbon::parse((string) $value);
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     public function render()

@@ -34,6 +34,7 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
 
     // Dealers
     Route::get('/pedagang', App\Livewire\Dealers\IndexDealers::class)->name('dealers.index');
+    Route::get('/pedagang/import-template', App\Http\Controllers\DealerImportTemplateController::class)->name('dealers.import-template');
     Route::get('/pedagang/create', App\Livewire\Dealers\CreateDealer::class)->name('dealers.create');
     Route::get('/pedagang/{dealer}', App\Livewire\Dealers\ShowDealer::class)->name('dealers.show');
     Route::get('/pedagang/{dealer}/edit', App\Livewire\Dealers\EditDealer::class)->name('dealers.edit');

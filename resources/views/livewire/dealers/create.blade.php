@@ -1,6 +1,43 @@
 <div>
     <x-page-heading title="Registrasi Pedagang" />
 
+    {{-- Impor massal dari Excel (kebutuhan migrasi) --}}
+    <x-card class="max-w-[820px] mb-5">
+        <div class="flex items-start justify-between gap-4 flex-wrap">
+            <div>
+                <h3 class="font-bold text-base text-[#1b2433]">Impor Massal (Excel)</h3>
+                <p class="text-sm text-[#71717a] mt-0.5">
+                    Untuk migrasi banyak pedagang sekaligus. Unduh template, isi, lalu unggah.
+                    Jika ada baris bermasalah, <span class="font-semibold">tidak ada yang diimpor</span> sampai diperbaiki.
+                </p>
+            </div>
+            <a href="{{ route('dealers.import-template') }}"
+               class="inline-flex items-center gap-1.5 text-sm font-semibold text-[#0e7490] hover:underline shrink-0">
+                <x-icon name="o-arrow-down-tray" class="w-4 h-4" /> Unduh Template
+            </a>
+        </div>
+
+        <x-form wire:submit="importExcel" class="mt-3">
+            <x-input label="File Excel" wire:model="import_file" type="file" accept=".xlsx,.xls,.csv"
+                hint="Format .xlsx / .xls / .csv, maks 10MB. Kolom: NIK, Nama, Tanggal Lahir, Alamat, Telepon, Kondisi, Lapak, Mulai Sewa, dst." />
+
+            @if($importErrors)
+                <div class="rounded-lg p-3 text-sm" style="background:#fef2f2; border:1px solid #fecaca; color:#b91c1c;">
+                    <p class="font-semibold mb-1">Impor dibatalkan — perbaiki baris berikut:</p>
+                    <ul class="list-disc pl-5 space-y-0.5 max-h-48 overflow-y-auto">
+                        @foreach($importErrors as $err)
+                            <li>{{ $err }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            <x-slot:actions>
+                <x-button label="Impor dari Excel" type="submit" icon="o-arrow-up-tray" class="btn-primary" spinner="importExcel" />
+            </x-slot:actions>
+        </x-form>
+    </x-card>
+
     <x-card class="max-w-[820px]">
         <x-form wire:submit="save">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
