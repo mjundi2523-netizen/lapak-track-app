@@ -19,7 +19,7 @@
 
         <x-form wire:submit="importExcel" class="mt-3">
             <x-input label="File Excel" wire:model="import_file" type="file" accept=".xlsx,.xls,.csv"
-                hint="Format .xlsx / .xls / .csv, maks 10MB. Kolom: NIK, Nama, Tanggal Lahir, Alamat, Telepon, Kondisi, Lapak, Mulai Sewa, dst." />
+                hint="Format .xlsx / .xls / .csv, maks 10MB. Penjelasan tiap kolom + daftar pilihan (kondisi, lapak, aturan bayar) ada di sheet 'Keterangan' pada template." />
 
             @if($importErrors)
                 <div class="rounded-lg p-3 text-sm" style="background:#fef2f2; border:1px solid #fecaca; color:#b91c1c;">

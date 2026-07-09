@@ -295,7 +295,7 @@ class CreateDealer extends Component
             $phone2 = trim((string) ($row['telepon_2'] ?? '')) ?: null;
             $product = trim((string) ($row['jenis_dagangan'] ?? '')) ?: null;
             $letterNo = trim((string) ($row['no_surat'] ?? '')) ?: null;
-            $condition = strtolower(trim((string) ($row['kondisi'] ?? ''))) ?: 'regular';
+            $condition = $this->normalizeCondition($row['kondisi'] ?? '');
 
             $rowErrors = [];
 
@@ -331,7 +331,7 @@ class CreateDealer extends Component
                     $rowErrors[] = 'Pedagang eksternal butuh paket premium';
                 }
                 $termName = trim((string) ($row['aturan_bayar'] ?? ''));
-                $start = $this->parseImportDate($row['mulai_langganan'] ?? null);
+                $start = $this->parseImportDate($row['tanggal_mulai'] ?? null);
                 if ($termName === '') {
                     $rowErrors[] = 'Aturan bayar wajib untuk pedagang eksternal';
                 } else {
@@ -339,7 +339,7 @@ class CreateDealer extends Component
                     if (! $term) {
                         $rowErrors[] = "Aturan bayar eksternal '$termName' tidak ditemukan";
                     } elseif (! $start) {
-                        $rowErrors[] = 'Mulai langganan kosong/format salah';
+                        $rowErrors[] = 'Tanggal mulai kosong/format salah';
                     } else {
                         $external = ['ptid' => $term->ptid, 'start' => $start->toDateString()];
                     }
@@ -349,7 +349,7 @@ class CreateDealer extends Component
                 $lapak = trim((string) ($row['lapak'] ?? ''));
                 if ($lapak !== '') {
                     $stall = $this->findStallByCode($lapak);
-                    $start = $this->parseImportDate($row['mulai_sewa'] ?? null);
+                    $start = $this->parseImportDate($row['tanggal_mulai'] ?? null);
                     $endRaw = trim((string) ($row['akhir_sewa'] ?? ''));
                     $end = $endRaw !== '' ? $this->parseImportDate($endRaw) : null;
 
@@ -362,7 +362,7 @@ class CreateDealer extends Component
                     } elseif ($stall->activeRentals()->exists()) {
                         $rowErrors[] = "Lapak '$lapak' sudah tersewa";
                     } elseif (! $start) {
-                        $rowErrors[] = 'Mulai sewa kosong/format salah';
+                        $rowErrors[] = 'Tanggal mulai kosong/format salah';
                     } elseif ($endRaw !== '' && ! $end) {
                         $rowErrors[] = 'Akhir sewa format salah';
                     } elseif ($end && $end->lt($start)) {
@@ -433,6 +433,19 @@ class CreateDealer extends Component
 
         $this->success(count($parsed) . ' pedagang berhasil diimpor.');
         $this->redirectBack('dealers.index');
+    }
+
+    /** Normalisasi kondisi + terima sinonim Indonesia. Nilai tak dikenal dibiarkan (agar divalidasi & dilaporkan). */
+    protected function normalizeCondition($raw): string
+    {
+        $v = strtolower(trim((string) $raw));
+
+        return match ($v) {
+            '', 'regular', 'biasa', 'reguler', 'umum' => 'regular',
+            'new', 'baru' => 'new',
+            'external', 'eksternal', 'keliling', 'gerobak' => 'external',
+            default => $v,
+        };
     }
 
     /** Cari lapak dari kode "A01/05" / "A01-05" / "A0105". Null bila tak ketemu. */
