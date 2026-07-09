@@ -21,6 +21,7 @@ Detail lengkap tiap subsistem dipindah ke vault (mulai `vault/LapakTrack/Index.m
 - `Cetak Dokumen.md` — kartu pedagang, kwitansi, invoice; pola langsung-print & print fix
 - `Pengeluaran & Laporan.md` — expenses/void, laporan, pengeluaran rutin auto-generate
 - `Pola Form & Konfirmasi.md` — ReturnsBack, `#[Url]`, konfirmasi 2 tahap, guard dirty-form
+- `Obfuscated ID (Sqids).md` — PK tidak pernah tampil di URL; trait `HasObfuscatedId`, titik decode manual
 
 ## Status proyek (per 2026-07-07)
 - Rebuild pasca-kehilangan source selesai (spec `.qoder/specs/Rebuild_Lost_Source_Files_task-61c.md`; Task 1–8, 10, 12; skip 9 Filament & 11 seeder). DB MySQL `lapak_track` utuh.
@@ -33,6 +34,7 @@ Detail lengkap tiap subsistem dipindah ke vault (mulai `vault/LapakTrack/Index.m
 - **Form create/edit/void baru WAJIB**: `use ReturnsBack;` + `redirectBack('fallback')` + tombol Batal `backHref()`; filter index baru diberi `#[Url]`. Guard dirty-form global otomatis selama pakai `x-form wire:submit`.
 - **Aksi destruktif baru** → minimal `wire:confirm`; yang berdampak generate tagihan → pola modal konfirmasi 2 tahap (validasi ulang di `confirmSave()`).
 - **`CreatePayment` menolak over-payment** — belum ada konsep saldo, jangan diakali.
+- **PK JANGAN PERNAH tampil di URL** (path/query string): model ber-route WAJIB `use HasObfuscatedId;` (Sqids). Di blade pakai `$model->obfuscated_id`; konteks non-model `encodeKey()`/`decodeKey()`. JANGAN ubah `config/sqids.php` setelah production (semua URL lama 404). Detail di vault.
 - **Fitur premium baru**: route middleware `premium` + item sidebar `'premium'=>true`; aksi in-page `$this->dispatch('premium-required')`.
 - **Desain kartu pedagang** (`resources/views/dealers/_letter.blade.php`) dibuat user — jangan diubah tanpa diminta.
 - **Filament tidak dipakai** — jangan daftarkan `AdminPanelProvider`.

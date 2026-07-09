@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exports\BillsExport;
+use App\Models\Dealer;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -16,7 +17,8 @@ class BillExportController extends Controller
             search: $request->get('search', ''),
             statusFilter: $request->get('status', ''),
             frequencyFilter: $request->get('frequency', ''),
-            dealerId: $request->filled('dealer') ? (int) $request->get('dealer') : null,
+            // Param `dealer` berupa sqid (lihat HasObfuscatedId) — decode ke did asli.
+            dealerId: Dealer::decodeKey($request->get('dealer')),
             from: $request->get('from', ''),
             to: $request->get('to', ''),
         ), $filename);

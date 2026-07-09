@@ -31,8 +31,9 @@ class IndexPayments extends Component
     #[Url(except: '')]
     public string $frequencyFilter = '';
 
+    // Nilai = sqid pedagang (bukan angka) supaya ID asli tidak tampil di URL.
     #[Url(except: null)]
-    public ?int $dealerId = null;
+    public ?string $dealerId = null;
 
     // Filter rentang tanggal bayar (kosong = semua).
     #[Url(except: '')]
@@ -72,8 +73,9 @@ class IndexPayments extends Component
     /** Dipanggil x-choices saat user mengetik; jaga pedagang terpilih tetap muncul. */
     public function searchDealer(string $value = ''): void
     {
-        $selected = $this->dealerId
-            ? Dealer::where('did', $this->dealerId)->get()
+        $selectedDid = Dealer::decodeKey($this->dealerId);
+        $selected = $selectedDid
+            ? Dealer::where('did', $selectedDid)->get()
             : collect();
 
         $this->dealersList = Dealer::query()
@@ -118,6 +120,8 @@ class IndexPayments extends Component
     }
     public function render()
     {
+        $did = Dealer::decodeKey($this->dealerId);
+
         $receiptPayment = $this->showReceipt && $this->receiptId
             ? DealerPayment::with(['dealerBill.dealerStall.dealer', 'dealerBill.dealerStall.stall', 'dealerBill.externalDealer.dealer'])
                 ->where('is_voided', false)
@@ -136,9 +140,9 @@ class IndexPayments extends Component
             ->when($this->from, fn ($q) => $q->whereDate('payment_date', '>=', $this->from))
             ->when($this->to, fn ($q) => $q->whereDate('payment_date', '<=', $this->to))
             ->when($this->frequencyFilter, fn ($q) => $q->whereHas('dealerBill', fn ($q2) => $q2->where('frequency', $this->frequencyFilter)))
-            ->when($this->dealerId, fn ($q) => $q->where(fn ($w) => $w
-                ->whereHas('dealerBill.dealerStall', fn ($q2) => $q2->where('did', $this->dealerId))
-                ->orWhereHas('dealerBill.externalDealer', fn ($q2) => $q2->where('did', $this->dealerId))
+            ->when($did, fn ($q) => $q->where(fn ($w) => $w
+                ->whereHas('dealerBill.dealerStall', fn ($q2) => $q2->where('did', $did))
+                ->orWhereHas('dealerBill.externalDealer', fn ($q2) => $q2->where('did', $did))
             ))
 ;
 

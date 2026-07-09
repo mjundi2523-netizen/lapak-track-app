@@ -200,7 +200,7 @@
                         <tbody>
                             @foreach($top10Debtors as $i => $d)
                                 <tr class="cursor-pointer transition-colors hover:bg-[#fff7f7]"
-                                    onclick="window.location='{{ route('dealers.show', $d['did']) }}'">
+                                    onclick="window.location='{{ route('dealers.show', $d['key']) }}'">
                                     <td class="px-6 py-3.5 text-sm text-[#9aa3b2] font-semibold" style="border-top:1px solid #f4f4f5;">{{ $i + 1 }}</td>
                                     <td class="px-4 py-3.5 text-sm font-semibold text-[#18181b]" style="border-top:1px solid #f4f4f5;">{{ $d['name'] }}</td>
                                     <td class="px-6 py-3.5 text-sm font-bold text-right text-[#b91c1c]" style="border-top:1px solid #f4f4f5;">

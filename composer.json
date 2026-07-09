@@ -14,7 +14,8 @@
         "laravel/tinker": "^3.0",
         "livewire/livewire": "^3.8",
         "maatwebsite/excel": "^3.1",
-        "robsontenorio/mary": "^2.8"
+        "robsontenorio/mary": "^2.8",
+        "sqids/sqids": "^0.5.0"
     },
     "require-dev": {
         "nunomaduro/collision": "^8.9"

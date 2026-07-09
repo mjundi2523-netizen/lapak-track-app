@@ -119,7 +119,7 @@ class Dashboard extends Component
         $top10Dids       = $debtMap->take(10)->keys();
         $dealerNames     = Dealer::whereIn('did', $top10Dids)->pluck('name', 'did');
         $top10Debtors    = $debtMap->take(10)->map(fn ($outstanding, $did) => [
-            'did'         => $did,
+            'key'         => Dealer::encodeKey($did),
             'name'        => $dealerNames[$did] ?? '-',
             'outstanding' => $outstanding,
         ])->values();

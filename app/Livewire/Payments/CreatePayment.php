@@ -40,7 +40,7 @@ class CreatePayment extends Component
 
         // Pembayaran SELALU untuk satu tagihan spesifik (dari ikon Bayar di Tagihan / detail tagihan).
         // Tanpa ?bill= yang valid → arahkan ke daftar Tagihan untuk memilih dulu.
-        $bill = request()->has('bill') ? DealerBill::find(request('bill')) : null;
+        $bill = DealerBill::find(DealerBill::decodeKey(request('bill')));
 
         if (! $bill) {
             $this->redirect(route('bills.index'), navigate: true);

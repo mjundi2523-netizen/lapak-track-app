@@ -31,8 +31,9 @@ class IndexBills extends Component
     #[Url(except: '')]
     public string $frequencyFilter = '';
 
+    // Nilai = sqid pedagang (bukan angka) supaya ID asli tidak tampil di URL.
     #[Url(except: null)]
-    public ?int $dealerId = null;
+    public ?string $dealerId = null;
 
     // Filter rentang tanggal jatuh tempo (kosong = semua).
     #[Url(except: '')]
@@ -89,8 +90,9 @@ class IndexBills extends Component
     /** Dipanggil x-choices saat user mengetik; jaga pedagang terpilih tetap muncul. */
     public function searchDealer(string $value = ''): void
     {
-        $selected = $this->dealerId
-            ? Dealer::where('did', $this->dealerId)->get()
+        $selectedDid = Dealer::decodeKey($this->dealerId);
+        $selected = $selectedDid
+            ? Dealer::where('did', $selectedDid)->get()
             : collect();
 
         $this->dealersList = Dealer::query()
@@ -105,6 +107,8 @@ class IndexBills extends Component
 
     public function render()
     {
+        $did = Dealer::decodeKey($this->dealerId);
+
         $query = DealerBill::query()
             ->with([
                 'dealerStall.dealer',
@@ -121,9 +125,9 @@ class IndexBills extends Component
             ->when($this->frequencyFilter, fn ($q) => $q->where('frequency', $this->frequencyFilter))
             ->when($this->from, fn ($q) => $q->whereDate('due_date', '>=', $this->from))
             ->when($this->to, fn ($q) => $q->whereDate('due_date', '<=', $this->to))
-            ->when($this->dealerId, fn ($q) => $q->where(fn ($w) => $w
-                ->whereHas('dealerStall', fn ($q2) => $q2->where('did', $this->dealerId))
-                ->orWhereHas('externalDealer', fn ($q2) => $q2->where('did', $this->dealerId))
+            ->when($did, fn ($q) => $q->where(fn ($w) => $w
+                ->whereHas('dealerStall', fn ($q2) => $q2->where('did', $did))
+                ->orWhereHas('externalDealer', fn ($q2) => $q2->where('did', $did))
             ));
 
         $this->applySort($query, fn ($q) => $q->orderBy('created_at', 'desc'));

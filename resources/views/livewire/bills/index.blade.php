@@ -45,7 +45,7 @@
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-3">
             <x-input label="Cari" placeholder="No. tagihan / nama pedagang" wire:model.live.debounce="search" clearable />
-            <x-choices label="Pedagang" wire:model.live="dealerId" :options="$dealersList" option-label="name" option-value="did"
+            <x-choices label="Pedagang" wire:model.live="dealerId" :options="$dealersList" option-label="name" option-value="obfuscated_id"
                 search-function="searchDealer" placeholder="Semua pedagang" single searchable clearable />
             <x-select label="Frekuensi" wire:model.live="frequencyFilter" :options="[
                 ['value' => '', 'label' => 'Semua Frekuensi'],
@@ -119,7 +119,7 @@
                             <div class="flex gap-1 justify-end">
                                 <a href="{{ route('bills.show', $row) }}" wire:navigate class="lt-act" title="Detail"><x-icon name="o-eye" class="w-[18px] h-[18px]" /></a>
                                 @if(! in_array($row->billing_status, ['paid', 'cancelled']))
-                                    <a href="{{ route('payments.create', ['bill' => $row->dbid]) }}" wire:navigate class="lt-act text-success" title="Bayar"><x-icon name="o-credit-card" class="w-[18px] h-[18px]" /></a>
+                                    <a href="{{ route('payments.create', ['bill' => $row->obfuscated_id]) }}" wire:navigate class="lt-act text-success" title="Bayar"><x-icon name="o-credit-card" class="w-[18px] h-[18px]" /></a>
                                 @endif
                             </div>
                         </td>

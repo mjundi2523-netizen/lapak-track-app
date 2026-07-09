@@ -43,7 +43,7 @@ class StallMap extends Component
                         : ($tenant ? 'occupied' : 'empty');
 
                     return [
-                        'sid'    => $s->sid,
+                        'key'    => $s->getRouteKey(),
                         'number' => $s->number,
                         'size'   => $s->size,
                         'status' => $status,

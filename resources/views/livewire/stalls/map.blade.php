@@ -41,7 +41,7 @@
                 <div class="grid gap-2.5" style="grid-template-columns:repeat(auto-fill, minmax(118px, 1fr));">
                     @foreach($cells as $c)
                         @php $st = $style[$c['status']]; @endphp
-                        <a href="{{ route('stalls.show', $c['sid']) }}" wire:navigate
+                        <a href="{{ route('stalls.show', $c['key']) }}" wire:navigate
                            class="block rounded-xl px-3 py-2.5 transition hover:brightness-[0.97] hover:-translate-y-0.5"
                            style="background:{{ $st[0] }}; border:1px solid {{ $st[1] }};"
                            title="{{ $prefix }} / {{ $c['number'] }}{{ $c['tenant'] ? ' — '.$c['tenant'] : ($c['status'] === 'inactive' ? ' — Nonaktif' : ' — Kosong') }}">

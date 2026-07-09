@@ -27,7 +27,7 @@
             <x-button label="Hitung Ulang" wire:click="recalculate" icon="o-arrow-path" spinner
                       class="h-10 text-sm font-semibold text-white border-none" style="background:#0891b2;" />
             @if(! in_array($dealerBill->billing_status, ['paid', 'cancelled']))
-                <a href="{{ route('payments.create', ['bill' => $dealerBill->dbid]) }}" wire:navigate
+                <a href="{{ route('payments.create', ['bill' => $dealerBill->obfuscated_id]) }}" wire:navigate
                    class="inline-flex items-center gap-1.5 h-10 px-4 rounded-[9px] text-sm font-semibold text-white transition hover:brightness-95"
                    style="background:#16a34a;">
                     <x-icon name="o-credit-card" class="w-4 h-4" /> Bayar
