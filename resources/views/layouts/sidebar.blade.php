@@ -22,7 +22,7 @@
         'Laporan' => [
             ['label' => 'Arus Kas',        'icon' => 'o-chart-bar',     'route' => 'reports.cash-flow',     'active' => 'reports.cash-flow', 'premium' => true],
             ['label' => 'Rekap Penerimaan','icon' => 'o-banknotes',     'route' => 'reports.collection',    'active' => 'reports.collection', 'premium' => true],
-            ['label' => 'Rekap Tagihan per Pedagang','icon' => 'o-table-cells','route' => 'reports.dealer-summary','active' => 'reports.dealer-summary*', 'premium' => true],
+            ['label' => 'Rekap Tagihan Pedagang','icon' => 'o-table-cells','route' => 'reports.dealer-summary','active' => 'reports.dealer-summary*', 'premium' => true],
             ['label' => 'Rekap Pengeluaran','icon' => 'o-arrow-trending-down','route' => 'reports.expense-summary','active' => 'reports.expense-summary', 'premium' => true],
         ],
     ];
