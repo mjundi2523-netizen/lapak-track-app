@@ -19,12 +19,13 @@
     {{-- collapsed (computed): sempit bila tidak disematkan (pinnedOpen) DAN tidak sedang di-hover.
          Hover → sidebar otomatis terbuka; klik logo/hamburger → sematkan tetap terbuka. --}}
     <div x-data="{ pinnedOpen: false, hovering: false, userMenu: false, get collapsed() { return !this.pinnedOpen && !this.hovering } }" class="flex min-h-screen">
-        {{-- Sidebar (dark) --}}
+        {{-- Sidebar: default light, override gelap murni via CSS `body.lt-dark .lt-sidebar` (lihat
+             app.css) — supaya reaktif ke toggle client-side tanpa reload, sama seperti header/main. --}}
         <aside
             @mouseenter="hovering = true" @mouseleave="hovering = false"
             :class="collapsed ? 'w-[76px]' : 'w-64'"
-            class="shrink-0 flex flex-col sticky top-0 h-screen z-20 overflow-hidden transition-all duration-200"
-            style="background:#1b2433; box-shadow:6px 0 24px rgba(27,36,51,0.16);">
+            class="lt-sidebar shrink-0 flex flex-col sticky top-0 h-screen z-20 overflow-hidden transition-all duration-200"
+            style="background:#ffffff; border-right:1px solid #eceef2;">
             @include('layouts.sidebar')
         </aside>
 

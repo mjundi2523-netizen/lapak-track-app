@@ -1,6 +1,10 @@
 @php
     $isPremium = Auth::user()?->isPremium() ?? false;
 
+    // Markup selalu render versi light. Tampilan gelap murni via CSS `body.lt-dark .lt-*` di
+    // app.css — reaktif ke toggle client-side (lihat show-profile.blade.php) tanpa perlu reload.
+    $navShapeClass = 'px-6';
+
     $topItems = [
         ['label' => 'Dashboard', 'icon' => 'o-home', 'route' => 'dashboard', 'active' => 'dashboard'],
     ];
@@ -37,7 +41,8 @@
          style="background:var(--lt-p); box-shadow:0 6px 18px color-mix(in srgb, var(--lt-p) 45%, transparent);">
         <x-icon name="o-square-3-stack-3d" class="w-[22px] h-[22px] text-white" />
     </div>
-    <span x-show="!collapsed" x-cloak class="font-bold text-xl text-white tracking-tight whitespace-nowrap">LapakTrack</span>
+    <span x-show="!collapsed" x-cloak
+          class="lt-brand-text font-bold text-xl tracking-tight whitespace-nowrap text-[#18181b]">LapakTrack</span>
 </button>
 
 {{-- Nav --}}
@@ -46,14 +51,10 @@
     @foreach($topItems as $item)
         @php $isActive = request()->routeIs($item['active']); @endphp
         <a href="{{ route($item['route']) }}" wire:navigate
-           :class="collapsed ? 'justify-center !px-0' : ''"
-           class="flex items-center gap-[13px] w-full text-sm font-medium py-[11px] px-6 cursor-pointer transition-colors
-                  {{ $isActive
-                      ? 'text-white'
-                      : 'text-[#aeb7c5] hover:bg-white/[0.04] hover:text-white' }}"
-           @style([
-               'background:rgba(255,255,255,0.06); box-shadow:inset 3px 0 0 var(--lt-p)' => $isActive,
-           ])>
+           :class="collapsed ? 'justify-center !px-0 !mx-0' : ''"
+           class="lt-nav-item flex items-center gap-[13px] w-full text-sm font-medium py-[11px] cursor-pointer transition-colors {{ $navShapeClass }}
+                  {{ $isActive ? 'lt-nav-active text-[var(--lt-p)] font-semibold' : 'text-[#71717a] hover:bg-[#f4f4f6] hover:text-[#18181b]' }}"
+           style="{{ $isActive ? 'background:color-mix(in srgb, var(--lt-p) 8%, #fff); box-shadow:inset 3px 0 0 var(--lt-p);' : '' }}">
             <x-icon name="{{ $item['icon'] }}" class="w-5 h-5 shrink-0" />
             <span x-show="!collapsed" x-cloak class="whitespace-nowrap">{{ $item['label'] }}</span>
         </a>
@@ -61,8 +62,8 @@
 
     @foreach($sections as $section => $items)
         <div x-show="!collapsed" x-cloak
-             class="text-[11px] font-bold uppercase tracking-[0.08em] text-[#5b6678] px-6 pt-3.5 pb-2">{{ $section }}</div>
-        <div x-show="collapsed" x-cloak class="mx-auto my-2.5 h-px w-8" style="background:rgba(255,255,255,0.07);"></div>
+             class="lt-section-label text-[11px] font-bold uppercase tracking-[0.08em] px-6 pt-3.5 pb-2 text-[#9aa3b2]">{{ $section }}</div>
+        <div x-show="collapsed" x-cloak class="lt-collapsed-divider mx-auto my-2.5 h-px w-8" style="background:#e5e7eb;"></div>
 
         @foreach($items as $item)
             @php
@@ -72,22 +73,18 @@
             @if($locked)
                 {{-- Item premium terkunci: buka modal, bukan navigasi. --}}
                 <button type="button" @click="$dispatch('premium-required')"
-                   :class="collapsed ? 'justify-center !px-0' : ''"
-                   class="flex items-center gap-[13px] w-full text-sm font-medium py-[11px] px-6 cursor-pointer transition-colors text-[#7e8799] hover:bg-white/[0.04] hover:text-[#aeb7c5]">
+                   :class="collapsed ? 'justify-center !px-0 !mx-0' : ''"
+                   class="lt-nav-item lt-nav-locked flex items-center gap-[13px] w-full text-sm font-medium py-[11px] cursor-pointer transition-colors {{ $navShapeClass }} text-[#9aa3b2] hover:bg-[#f4f4f6] hover:text-[#71717a]">
                     <x-icon name="{{ $item['icon'] }}" class="w-5 h-5 shrink-0" />
                     <span x-show="!collapsed" x-cloak class="whitespace-nowrap flex-1 text-left">{{ $item['label'] }}</span>
-                    <x-icon name="s-lock-closed" x-show="!collapsed" x-cloak class="w-3.5 h-3.5 shrink-0 text-[#5b6678]" />
+                    <x-icon name="s-lock-closed" x-show="!collapsed" x-cloak class="lt-lock-icon w-3.5 h-3.5 shrink-0 text-[#c4cad5]" />
                 </button>
             @else
                 <a href="{{ route($item['route']) }}" wire:navigate
-                   :class="collapsed ? 'justify-center !px-0' : ''"
-                   class="flex items-center gap-[13px] w-full text-sm font-medium py-[11px] px-6 cursor-pointer transition-colors
-                          {{ $isActive
-                              ? 'text-white'
-                              : 'text-[#aeb7c5] hover:bg-white/[0.04] hover:text-white' }}"
-                   @style([
-                       'background:rgba(255,255,255,0.06); box-shadow:inset 3px 0 0 var(--lt-p)' => $isActive,
-                   ])>
+                   :class="collapsed ? 'justify-center !px-0 !mx-0' : ''"
+                   class="lt-nav-item flex items-center gap-[13px] w-full text-sm font-medium py-[11px] cursor-pointer transition-colors {{ $navShapeClass }}
+                          {{ $isActive ? 'lt-nav-active text-[var(--lt-p)] font-semibold' : 'text-[#71717a] hover:bg-[#f4f4f6] hover:text-[#18181b]' }}"
+                   style="{{ $isActive ? 'background:color-mix(in srgb, var(--lt-p) 8%, #fff); box-shadow:inset 3px 0 0 var(--lt-p);' : '' }}">
                     <x-icon name="{{ $item['icon'] }}" class="w-5 h-5 shrink-0" />
                     <span x-show="!collapsed" x-cloak class="whitespace-nowrap">{{ $item['label'] }}</span>
                 </a>
@@ -97,20 +94,20 @@
 </div>
 
 {{-- Profile footer --}}
-<div class="flex items-center gap-3" style="border-top:1px solid rgba(255,255,255,0.08);"
+<div class="lt-sidebar-footer flex items-center gap-3" style="border-top:1px solid #eceef2;"
      :class="collapsed ? 'justify-center py-3.5' : 'py-3.5 px-4'">
     <div class="w-[38px] h-[38px] rounded-full text-white flex items-center justify-center text-[13px] font-bold shrink-0"
          style="background:var(--lt-p);">
         {{ strtoupper(\Illuminate\Support\Str::substr(Auth::user()->name, 0, 2)) }}
     </div>
     <div x-show="!collapsed" x-cloak class="flex-1 min-w-0 overflow-hidden whitespace-nowrap">
-        <div class="text-sm font-semibold text-white leading-tight truncate">{{ Auth::user()->name }}</div>
-        <div class="text-xs text-[#7b8597]">Admin</div>
+        <div class="lt-footer-name text-sm font-semibold leading-tight truncate text-[#18181b]">{{ Auth::user()->name }}</div>
+        <div class="lt-footer-role text-xs text-[#9aa3b2]">Admin</div>
     </div>
     <form method="POST" action="{{ route('logout') }}" x-show="!collapsed" x-cloak>
         @csrf
         <button type="submit" title="Keluar"
-                class="w-[34px] h-[34px] inline-flex items-center justify-center rounded-lg text-[#8a94a6] hover:bg-white/[0.08] transition shrink-0">
+                class="lt-logout-btn w-[34px] h-[34px] inline-flex items-center justify-center rounded-lg transition shrink-0 text-[#71717a] hover:bg-[#f4f4f6]">
             <x-icon name="o-arrow-right-on-rectangle" class="w-[19px] h-[19px]" />
         </button>
     </form>

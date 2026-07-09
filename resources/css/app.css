@@ -227,16 +227,36 @@
 }
 
 /* ════════════════════════════════════════════════════════════════════════
-   DARK MODE — class `lt-dark` di <body>, dirender server dari config_users
-   (toggle di halaman Profil; persist saat wire:navigate karena <body> di-morph).
-   Sidebar memang sudah gelap → dibiarkan. Override ini menyasar nilai warna
-   nyata yang dipakai app (hex inline + class arbitrary Tailwind). Hanya aktif
-   saat `lt-dark`, jadi mode terang sama sekali tak terpengaruh.
+   DARK MODE — class `lt-dark` di <body>, di-toggle client-side (tombol di
+   halaman Profil, lihat show-profile.blade.php) TANPA reload — jadi setiap
+   elemen yang perlu bereaksi ke dark mode WAJIB lewat CSS class di sini,
+   bukan kondisional PHP (`$lt_dark` cuma dipakai buat kelas awal <body> saat
+   render pertama, biar tak ada flash; toggle sesudahnya murni CSS cascade).
+   Override ini menyasar nilai warna nyata yang dipakai app (hex inline +
+   class arbitrary Tailwind). Hanya aktif saat `lt-dark`, jadi mode terang
+   sama sekali tak terpengaruh.
    ════════════════════════════════════════════════════════════════════════ */
 body.lt-dark { background: #0e1420 !important; color: #c7cedb; }
 body.lt-dark main { background: #0e1420 !important; color: #c7cedb; }
 body.lt-dark header { background: #141b27 !important; border-bottom-color: #222c3d !important; }
 body.lt-dark ::-webkit-scrollbar-thumb { background: #33405a; }
+
+/* Sidebar (kelas stabil `.lt-*` di layouts/sidebar.blade.php + layouts/app.blade.php) */
+body.lt-dark .lt-sidebar { background: #1b2433 !important; border-right: none !important; box-shadow: 6px 0 24px rgba(27,36,51,0.16) !important; }
+body.lt-dark .lt-brand-text { color: #fff !important; }
+body.lt-dark .lt-nav-item { color: #aeb7c5 !important; }
+body.lt-dark .lt-nav-item:not(.lt-nav-active):hover { background: rgba(255,255,255,0.04) !important; color: #fff !important; }
+body.lt-dark .lt-nav-active { background: rgba(255,255,255,0.06) !important; box-shadow: inset 3px 0 0 var(--lt-p) !important; color: #fff !important; }
+body.lt-dark .lt-nav-locked { color: #7e8799 !important; }
+body.lt-dark .lt-nav-locked:hover { background: rgba(255,255,255,0.04) !important; color: #aeb7c5 !important; }
+body.lt-dark .lt-lock-icon { color: #5b6678 !important; }
+body.lt-dark .lt-section-label { color: #5b6678 !important; }
+body.lt-dark .lt-collapsed-divider { background: rgba(255,255,255,0.07) !important; }
+body.lt-dark .lt-sidebar-footer { border-top-color: rgba(255,255,255,0.08) !important; }
+body.lt-dark .lt-footer-name { color: #fff !important; }
+body.lt-dark .lt-footer-role { color: #7b8597 !important; }
+body.lt-dark .lt-logout-btn { color: #8a94a6 !important; }
+body.lt-dark .lt-logout-btn:hover { background: rgba(255,255,255,0.08) !important; }
 
 /* Permukaan kartu (putih → gelap). bg-white = class; +4 inline background:#fff. */
 body.lt-dark .bg-white,
@@ -250,7 +270,8 @@ body.lt-dark [style*="background:#fafafa"] { background-color: #1a2230 !importan
 body.lt-dark [style*="#eef1f6"] { background-color: #0e1420 !important; }
 body.lt-dark .bg-\[\#f4f4f5\],
 body.lt-dark .bg-\[\#f4f4f6\],
-body.lt-dark [style*="background:#f1f1f3"] { background-color: #222c3d !important; }
+body.lt-dark [style*="background:#f1f1f3"],
+body.lt-dark [style*="background:#f4f4f6"] { background-color: #222c3d !important; }
 /* Permukaan input lembut (search bar topbar, field disabled) #f7f8fb/#f6f7fb */
 body.lt-dark [style*="background:#f7f8fb"],
 body.lt-dark [style*="background:#f6f7fb"],
