@@ -43,3 +43,10 @@ Detail lengkap tiap subsistem dipindah ke vault (mulai `vault/LapakTrack/Index.m
 ## Menjalankan app (Laragon/lokal)
 - `php artisan serve` → http://127.0.0.1:8000 ; `npm run build` (atau `npm run dev`) untuk aset.
 - Kalau muncul error "Class ... not found" saat boot / route:list nyebut file yang hilang: classmap basi → `composer dump-autoload`. Cache route lama bisa stuck → hapus `bootstrap/cache/*.php` (regenerate otomatis).
+
+## Penjadwalan (cron) — generate tagihan & pengeluaran rutin
+- **Timezone app = `Asia/Jakarta`** (`config/app.php`), supaya `today()`/`now()`/scheduler konsisten WIB. Jadwal di `routes/console.php`: `bills:generate` & `expenses:generate` `->dailyAt('00:00')` (idempoten, lintas-market via console). Catch-up lazy di `mount()` tetap dipertahankan sebagai jaring pengaman.
+- Butuh 1 pemicu OS yang memanggil `php artisan schedule:run` tiap menit:
+  - **Linux (produksi)**: `* * * * * cd /path/ke/app && php artisan schedule:run >> /dev/null 2>&1`
+  - **Windows/Laragon (lokal)**: Task Scheduler jalankan `schedule-run.bat` (di root repo) tiap 1 menit. Mesin harus menyala.
+- Uji: `php artisan schedule:list`, `php artisan bills:generate`, `php artisan expenses:generate`; output ke `storage/logs/schedule.log`.
