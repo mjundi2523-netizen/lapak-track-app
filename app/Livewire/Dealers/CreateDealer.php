@@ -388,19 +388,26 @@ class CreateDealer extends Component
                     $start = $this->parseImportDate($row['tanggal_mulai'] ?? null);
                     $endRaw = trim((string) ($row['akhir_sewa'] ?? ''));
                     $end = $endRaw !== '' ? $this->parseImportDate($endRaw) : null;
+                    $termName = trim((string) ($row['aturan_bayar'] ?? ''));
 
-                    // Aturan bayar lapak yang cocok kondisi. Impor otomatis hanya bila TEPAT 1
-                    // yang cocok; bila >1 (ambigu) baris ditolak → pakai form manual.
+                    // Aturan bayar lapak yang cocok kondisi pedagang (satu lapak bisa punya >1).
                     $matchTerms = $stall
                         ? $stall->paymentTerms->where('dealer_condition', $condition)->values()
                         : collect();
+
+                    // Pilih term: pakai kolom "Aturan Bayar" bila diisi; bila kosong & cuma 1 opsi, pakai itu.
+                    $chosenTerm = $termName !== ''
+                        ? $matchTerms->first(fn ($t) => strcasecmp(trim((string) $t->term_name), $termName) === 0)
+                        : ($matchTerms->count() === 1 ? $matchTerms->first() : null);
 
                     if (! $stall) {
                         $rowErrors[] = "Lapak '$lapak' tidak ditemukan";
                     } elseif ($matchTerms->isEmpty()) {
                         $rowErrors[] = "Aturan bayar lapak '$lapak' tidak sesuai kondisi '$condition'";
-                    } elseif ($matchTerms->count() > 1) {
-                        $rowErrors[] = "Lapak '$lapak' punya beberapa aturan bayar '$condition' — pakai form manual untuk memilih";
+                    } elseif ($termName === '' && $matchTerms->count() > 1) {
+                        $rowErrors[] = "Lapak '$lapak' punya beberapa aturan bayar — isi kolom 'Aturan Bayar' dengan salah satu: " . $matchTerms->pluck('term_name')->join(', ');
+                    } elseif (! $chosenTerm) {
+                        $rowErrors[] = "Aturan bayar '$termName' bukan pilihan untuk lapak '$lapak'. Pilihan: " . $matchTerms->pluck('term_name')->join(', ');
                     } elseif (in_array($stall->sid, $claimedStalls, true)) {
                         $rowErrors[] = "Lapak '$lapak' sudah diklaim baris lain di file ini";
                     } elseif ($stall->activeRentals()->exists()) {
@@ -414,7 +421,7 @@ class CreateDealer extends Component
                     } else {
                         $rental = [
                             'sid' => $stall->sid,
-                            'sptid' => (int) $matchTerms->first()->pivot->sptid,
+                            'sptid' => (int) $chosenTerm->pivot->sptid,
                             'start' => $start->toDateString(),
                             'end' => $end?->toDateString(),
                         ];

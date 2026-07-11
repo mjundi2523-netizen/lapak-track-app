@@ -33,7 +33,7 @@ class DealerTemplateDataSheet implements FromArray, WithHeadings, WithTitle
             'Lapak',          // kode lapak mis. A01/05 (untuk regular/new)
             'Tanggal Mulai',  // mulai sewa (regular/new) ATAU mulai langganan (external)
             'Akhir Sewa',     // opsional, hanya penyewa lapak
-            'Aturan Bayar',   // nama aturan bayar eksternal (untuk external)
+            'Aturan Bayar',   // external: nama term eksternal; regular/new: nama term lapak bila lapak punya >1
         ];
     }
 
