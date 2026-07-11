@@ -27,7 +27,8 @@ class CreateStall extends Component
 
     public ?string $size = null;
 
-    public ?int $ptid = null;
+    /** Aturan bayar yang ditawarkan lapak (bisa >1). Disimpan ke pivot stall_payment_terms. */
+    public array $selectedPaymentTerms = [];
 
     public array $selectedAddOns = [];
 
@@ -44,7 +45,8 @@ class CreateStall extends Component
                 Rule::unique('stall', 'block')->where('number', $this->number)->where('market_id', Auth::user()->market_id),
             ],
             'number' => ['required', 'regex:/^\d{2}$/'],
-            'ptid' => ['nullable', 'exists:payment_terms,ptid'],
+            'selectedPaymentTerms' => ['array'],
+            'selectedPaymentTerms.*' => ['integer', 'exists:payment_terms,ptid'],
         ], [
             'block.regex' => 'Format blok harus 1 huruf + 2 angka (mis. A01).',
             'block.unique' => 'Lapak dengan blok & nomor ini sudah ada.',
@@ -57,23 +59,32 @@ class CreateStall extends Component
                 'number' => $this->number,
                 'description' => $this->description,
                 'size' => $this->size,
-                'ptid' => $this->ptid,
                 'is_active' => true,
                 'created_by' => Auth::id(),
             ]);
 
-            if (! empty($this->selectedAddOns)) {
-                $userId = Auth::id();
-                foreach ($this->selectedAddOns as $aoid) {
-                    DB::table('stall_add_ons')->insert([
-                        'market_id' => $stall->market_id,
-                        'sid' => $stall->sid,
-                        'aoid' => $aoid,
-                        'created_by' => $userId,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-                }
+            $userId = Auth::id();
+
+            foreach (array_unique($this->selectedPaymentTerms) as $ptid) {
+                DB::table('stall_payment_terms')->insert([
+                    'market_id' => $stall->market_id,
+                    'sid' => $stall->sid,
+                    'ptid' => $ptid,
+                    'created_by' => $userId,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+
+            foreach ($this->selectedAddOns as $aoid) {
+                DB::table('stall_add_ons')->insert([
+                    'market_id' => $stall->market_id,
+                    'sid' => $stall->sid,
+                    'aoid' => $aoid,
+                    'created_by' => $userId,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
             }
         });
 
@@ -83,9 +94,21 @@ class CreateStall extends Component
 
     public function render()
     {
+        $freq = ['daily' => 'hari', 'weekly' => 'minggu', 'monthly' => 'bulan', 'annual' => 'tahun'];
+
         return view('livewire.stalls.create', [
-            'paymentTerms' => PaymentTerm::orderBy('term_name')->get(),
-            'addOns' => AddOn::orderBy('add_on')->get(),
+            'paymentTerms' => PaymentTerm::orderBy('term_name')->get()->map(fn ($pt) => [
+                'ptid' => $pt->ptid,
+                'name' => $pt->term_name,
+                'sub' => 'Rp ' . number_format($pt->price, 0, ',', '.') . ' / '
+                    . ($pt->interval_count > 1 ? $pt->interval_count . ' ' : '') . ($freq[$pt->frequency] ?? $pt->frequency)
+                    . ' · ' . $pt->dealer_condition,
+            ]),
+            'addOns' => AddOn::orderBy('add_on')->get()->map(fn ($ao) => [
+                'aoid' => $ao->aoid,
+                'name' => $ao->add_on,
+                'sub' => 'Rp ' . number_format($ao->price, 0, ',', '.') . ' / ' . ($freq[$ao->frequency] ?? $ao->frequency),
+            ]),
         ]);
     }
 }

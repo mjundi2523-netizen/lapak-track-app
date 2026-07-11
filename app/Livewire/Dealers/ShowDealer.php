@@ -146,8 +146,8 @@ class ShowDealer extends Component
     {
         $this->dealer->load([
             'dealerStalls' => fn ($q) => $q->where('deleted', false),
-            'dealerStalls.stall.paymentTerm',
             'dealerStalls.stall.addOns',
+            'dealerStalls.stallPaymentTerm.paymentTerm',
         ]);
 
         $bills = DealerBill::query()

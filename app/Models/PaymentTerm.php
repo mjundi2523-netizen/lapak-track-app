@@ -6,8 +6,7 @@ use App\Models\Concerns\BelongsToMarket;
 use App\Models\Concerns\HasObfuscatedId;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class PaymentTerm extends Model
 {
@@ -35,9 +34,10 @@ class PaymentTerm extends Model
         ];
     }
 
-    public function stalls(): HasMany
+    public function stalls(): BelongsToMany
     {
-        return $this->hasMany(Stall::class, 'ptid', 'ptid');
+        return $this->belongsToMany(Stall::class, 'stall_payment_terms', 'ptid', 'sid', 'ptid', 'sid')
+            ->withPivot('sptid');
     }
 
     public function createdBy(): BelongsTo

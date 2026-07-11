@@ -44,6 +44,8 @@ class EditDealer extends Component
 
     // Tambah penyewaan (hanya muncul saat pedagang tidak punya rental aktif).
     public array $selected_stalls = [];
+    /** Aturan bayar terpilih per lapak (sid => sptid) untuk penyewaan baru. */
+    public array $stall_term_choice = [];
     public ?int $selected_ptid = null;          // aturan bayar (pedagang eksternal)
     public string $external_start_date = '';    // mulai langganan eksternal baru
     public string $rent_start_date = '';
@@ -81,6 +83,7 @@ class EditDealer extends Component
             $this->cond_external = false;
         }
         $this->selected_stalls = [];
+        $this->stall_term_choice = [];
         $this->selected_ptid = null;
     }
 
@@ -98,6 +101,7 @@ class EditDealer extends Component
             $this->cond_new = false;
         }
         $this->selected_stalls = [];
+        $this->stall_term_choice = [];
         $this->selected_ptid = null;
     }
 
@@ -132,9 +136,40 @@ class EditDealer extends Component
     {
         if (in_array($sid, $this->selected_stalls, true)) {
             $this->selected_stalls = array_values(array_diff($this->selected_stalls, [$sid]));
+            unset($this->stall_term_choice[$sid]);
         } else {
             $this->selected_stalls[] = $sid;
+            // Auto-pilih bila lapak hanya punya 1 aturan bayar yang cocok kondisi pedagang.
+            $opts = $this->stallTermOptions($sid);
+            $this->stall_term_choice[$sid] = count($opts) === 1 ? (int) $opts[0]['sptid'] : null;
         }
+    }
+
+    /** Set aturan bayar terpilih untuk sebuah lapak (sekaligus menandai lapak terpilih). */
+    public function setStallTerm(int $sid, int $sptid): void
+    {
+        if (! in_array($sid, $this->selected_stalls, true)) {
+            $this->selected_stalls[] = $sid;
+        }
+        $this->stall_term_choice[$sid] = $sptid;
+    }
+
+    /**
+     * Opsi aturan bayar sebuah lapak yang cocok kondisi pedagang.
+     * Return: [['sptid','ptid','term_name','price','frequency','interval_count'], ...].
+     * Raw query → filter market_id manual (global scope tidak berlaku).
+     */
+    protected function stallTermOptions(int $sid): array
+    {
+        return DB::table('stall_payment_terms as spt')
+            ->join('payment_terms as pt', 'pt.ptid', '=', 'spt.ptid')
+            ->where('spt.sid', $sid)
+            ->where('pt.dealer_condition', $this->dealerCondition())
+            ->when(Auth::user()?->market_id, fn ($q, $m) => $q->where('spt.market_id', $m))
+            ->orderBy('pt.price')
+            ->get(['spt.sptid', 'pt.ptid', 'pt.term_name', 'pt.price', 'pt.frequency', 'pt.interval_count'])
+            ->map(fn ($r) => (array) $r)
+            ->all();
     }
 
     /**
@@ -208,17 +243,16 @@ class EditDealer extends Component
                 return null;
             }
 
-            // Lapak harus cocok dengan status pedagang (aturan bayar is_new = is_new pedagang).
-            $mismatch = Stall::whereIn('sid', $this->selected_stalls)
-                ->whereDoesntHave('paymentTerm', fn ($q) => $q->where('dealer_condition', $this->dealerCondition()))
-                ->pluck('sid')
-                ->all();
+            // Tiap lapak wajib punya aturan bayar terpilih yang valid: milik lapak & cocok kondisi.
+            foreach ($this->selected_stalls as $sid) {
+                $chosen = $this->stall_term_choice[$sid] ?? null;
+                $validSptids = array_map(fn ($o) => (int) $o['sptid'], $this->stallTermOptions($sid));
 
-            if ($mismatch) {
-                $this->addError('selected_stalls', 'Ada lapak yang aturan bayarnya tidak sesuai kondisi pedagang.');
-                $this->selected_stalls = array_values(array_diff($this->selected_stalls, $mismatch));
+                if (! $chosen || ! in_array((int) $chosen, $validSptids, true)) {
+                    $this->addError('selected_stalls', 'Setiap lapak harus dipilih satu aturan bayar yang sesuai kondisi pedagang.');
 
-                return null;
+                    return null;
+                }
             }
         }
 
@@ -272,6 +306,7 @@ class EditDealer extends Component
                     $ds = DealerStall::create([
                         'did' => $this->dealer->did,
                         'sid' => $sid,
+                        'sptid' => $this->stall_term_choice[$sid] ?? null,
                         'rent_start_date' => $this->rent_start_date,
                         'rent_end_date' => $this->rent_end_date,
                         'deleted' => false,
@@ -309,12 +344,17 @@ class EditDealer extends Component
 
         // Daftar lapak untuk modal (untuk pedagang non-eksternal; boleh menambah lapak baru
         // walau sudah punya rental aktif — lapak yang sudah tersewa otomatis tidak bisa dipilih).
+        $cond = $this->dealerCondition();
+
         $stalls = $this->cond_external
             ? collect()
             : Stall::query()
                 ->where('is_active', true)
-                ->whereHas('paymentTerm', fn ($q) => $q->where('dealer_condition', $this->dealerCondition()))
-                ->with(['paymentTerm', 'addOns'])
+                ->whereHas('paymentTerms', fn ($q) => $q->where('dealer_condition', $cond))
+                ->with([
+                    'paymentTerms' => fn ($q) => $q->where('dealer_condition', $cond),
+                    'addOns',
+                ])
                 ->withCount('activeRentals')
                 ->when($this->stallSearch !== '', fn ($q) => $q->where('block', 'like', '%' . $this->stallSearch . '%'))
                 ->orderBy('block')
@@ -327,11 +367,11 @@ class EditDealer extends Component
             'hasActiveExternal' => $hasActiveExternal,
             'stalls' => $stalls,
             'selectedStallDetails' => Stall::whereIn('sid', $this->selected_stalls)
-                ->with('paymentTerm')
+                ->with(['paymentTerms' => fn ($q) => $q->where('dealer_condition', $cond)])
                 ->orderBy('block')
                 ->get(),
             'paymentTerms' => $this->cond_external
-                ? PaymentTerm::where('dealer_condition', $this->dealerCondition())->orderBy('term_name')->get()
+                ? PaymentTerm::where('dealer_condition', $cond)->orderBy('term_name')->get()
                 : collect(),
         ]);
     }

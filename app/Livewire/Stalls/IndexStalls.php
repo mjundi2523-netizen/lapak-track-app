@@ -32,14 +32,14 @@ class IndexStalls extends Component
         return [
             'location' => "CONCAT(block, number)",
             'size' => 'size',
-            'term' => '(SELECT pt.term_name FROM payment_terms pt WHERE pt.ptid = stall.ptid)',
+            'term' => '(SELECT MIN(pt.term_name) FROM stall_payment_terms spt JOIN payment_terms pt ON pt.ptid = spt.ptid WHERE spt.sid = stall.sid)',
             'is_active' => 'is_active',
         ];
     }
     public function render()
     {
         $stalls = Stall::query()
-            ->with(['paymentTerm'])
+            ->with(['paymentTerms'])
             ->when($this->search, fn ($q) => $q->where(fn ($w) => $w
                 ->where('block', 'like', "%{$this->search}%")
                 ->orWhere('number', 'like', "%{$this->search}%")));

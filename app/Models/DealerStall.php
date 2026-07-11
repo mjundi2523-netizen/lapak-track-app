@@ -18,6 +18,7 @@ class DealerStall extends Model
         'market_id',
         'did',
         'sid',
+        'sptid',
         'rent_start_date',
         'rent_end_date',
         'deleted',
@@ -42,6 +43,12 @@ class DealerStall extends Model
     public function stall(): BelongsTo
     {
         return $this->belongsTo(Stall::class, 'sid', 'sid');
+    }
+
+    /** Aturan bayar yang dipilih pedagang untuk lapak ini (baris pivot stall_payment_terms). */
+    public function stallPaymentTerm(): BelongsTo
+    {
+        return $this->belongsTo(StallPaymentTerm::class, 'sptid', 'sptid');
     }
 
     public function bills(): HasMany

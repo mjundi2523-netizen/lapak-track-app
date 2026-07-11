@@ -22,7 +22,7 @@ class ShowStall extends Component
 
     public function render()
     {
-        $this->stall->load('paymentTerm');
+        $this->stall->load('paymentTerms');
 
         // Penyewa aktif terkini (rental belum dihapus, mulai sewa terbaru).
         $tenant = $this->stall->activeRentals()

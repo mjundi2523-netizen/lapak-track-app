@@ -122,10 +122,13 @@
                 @if($selectedStallDetails->isNotEmpty())
                     <div class="flex flex-wrap gap-2 mt-3">
                         @foreach($selectedStallDetails as $s)
+                            @php $term = $s->paymentTerms->first(fn ($t) => (int) $t->pivot->sptid === (int) ($stall_term_choice[$s->sid] ?? 0)); @endphp
                             <span class="inline-flex items-center gap-2 lt-pill" style="background:#cffafe; color:#0e7490;">
                                 {{ $s->code }}
-                                @if($s->paymentTerm)
-                                    <span class="text-[#0e7490]">· Rp {{ number_format($s->paymentTerm->price, 0, ',', '.') }}</span>
+                                @if($term)
+                                    <span class="text-[#0e7490]">· {{ $term->term_name }} · Rp {{ number_format($term->price, 0, ',', '.') }}</span>
+                                @else
+                                    <span class="text-amber-600 font-semibold">· pilih aturan bayar</span>
                                 @endif
                                 <button type="button" wire:click="toggleStall({{ $s->sid }})" class="hover:text-error">
                                     <x-icon name="o-x-mark" class="w-4 h-4" />
@@ -191,15 +194,22 @@
                                 @endif
 
                                 <div class="text-sm mt-2">
-                                    @if($stall->paymentTerm)
-                                        <span class="text-[#52525b]">Sewa:</span>
-                                        <span class="font-medium text-[#18181b]">Rp {{ number_format($stall->paymentTerm->price, 0, ',', '.') }}</span>
-                                        <span class="text-[#71717a]">/ {{ $stall->paymentTerm->interval_count > 1 ? $stall->paymentTerm->interval_count . ' ' : '' }}{{ match($stall->paymentTerm->frequency) {
-                                            'daily' => 'hari', 'weekly' => 'minggu', 'monthly' => 'bulan', 'annual' => 'tahun', default => $stall->paymentTerm->frequency,
-                                        } }}</span>
-                                    @else
+                                    <p class="text-[#52525b] mb-1">Aturan bayar:</p>
+                                    @forelse($stall->paymentTerms as $term)
+                                        @php $picked = (int) ($stall_term_choice[$stall->sid] ?? 0) === (int) $term->pivot->sptid; @endphp
+                                        <label class="flex items-start gap-2 py-0.5 cursor-pointer" wire:click.stop="setStallTerm({{ $stall->sid }}, {{ $term->pivot->sptid }})">
+                                            <input type="radio" class="radio radio-xs mt-0.5" @checked($picked) @disabled($occupied) />
+                                            <span>
+                                                <span class="font-medium text-[#18181b]">Rp {{ number_format($term->price, 0, ',', '.') }}</span>
+                                                <span class="text-[#71717a]">/ {{ $term->interval_count > 1 ? $term->interval_count . ' ' : '' }}{{ match($term->frequency) {
+                                                    'daily' => 'hari', 'weekly' => 'minggu', 'monthly' => 'bulan', 'annual' => 'tahun', default => $term->frequency,
+                                                } }}</span>
+                                                <span class="text-[#a1a1aa]">· {{ $term->term_name }}</span>
+                                            </span>
+                                        </label>
+                                    @empty
                                         <span class="text-[#a1a1aa] italic">Belum ada aturan sewa</span>
-                                    @endif
+                                    @endforelse
                                 </div>
 
                                 @if($stall->addOns->isNotEmpty())

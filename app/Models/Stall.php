@@ -23,7 +23,6 @@ class Stall extends Model
         'number',
         'description',
         'size',
-        'ptid',
         'is_active',
         'created_by',
         'modified_by',
@@ -42,9 +41,14 @@ class Stall extends Model
         return trim(($this->block ?? '') . ' / ' . ($this->number ?? ''));
     }
 
-    public function paymentTerm(): BelongsTo
+    /**
+     * Aturan bayar yang tersedia untuk lapak ini (satu lapak bisa menawarkan >1).
+     * Pivot menyimpan `sptid`; pedagang memilih salah satu saat menempati lapak.
+     */
+    public function paymentTerms(): BelongsToMany
     {
-        return $this->belongsTo(PaymentTerm::class, 'ptid', 'ptid');
+        return $this->belongsToMany(PaymentTerm::class, 'stall_payment_terms', 'sid', 'ptid', 'sid', 'ptid')
+            ->withPivot('sptid');
     }
 
     public function addOns(): BelongsToMany

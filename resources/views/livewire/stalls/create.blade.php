@@ -10,21 +10,27 @@
             <x-input label="Ukuran" wire:model="size" placeholder="Contoh: 3x4 m" />
             <x-input label="Deskripsi" wire:model="description" placeholder="Catatan tambahan (opsional)" />
 
-            <x-select label="Aturan Bayar Sewa" wire:model="ptid" :options="$paymentTerms->map(fn($pt) => ['value' => $pt->ptid, 'label' => $pt->term_name . ' (' . match($pt->frequency) {
-                'daily' => 'Harian', 'weekly' => 'Mingguan', 'monthly' => 'Bulanan', 'annual' => 'Tahunan', default => $pt->frequency
-            } . ')'])->toArray()" option-value="value" option-label="label" placeholder="Pilih aturan bayar" />
+            <x-choices-offline
+                label="Aturan Bayar Sewa"
+                wire:model="selectedPaymentTerms"
+                :options="$paymentTerms"
+                option-value="ptid"
+                option-label="name"
+                option-sub-label="sub"
+                searchable
+                clearable
+                hint="Pilih satu atau lebih. Pedagang memilih salah satu saat menyewa lapak ini." />
 
-            <div>
-                <label class="label"><span class="label-text">Biaya Tambahan</span></label>
-                <div class="grid grid-cols-2 gap-2">
-                    @foreach($addOns as $ao)
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" value="{{ $ao->aoid }}" wire:model="selectedAddOns" class="checkbox checkbox-sm" />
-                            <span>{{ $ao->add_on }} (Rp {{ number_format($ao->price, 0, ',', '.') }})</span>
-                        </label>
-                    @endforeach
-                </div>
-            </div>
+            <x-choices-offline
+                label="Biaya Tambahan"
+                wire:model="selectedAddOns"
+                :options="$addOns"
+                option-value="aoid"
+                option-label="name"
+                option-sub-label="sub"
+                searchable
+                clearable
+                hint="Opsional. Biaya tambahan yang melekat pada lapak." />
 
             <x-slot:actions>
                 <x-button label="Batal" link="{{ $this->backHref('stalls.index') }}" class="btn-ghost" />

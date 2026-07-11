@@ -27,10 +27,11 @@ Detail lengkap tiap subsistem dipindah ke vault (mulai `vault/LapakTrack/Index.m
 - Rebuild pasca-kehilangan source selesai (spec `.qoder/specs/Rebuild_Lost_Source_Files_task-61c.md`; Task 1–8, 10, 12; skip 9 Filament & 11 seeder). DB MySQL `lapak_track` utuh.
 - Mesin billing tuntas & data di-regen penuh; multi-tenancy + onboarding sudah masuk. Kerja billing engine **belum di-commit** (lihat Aturan keamanan).
 - ERD lama (`terms_add_ons`) usang — add-ons menempel ke **stall** via pivot `stall_add_ons`.
+- **Aturan bayar (payment_terms) juga many-to-many ke stall** via pivot `stall_payment_terms` (PK `sptid`) — satu lapak bisa menawarkan >1 aturan bayar. Kolom `stall.ptid` sudah **dihapus**. Saat pedagang menyewa, `dealer_stall.sptid` menyimpan **satu** aturan bayar terpilih (FK ke pivot → dijamin milik lapak itu). Billing me-resolve term via `dealer_stall.sptid → stall_payment_terms → payment_terms` (`$ds->stallPaymentTerm->paymentTerm`), bukan lagi `stall->paymentTerm`. Jalur eksternal tetap pakai `external_dealers.ptid` (terpisah).
 
 ## Aturan inti (wajib dipatuhi lintas area — detail di vault)
 - **Multi-tenancy aktif**: JANGAN filter `market_id` manual di query Eloquent (global scope `BelongsToMarket` + auto-isi saat create). Query mentah `DB::table`/`DB::raw` TIDAK kena scope → WAJIB filter manual. Service generator set `market_id` eksplisit dari parent (aman di console tanpa Auth). Scope inert bila user null / `market_id` null (developer/console → lintas market).
-- **`billing_status` enum** `paid|installment|unpaid|pending|cancelled`; `cancelled` = terminal (tak disentuh `recalculateBillingStatus()`, dikecualikan dari hitungan/notifikasi/pemilih bayar). PK custom per tabel (`ptid`,`aoid`,`sid`,`did`,`dsid`,`dbid`,`dpid`,`edid`,`mid`…).
+- **`billing_status` enum** `paid|installment|unpaid|pending|cancelled`; `cancelled` = terminal (tak disentuh `recalculateBillingStatus()`, dikecualikan dari hitungan/notifikasi/pemilih bayar). PK custom per tabel (`ptid`,`aoid`,`sid`,`did`,`dsid`,`dbid`,`dpid`,`edid`,`mid`,`saoid`,`sptid`…).
 - **Form create/edit/void baru WAJIB**: `use ReturnsBack;` + `redirectBack('fallback')` + tombol Batal `backHref()`; filter index baru diberi `#[Url]`. Guard dirty-form global otomatis selama pakai `x-form wire:submit`.
 - **Aksi destruktif baru** → minimal `wire:confirm`; yang berdampak generate tagihan → pola modal konfirmasi 2 tahap (validasi ulang di `confirmSave()`).
 - **`CreatePayment` menolak over-payment** — belum ada konsep saldo, jangan diakali.

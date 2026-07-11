@@ -37,8 +37,8 @@ class ShowBill extends Component
     {
         $this->dealerBill->load([
             'dealerStall.dealer',
-            'dealerStall.stall.paymentTerm',
             'dealerStall.stall.addOns',
+            'dealerStall.stallPaymentTerm.paymentTerm',
             'externalDealer.dealer',
             'externalDealer.paymentTerm',
             'addOn',

@@ -35,7 +35,7 @@ class BillGenerationService
             return;
         }
 
-        $ds->loadMissing(['stall.paymentTerm', 'stall.addOns']);
+        $ds->loadMissing(['stall.addOns', 'stallPaymentTerm.paymentTerm']);
         $stall = $ds->stall;
 
         if (! $stall) {
@@ -55,7 +55,8 @@ class BillGenerationService
         $userId = Auth::id() ?? $ds->created_by ?? 1;
 
         DB::transaction(function () use ($ds, $stall, $rentStart, $horizon, $userId) {
-            $term = $stall->paymentTerm;
+            // Aturan bayar sewa = term yang dipilih pedagang untuk lapak ini (via sptid).
+            $term = $ds->stallPaymentTerm?->paymentTerm;
             $rentFreq = $term && $term->price > 0 ? $term->frequency : null;
             $rentInterval = $term ? max(1, (int) ($term->interval_count ?? 1)) : 1;
 
@@ -124,7 +125,7 @@ class BillGenerationService
         $before = DealerBill::count();
 
         DealerStall::where('deleted', false)
-            ->with(['stall.paymentTerm', 'stall.addOns'])
+            ->with(['stall.addOns', 'stallPaymentTerm.paymentTerm'])
             ->get()
             ->each(fn (DealerStall $ds) => $this->ensureBillsUpToDate($ds));
 

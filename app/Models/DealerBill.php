@@ -132,7 +132,8 @@ class DealerBill extends Model
 
         $items = [];
 
-        $term = $stall->paymentTerm;
+        // Term sewa = aturan bayar yang dipilih pedagang untuk rental ini (via sptid).
+        $term = $this->dealerStall?->stallPaymentTerm?->paymentTerm;
         if ($term && (int) $term->price > 0 && $term->frequency === $this->frequency) {
             $items[] = ['label' => 'Sewa Lapak', 'amount' => (int) $term->price];
         }

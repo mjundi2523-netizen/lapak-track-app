@@ -20,7 +20,7 @@
                     <tr class="lt-row">
                         <td class="lt-td font-semibold text-[#18181b]">{{ $row->code }}</td>
                         <td class="lt-td">{{ $row->size ?: '-' }}</td>
-                        <td class="lt-td">{{ $row->paymentTerm?->term_name ?? '-' }}</td>
+                        <td class="lt-td">{{ $row->paymentTerms->pluck('term_name')->join(', ') ?: '-' }}</td>
                         <td class="lt-td">
                             @if($row->is_active)
                                 <span class="lt-pill" style="background:#dcfce7; color:#15803d;">Aktif</span>

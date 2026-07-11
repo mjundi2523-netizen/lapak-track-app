@@ -57,7 +57,7 @@ class DealerTemplateLegendSheet implements FromArray, WithTitle
 
         $stalls = Stall::where('is_active', true)
             ->whereDoesntHave('activeRentals')
-            ->with('paymentTerm')
+            ->with('paymentTerms')
             ->orderBy('block')
             ->orderBy('number')
             ->get();
@@ -68,8 +68,8 @@ class DealerTemplateLegendSheet implements FromArray, WithTitle
             foreach ($stalls as $s) {
                 $rows[] = [
                     $s->block . '/' . $s->number,
-                    $s->paymentTerm?->dealer_condition ?? '(belum ada aturan)',
-                    $s->paymentTerm?->term_name ?? '-',
+                    $s->paymentTerms->pluck('dealer_condition')->unique()->join(', ') ?: '(belum ada aturan)',
+                    $s->paymentTerms->pluck('term_name')->join(', ') ?: '-',
                 ];
             }
         }
