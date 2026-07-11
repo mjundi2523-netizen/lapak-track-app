@@ -17,8 +17,12 @@ class BillExportController extends Controller
             search: $request->get('search', ''),
             statusFilter: $request->get('status', ''),
             frequencyFilter: $request->get('frequency', ''),
-            // Param `dealer` berupa sqid (lihat HasObfuscatedId) — decode ke did asli.
-            dealerId: Dealer::decodeKey($request->get('dealer')),
+            // Param `dealer` berupa array sqid (lihat HasObfuscatedId) — decode tiap elemen ke did asli.
+            dealerIds: collect($request->get('dealer', []))
+                ->map(fn ($k) => Dealer::decodeKey($k))
+                ->filter()
+                ->values()
+                ->all(),
             from: $request->get('from', ''),
             to: $request->get('to', ''),
         ), $filename);

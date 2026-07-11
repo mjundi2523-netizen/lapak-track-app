@@ -19,7 +19,7 @@ class BillsExport implements FromCollection, WithHeadings, WithMapping, ShouldAu
         private readonly string $search = '',
         private readonly string $statusFilter = '',
         private readonly string $frequencyFilter = '',
-        private readonly ?int $dealerId = null,
+        private readonly array $dealerIds = [],
         private readonly string $from = '',
         private readonly string $to = '',
     ) {}
@@ -41,9 +41,9 @@ class BillsExport implements FromCollection, WithHeadings, WithMapping, ShouldAu
             ->when($this->frequencyFilter, fn ($q) => $q->where('frequency', $this->frequencyFilter))
             ->when($this->from, fn ($q) => $q->whereDate('due_date', '>=', $this->from))
             ->when($this->to, fn ($q) => $q->whereDate('due_date', '<=', $this->to))
-            ->when($this->dealerId, fn ($q) => $q->where(fn ($w) => $w
-                ->whereHas('dealerStall', fn ($q2) => $q2->where('did', $this->dealerId))
-                ->orWhereHas('externalDealer', fn ($q2) => $q2->where('did', $this->dealerId))
+            ->when($this->dealerIds, fn ($q) => $q->where(fn ($w) => $w
+                ->whereHas('dealerStall', fn ($q2) => $q2->whereIn('did', $this->dealerIds))
+                ->orWhereHas('externalDealer', fn ($q2) => $q2->whereIn('did', $this->dealerIds))
             ))
             ->orderBy('created_at', 'desc')
             ->get();

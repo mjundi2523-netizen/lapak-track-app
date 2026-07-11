@@ -6,7 +6,6 @@ use App\Livewire\Concerns\Sortable;
 use App\Models\Dealer;
 use App\Models\DealerPayment;
 use App\Services\BillGenerationService;
-use Illuminate\Support\Collection;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -31,9 +30,9 @@ class IndexPayments extends Component
     #[Url(except: '')]
     public string $frequencyFilter = '';
 
-    // Nilai = sqid pedagang (bukan angka) supaya ID asli tidak tampil di URL.
-    #[Url(except: null)]
-    public ?string $dealerId = null;
+    // Nilai = array sqid pedagang (bukan angka) supaya ID asli tidak tampil di URL.
+    #[Url(except: [])]
+    public array $dealerIds = [];
 
     // Filter rentang tanggal bayar (kosong = semua).
     #[Url(except: '')]
@@ -42,9 +41,6 @@ class IndexPayments extends Component
     #[Url(except: '')]
     public string $to = '';
 
-    /** Kandidat opsi untuk autocomplete pedagang (x-choices searchable). */
-    public Collection $dealersList;
-
     // Modal kwitansi
     public bool $showReceipt = false;
     public ?int $receiptId = null;
@@ -52,40 +48,21 @@ class IndexPayments extends Component
     public function mount(BillGenerationService $bills): void
     {
         $bills->ensureAllActive();
-        $this->searchDealer();
     }
 
     /** Reset halaman saat filter berubah agar tidak nyangkut di page kosong. */
     public function updated(string $name): void
     {
-        if (in_array($name, ['search', 'voidedFilter', 'frequencyFilter', 'dealerId', 'from', 'to'], true)) {
+        if (in_array($name, ['search', 'voidedFilter', 'frequencyFilter', 'from', 'to'], true)
+            || str($name)->startsWith('dealerIds')) {
             $this->resetPage();
         }
     }
 
     public function resetFilters(): void
     {
-        $this->reset(['search', 'voidedFilter', 'frequencyFilter', 'dealerId', 'from', 'to']);
+        $this->reset(['search', 'voidedFilter', 'frequencyFilter', 'dealerIds', 'from', 'to']);
         $this->resetPage();
-        $this->searchDealer();
-    }
-
-    /** Dipanggil x-choices saat user mengetik; jaga pedagang terpilih tetap muncul. */
-    public function searchDealer(string $value = ''): void
-    {
-        $selectedDid = Dealer::decodeKey($this->dealerId);
-        $selected = $selectedDid
-            ? Dealer::where('did', $selectedDid)->get()
-            : collect();
-
-        $this->dealersList = Dealer::query()
-            ->when($value, fn ($q) => $q->where('name', 'like', "%{$value}%"))
-            ->orderBy('name')
-            ->limit(30)
-            ->get()
-            ->merge($selected)
-            ->unique('did')
-            ->values();
     }
 
     /** Render kwitansi tersembunyi lalu langsung buka dialog cetak browser (tanpa preview). */
@@ -120,7 +97,12 @@ class IndexPayments extends Component
     }
     public function render()
     {
-        $did = Dealer::decodeKey($this->dealerId);
+        // Decode sqid → did asli untuk filter (bisa >1 pedagang).
+        $dids = collect($this->dealerIds)
+            ->map(fn ($k) => Dealer::decodeKey($k))
+            ->filter()
+            ->values()
+            ->all();
 
         $receiptPayment = $this->showReceipt && $this->receiptId
             ? DealerPayment::with(['dealerBill.dealerStall.dealer', 'dealerBill.dealerStall.stall', 'dealerBill.externalDealer.dealer'])
@@ -140,9 +122,9 @@ class IndexPayments extends Component
             ->when($this->from, fn ($q) => $q->whereDate('payment_date', '>=', $this->from))
             ->when($this->to, fn ($q) => $q->whereDate('payment_date', '<=', $this->to))
             ->when($this->frequencyFilter, fn ($q) => $q->whereHas('dealerBill', fn ($q2) => $q2->where('frequency', $this->frequencyFilter)))
-            ->when($did, fn ($q) => $q->where(fn ($w) => $w
-                ->whereHas('dealerBill.dealerStall', fn ($q2) => $q2->where('did', $did))
-                ->orWhereHas('dealerBill.externalDealer', fn ($q2) => $q2->where('did', $did))
+            ->when($dids, fn ($q) => $q->where(fn ($w) => $w
+                ->whereHas('dealerBill.dealerStall', fn ($q2) => $q2->whereIn('did', $dids))
+                ->orWhereHas('dealerBill.externalDealer', fn ($q2) => $q2->whereIn('did', $dids))
             ))
 ;
 
@@ -153,6 +135,12 @@ class IndexPayments extends Component
         return view('livewire.payments.index', [
             'payments' => $payments,
             'receiptPayment' => $receiptPayment,
+            // Semua pedagang untuk x-choices-offline (DB-backed, cari & pilih di klien —
+            // pola sama seperti "Aturan Bayar" di form lapak). Nilai = sqid (bukan did asli).
+            'dealerOptions' => Dealer::orderBy('name')->get()->map(fn ($d) => [
+                'id' => $d->obfuscated_id,
+                'name' => $d->name,
+            ]),
         ]);
     }
 }

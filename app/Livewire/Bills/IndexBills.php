@@ -6,7 +6,6 @@ use App\Livewire\Concerns\Sortable;
 use App\Models\Dealer;
 use App\Models\DealerBill;
 use App\Services\BillGenerationService;
-use Illuminate\Support\Collection;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -31,9 +30,9 @@ class IndexBills extends Component
     #[Url(except: '')]
     public string $frequencyFilter = '';
 
-    // Nilai = sqid pedagang (bukan angka) supaya ID asli tidak tampil di URL.
-    #[Url(except: null)]
-    public ?string $dealerId = null;
+    // Nilai = array sqid pedagang (bukan angka) supaya ID asli tidak tampil di URL.
+    #[Url(except: [])]
+    public array $dealerIds = [];
 
     // Filter rentang tanggal jatuh tempo (kosong = semua).
     #[Url(except: '')]
@@ -42,28 +41,24 @@ class IndexBills extends Component
     #[Url(except: '')]
     public string $to = '';
 
-    /** Kandidat opsi untuk autocomplete pedagang (x-choices searchable). */
-    public Collection $dealersList;
-
     public function mount(BillGenerationService $bills): void
     {
         $bills->ensureAllActive();
-        $this->searchDealer();
     }
 
     /** Reset halaman saat filter berubah agar tidak nyangkut di page kosong. */
     public function updated(string $name): void
     {
-        if (in_array($name, ['search', 'statusFilter', 'frequencyFilter', 'dealerId', 'from', 'to'], true)) {
+        if (in_array($name, ['search', 'statusFilter', 'frequencyFilter', 'from', 'to'], true)
+            || str($name)->startsWith('dealerIds')) {
             $this->resetPage();
         }
     }
 
     public function resetFilters(): void
     {
-        $this->reset(['search', 'statusFilter', 'frequencyFilter', 'dealerId', 'from', 'to']);
+        $this->reset(['search', 'statusFilter', 'frequencyFilter', 'dealerIds', 'from', 'to']);
         $this->resetPage();
-        $this->searchDealer();
     }
 
     /** Kolom sortable (klik header). Kolom relasi/terhitung pakai subquery. */
@@ -87,27 +82,14 @@ class IndexBills extends Component
         ];
     }
 
-    /** Dipanggil x-choices saat user mengetik; jaga pedagang terpilih tetap muncul. */
-    public function searchDealer(string $value = ''): void
-    {
-        $selectedDid = Dealer::decodeKey($this->dealerId);
-        $selected = $selectedDid
-            ? Dealer::where('did', $selectedDid)->get()
-            : collect();
-
-        $this->dealersList = Dealer::query()
-            ->when($value, fn ($q) => $q->where('name', 'like', "%{$value}%"))
-            ->orderBy('name')
-            ->limit(30)
-            ->get()
-            ->merge($selected)
-            ->unique('did')
-            ->values();
-    }
-
     public function render()
     {
-        $did = Dealer::decodeKey($this->dealerId);
+        // Decode sqid → did asli untuk filter (bisa >1 pedagang).
+        $dids = collect($this->dealerIds)
+            ->map(fn ($k) => Dealer::decodeKey($k))
+            ->filter()
+            ->values()
+            ->all();
 
         $query = DealerBill::query()
             ->with([
@@ -125,9 +107,9 @@ class IndexBills extends Component
             ->when($this->frequencyFilter, fn ($q) => $q->where('frequency', $this->frequencyFilter))
             ->when($this->from, fn ($q) => $q->whereDate('due_date', '>=', $this->from))
             ->when($this->to, fn ($q) => $q->whereDate('due_date', '<=', $this->to))
-            ->when($did, fn ($q) => $q->where(fn ($w) => $w
-                ->whereHas('dealerStall', fn ($q2) => $q2->where('did', $did))
-                ->orWhereHas('externalDealer', fn ($q2) => $q2->where('did', $did))
+            ->when($dids, fn ($q) => $q->where(fn ($w) => $w
+                ->whereHas('dealerStall', fn ($q2) => $q2->whereIn('did', $dids))
+                ->orWhereHas('externalDealer', fn ($q2) => $q2->whereIn('did', $dids))
             ));
 
         $this->applySort($query, fn ($q) => $q->orderBy('created_at', 'desc'));
@@ -139,6 +121,12 @@ class IndexBills extends Component
         // jadi nilainya dijamin konsisten.
         return view('livewire.bills.index', [
             'bills' => $bills,
+            // Semua pedagang untuk x-choices-offline (DB-backed, cari & pilih di klien —
+            // pola sama seperti "Aturan Bayar" di form lapak). Nilai = sqid (bukan did asli).
+            'dealerOptions' => Dealer::orderBy('name')->get()->map(fn ($d) => [
+                'id' => $d->obfuscated_id,
+                'name' => $d->name,
+            ]),
         ]);
     }
 }

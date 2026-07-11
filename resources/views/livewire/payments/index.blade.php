@@ -27,8 +27,8 @@
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-3">
             <x-input label="Cari" placeholder="No. bayar / nama pedagang" wire:model.live.debounce="search" clearable />
-            <x-choices label="Pedagang" wire:model.live="dealerId" :options="$dealersList" option-label="name" option-value="obfuscated_id"
-                search-function="searchDealer" placeholder="Semua pedagang" single searchable clearable />
+            <x-choices-offline label="Pedagang" wire:model.live="dealerIds" :options="$dealerOptions"
+                option-value="id" option-label="name" searchable clearable placeholder="Semua pedagang" />
             <x-select label="Frekuensi" wire:model.live="frequencyFilter" :options="[
                 ['value' => '', 'label' => 'Semua Frekuensi'],
                 ['value' => 'daily', 'label' => 'Harian'],
