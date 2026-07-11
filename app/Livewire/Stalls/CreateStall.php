@@ -97,7 +97,8 @@ class CreateStall extends Component
         $freq = ['daily' => 'hari', 'weekly' => 'minggu', 'monthly' => 'bulan', 'annual' => 'tahun'];
 
         return view('livewire.stalls.create', [
-            'paymentTerms' => PaymentTerm::orderBy('term_name')->get()->map(fn ($pt) => [
+            'paymentTerms' => PaymentTerm::where('dealer_condition', '!=', 'external')
+                ->orderBy('term_name')->get()->map(fn ($pt) => [
                 'ptid' => $pt->ptid,
                 'name' => $pt->term_name,
                 'sub' => 'Rp ' . number_format($pt->price, 0, ',', '.') . ' / '
