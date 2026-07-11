@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="200" viewBox="0 0 320 200" role="img" aria-label="Tidak ada scan KTP">
+<rect width="320" height="200" rx="10" fill="#f1f5f9"/>
+<g fill="#cbd5e1">
+  <circle cx="160" cy="84" r="30"/>
+  <path d="M108 150c0-28 24-42 52-42s52 14 52 42v6H108z"/>
+</g>
+<text x="160" y="186" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#94a3b8">Belum ada scan KTP</text>
+</svg>

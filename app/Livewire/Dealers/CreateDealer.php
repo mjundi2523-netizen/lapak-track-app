@@ -168,7 +168,7 @@ class CreateDealer extends Component
         }
 
         if ($this->scan_id_file) {
-            $this->scan_id = $this->scan_id_file->store('scan-ids', 'public');
+            $this->scan_id = \App\Support\Upload::storeImageAsWebp($this->scan_id_file, 'scan-ids');
         }
 
         DB::transaction(function () use ($billService) {

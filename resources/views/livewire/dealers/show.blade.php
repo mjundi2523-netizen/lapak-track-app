@@ -56,6 +56,32 @@
                 @endif
             </div>
         </div>
+
+        @php
+            $scan = $dealer->scan_id;
+            $isPdf = $scan && \Illuminate\Support\Str::endsWith(strtolower($scan), '.pdf');
+            $placeholder = asset('img/no-image.svg');
+            $scanUrl = $scan ? asset('storage/' . $scan) : null;
+        @endphp
+        <div class="px-6 pb-6 -mt-2">
+            <div class="text-sm font-semibold text-[#1b2433] mb-2">Scan KTP</div>
+            @if($isPdf)
+                <a href="{{ $scanUrl }}" target="_blank" rel="noopener"
+                   class="inline-flex items-center gap-1.5 h-9 px-3 rounded-[9px] text-sm font-semibold text-[#3f3f46] bg-white transition hover:bg-base-200"
+                   style="border:1px solid #e5e7eb;">
+                    <x-icon name="o-document-text" class="w-4 h-4" /> Lihat PDF
+                </a>
+            @elseif($scanUrl)
+                <a href="{{ $scanUrl }}" target="_blank" rel="noopener" title="Buka ukuran penuh">
+                    <img src="{{ $scanUrl }}" onerror="this.onerror=null;this.src='{{ $placeholder }}'"
+                         alt="Scan KTP {{ $dealer->name }}" loading="lazy"
+                         class="max-w-xs w-full rounded-lg" style="border:1px solid #eceef2;" />
+                </a>
+            @else
+                <img src="{{ $placeholder }}" alt="Belum ada scan KTP"
+                     class="max-w-xs w-full rounded-lg" style="border:1px solid #eceef2;" />
+            @endif
+        </div>
     </div>
 
     {{-- Per-lapak --}}
