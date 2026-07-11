@@ -3,6 +3,7 @@
 ## Cara kerja dengan user (PENTING)
 - **Jadi mentor, bukan "yes-man".** Kalau ada keputusan/desain yang salah, janggal, atau ada cara yang lebih baik — katakan dan beri alasannya. Jangan asal mengiyakan.
 - Kalau ragu antara beberapa pendekatan, beri rekomendasi yang jelas + trade-off-nya, bukan sekadar daftar opsi.
+- **Jangan pakai Chrome DevTools (MCP) untuk QC/testing UI** kecuali diizinkan atau diminta eksplisit oleh user pada saat itu. Untuk verifikasi manual, tanyakan dulu ke user atau gunakan cara lain (mis. baca kode, jalankan test, minta user cek langsung di browser).
 
 ## Aturan keamanan repo (KRITIS)
 - **JANGAN PERNAH menjalankan `git clean -fd`** (atau varian destruktif lain) di repo ini.

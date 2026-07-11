@@ -36,8 +36,7 @@ class CreateDealer extends Component
     public ?string $phone_number_2 = null;
     public ?string $product_type = null;
     public ?string $status = 'active';
-    public bool $cond_new = false;
-    public bool $cond_external = false;
+    public string $dealer_condition = 'regular';
     public ?string $letter_no = null;
 
     public $scan_id_file = null;
@@ -89,38 +88,20 @@ class CreateDealer extends Component
         ];
     }
 
-    // Kondisi pedagang mengubah set lapak yang valid → reset pilihan + jaga mutually-exclusive.
-    public function updatedCondNew($value): void
-    {
-        if ($value) {
-            $this->cond_external = false;
-        }
-        $this->selected_stalls = [];
-        $this->stall_term_choice = [];
-        $this->selected_ptid = null;
-    }
-
-    public function updatedCondExternal($value): void
+    // Kondisi pedagang mengubah set lapak yang valid → reset pilihan.
+    public function updatedDealerCondition($value): void
     {
         // Fitur "Pedagang eksternal" = premium.
-        if ($value && ! auth()->user()->isPremium()) {
-            $this->cond_external = false;
+        if ($value === 'external' && ! auth()->user()->isPremium()) {
+            $this->dealer_condition = 'regular';
             $this->dispatch('premium-required');
 
             return;
         }
 
-        if ($value) {
-            $this->cond_new = false;
-        }
         $this->selected_stalls = [];
         $this->stall_term_choice = [];
         $this->selected_ptid = null;
-    }
-
-    protected function dealerCondition(): string
-    {
-        return $this->cond_external ? 'external' : ($this->cond_new ? 'new' : 'regular');
     }
 
     public function toggleStall(int $sid): void
@@ -155,7 +136,7 @@ class CreateDealer extends Component
         return DB::table('stall_payment_terms as spt')
             ->join('payment_terms as pt', 'pt.ptid', '=', 'spt.ptid')
             ->where('spt.sid', $sid)
-            ->where('pt.dealer_condition', $this->dealerCondition())
+            ->where('pt.dealer_condition', $this->dealer_condition)
             ->when(Auth::user()?->market_id, fn ($q, $m) => $q->where('spt.market_id', $m))
             ->orderBy('pt.price')
             ->get(['spt.sptid', 'pt.ptid', 'pt.term_name', 'pt.price', 'pt.frequency', 'pt.interval_count'])
@@ -200,13 +181,13 @@ class CreateDealer extends Component
                 'phone_number_2' => $this->phone_number_2,
                 'product_type' => $this->product_type,
                 'status' => $this->status ?? 'active',
-                'dealer_condition' => $this->dealerCondition(),
+                'dealer_condition' => $this->dealer_condition,
                 'letter_no' => $this->letter_no,
                 'scan_id' => $this->scan_id,
                 'created_by' => Auth::id(),
             ]);
 
-            if ($this->cond_external) {
+            if ($this->dealer_condition === 'external') {
                 // Langganan eksternal (relasi langsung ke aturan bayar), lalu generate tagihannya.
                 $ed = ExternalDealer::create([
                     'did' => $dealer->did,
@@ -247,8 +228,8 @@ class CreateDealer extends Component
         $this->rent_end_date = $this->rent_end_date ?: null;
 
         // Guard premium: cegah pembuatan pedagang eksternal oleh akun non-premium.
-        if ($this->cond_external && ! auth()->user()->isPremium()) {
-            $this->cond_external = false;
+        if ($this->dealer_condition === 'external' && ! auth()->user()->isPremium()) {
+            $this->dealer_condition = 'regular';
             $this->dispatch('premium-required');
 
             return false;
@@ -262,7 +243,7 @@ class CreateDealer extends Component
         }
 
         // Pedagang eksternal: wajib pilih aturan bayar + tanggal mulai langganan.
-        if ($this->cond_external) {
+        if ($this->dealer_condition === 'external') {
             $this->validate([
                 'selected_ptid' => 'required|integer|exists:payment_terms,ptid',
                 'external_start_date' => 'required|date',
@@ -540,7 +521,7 @@ class CreateDealer extends Component
 
     public function render()
     {
-        $cond = $this->dealerCondition();
+        $cond = $this->dealer_condition;
 
         // Lapak aktif yang punya ≥1 aturan bayar sesuai kondisi pedagang; muat hanya term yang cocok.
         $stalls = Stall::query()
@@ -563,7 +544,7 @@ class CreateDealer extends Component
                 ->orderBy('block')
                 ->get(),
             // Aturan bayar untuk pedagang eksternal (tanpa lapak).
-            'paymentTerms' => $this->cond_external
+            'paymentTerms' => $this->dealer_condition === 'external'
                 ? PaymentTerm::where('dealer_condition', $cond)->orderBy('term_name')->get()
                 : collect(),
         ]);

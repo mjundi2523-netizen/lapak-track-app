@@ -5,6 +5,7 @@ namespace App\Livewire\Dealers;
 use App\Models\Dealer;
 use App\Models\DealerBill;
 use App\Models\DealerStall;
+use App\Models\ExternalDealer;
 use App\Services\BillGenerationService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -32,6 +33,13 @@ class ShowDealer extends Component
     public bool $deleteModal = false;
     public ?int $deleteDsid = null;
     public string $deleteBlock = '';
+
+    // --- State modal "Akhiri Kontrak" (eksternal) ---
+    public bool $endExtModal = false;
+    public ?int $endExtEdid = null;
+    public string $endExtTerm = '';
+    public string $endExtDate = '';
+    public string $extArrearAction = 'keep'; // keep | cancel
 
     // --- State modal "Cetak Surat Pedagang" ---
     public bool $showLetter = false;
@@ -100,6 +108,52 @@ class ShowDealer extends Component
         $this->success('Sewa lapak "' . $this->endBlock . '" berhasil diakhiri.');
     }
 
+    public function startEndExternal(int $edid): void
+    {
+        $ed = $this->dealer->externalDealers()->where('edid', $edid)->first();
+        if (! $ed) {
+            return;
+        }
+
+        $this->endExtEdid = $edid;
+        $this->endExtTerm = $ed->paymentTerm?->term_name ?? '-';
+        $this->endExtDate = ($ed->end_date ?? Carbon::today())->toDateString();
+        $this->extArrearAction = 'keep';
+        $this->endExtModal = true;
+    }
+
+    public function endExternal(BillGenerationService $bills): void
+    {
+        $this->validate([
+            'endExtDate' => 'required|date',
+            'extArrearAction' => 'required|in:keep,cancel',
+        ]);
+
+        $ed = ExternalDealer::where('edid', $this->endExtEdid)
+            ->where('did', $this->dealer->did)
+            ->firstOrFail();
+
+        if (Carbon::parse($this->endExtDate)->lt(Carbon::parse($ed->start_date))) {
+            $this->addError('endExtDate', 'Tanggal berakhir tidak boleh sebelum tanggal mulai kontrak.');
+
+            return;
+        }
+
+        DB::transaction(function () use ($ed, $bills) {
+            $ed->update(['end_date' => $this->endExtDate, 'modified_by' => Auth::id()]);
+            $bills->ensureExternalBillsUpToDate($ed->fresh());
+
+            if ($this->extArrearAction === 'cancel') {
+                DealerBill::where('edid', $ed->edid)
+                    ->whereIn('billing_status', ['unpaid', 'pending'])
+                    ->update(['billing_status' => 'cancelled', 'modified_by' => Auth::id()]);
+            }
+        });
+
+        $this->endExtModal = false;
+        $this->success('Kontrak eksternal "' . $this->endExtTerm . '" berhasil diakhiri.');
+    }
+
     public function startDelete(int $dsid): void
     {
         $ds = $this->dealer->dealerStalls()->where('dsid', $dsid)->first();
@@ -148,6 +202,8 @@ class ShowDealer extends Component
             'dealerStalls' => fn ($q) => $q->where('deleted', false),
             'dealerStalls.stall.addOns',
             'dealerStalls.stallPaymentTerm.paymentTerm',
+            'externalDealers' => fn ($q) => $q->where('deleted', false),
+            'externalDealers.paymentTerm',
         ]);
 
         $bills = DealerBill::query()

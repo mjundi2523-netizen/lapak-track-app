@@ -98,6 +98,35 @@
         </div>
     @endforeach
 
+    {{-- Per-kontrak eksternal --}}
+    @foreach($dealer->externalDealers as $ed)
+        @php $extEnded = (bool) $ed->end_date; @endphp
+        <div class="bg-white rounded-2xl overflow-hidden mb-4" style="border:1px solid #eceef2; box-shadow:0 1px 2px rgba(16,12,40,0.04);">
+            <div class="flex items-center justify-between gap-3 px-6 py-4" style="border-bottom:1px solid #eef0f4;">
+                <span class="text-base font-bold text-[#1b2433]">Kontrak Eksternal: {{ $ed->paymentTerm?->term_name ?? '-' }}</span>
+                <div class="flex items-center gap-2">
+                    @if($extEnded)
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold" style="background:#f1f1f3; color:#52525b;">
+                            <x-icon name="o-check-circle" class="w-4 h-4" /> Kontrak berakhir {{ $ed->end_date->format('d-m-Y') }}
+                        </span>
+                    @else
+                        <button type="button" wire:click="startEndExternal({{ $ed->edid }})"
+                                class="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-[9px] text-sm font-semibold transition hover:brightness-95"
+                                style="background:#fee2e2; color:#b91c1c;">
+                            <x-icon name="o-x-circle" class="w-4 h-4" /> Akhiri Kontrak
+                        </button>
+                    @endif
+                </div>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-[18px] text-sm">
+                    <div><span class="font-semibold">Mulai Kontrak:</span> {{ $ed->start_date?->format('d-m-Y') ?? '-' }}</div>
+                    <div><span class="font-semibold">Akhir Kontrak:</span> {{ $ed->end_date?->format('d-m-Y') ?? '-' }}</div>
+                </div>
+            </div>
+        </div>
+    @endforeach
+
     {{-- Riwayat Tagihan (semua lapak + eksternal, paginated) --}}
     <div class="bg-white rounded-2xl overflow-hidden mb-4" style="border:1px solid #eceef2; box-shadow:0 1px 2px rgba(16,12,40,0.04);">
         <div class="flex items-center justify-between px-6 py-4" style="border-bottom:1px solid #eef0f4;">
@@ -186,6 +215,32 @@
         <x-slot:actions>
             <x-button label="Batal" @click="$wire.endModal = false" class="btn-ghost" />
             <x-button label="Akhiri Sewa" wire:click="endRental" spinner="endRental"
+                      class="text-white border-0" style="background:var(--lt-p);" />
+        </x-slot:actions>
+    </x-modal>
+
+    {{-- Modal: Akhiri Kontrak (eksternal) --}}
+    <x-modal wire:model="endExtModal" title="Akhiri Kontrak Eksternal" separator persistent>
+        <div class="space-y-4">
+            <p class="text-sm text-[#52525b]">
+                Mengakhiri kontrak <span class="font-semibold">{{ $endExtTerm }}</span>.
+                Setelah tanggal berakhir, tidak ada tagihan baru untuk kontrak ini.
+            </p>
+
+            <x-input type="date" label="Tanggal Berakhir Kontrak" wire:model="endExtDate" />
+
+            <div>
+                <div class="text-sm font-semibold text-[#1b2433] mb-2">Tagihan yang belum dibayar (tunggakan)</div>
+                <x-radio wire:model="extArrearAction" :options="[
+                    ['id' => 'keep', 'name' => 'Biarkan jadi utang (tetap tercatat & bisa ditagih)'],
+                    ['id' => 'cancel', 'name' => 'Batalkan (ditandai Dibatalkan)'],
+                ]" />
+            </div>
+        </div>
+
+        <x-slot:actions>
+            <x-button label="Batal" @click="$wire.endExtModal = false" class="btn-ghost" />
+            <x-button label="Akhiri Kontrak" wire:click="endExternal" spinner="endExternal"
                       class="text-white border-0" style="background:var(--lt-p);" />
         </x-slot:actions>
     </x-modal>

@@ -35,8 +35,7 @@ class EditDealer extends Component
     public ?string $phone_number_2 = null;
     public ?string $product_type = null;
     public string $status = 'active';
-    public bool $cond_new = false;
-    public bool $cond_external = false;
+    public string $dealer_condition = 'regular';
     public ?string $letter_no = null;
 
     public $scan_id_file = null;
@@ -68,46 +67,37 @@ class EditDealer extends Component
         $this->phone_number_2 = $dealer->phone_number_2;
         $this->product_type = $dealer->product_type;
         $this->status = $dealer->status;
-        $this->cond_new = $dealer->dealer_condition === 'new';
-        $this->cond_external = $dealer->dealer_condition === 'external';
+        $this->dealer_condition = $dealer->dealer_condition;
         $this->letter_no = $dealer->letter_no;
         $this->scan_id = $dealer->scan_id;
         $this->rent_start_date = Carbon::today()->toDateString();
         $this->external_start_date = Carbon::today()->toDateString();
     }
 
-    // Kondisi pedagang mengubah set lapak yang valid → reset pilihan + jaga mutually-exclusive.
-    public function updatedCondNew($value): void
+    // Kondisi pedagang mengubah set lapak yang valid → reset pilihan.
+    public function updatedDealerCondition($value): void
     {
-        if ($value) {
-            $this->cond_external = false;
-        }
-        $this->selected_stalls = [];
-        $this->stall_term_choice = [];
-        $this->selected_ptid = null;
-    }
+        // Tidak boleh ubah Jenis Pedagang selagi masih ada kontrak aktif (sewa lapak / langganan
+        // eksternal). Kembalikan pilihan & arahkan ke detail agar diakhiri dulu.
+        if ($this->dealer->activeRentals()->exists() || $this->dealer->activeExternal()->exists()) {
+            $this->dealer_condition = $this->dealer->dealer_condition;
+            $this->warning('Akhiri dulu semua sewa/kontrak aktif pedagang ini sebelum mengubah Jenis Pedagang.');
+            $this->redirectRoute('dealers.show', $this->dealer, navigate: true);
 
-    public function updatedCondExternal($value): void
-    {
+            return;
+        }
+
         // Fitur "Pedagang eksternal" = premium.
-        if ($value && ! auth()->user()->isPremium()) {
-            $this->cond_external = false;
+        if ($value === 'external' && ! auth()->user()->isPremium()) {
+            $this->dealer_condition = 'regular';
             $this->dispatch('premium-required');
 
             return;
         }
 
-        if ($value) {
-            $this->cond_new = false;
-        }
         $this->selected_stalls = [];
         $this->stall_term_choice = [];
         $this->selected_ptid = null;
-    }
-
-    protected function dealerCondition(): string
-    {
-        return $this->cond_external ? 'external' : ($this->cond_new ? 'new' : 'regular');
     }
 
     protected function rules(): array
@@ -164,7 +154,7 @@ class EditDealer extends Component
         return DB::table('stall_payment_terms as spt')
             ->join('payment_terms as pt', 'pt.ptid', '=', 'spt.ptid')
             ->where('spt.sid', $sid)
-            ->where('pt.dealer_condition', $this->dealerCondition())
+            ->where('pt.dealer_condition', $this->dealer_condition)
             ->when(Auth::user()?->market_id, fn ($q, $m) => $q->where('spt.market_id', $m))
             ->orderBy('pt.price')
             ->get(['spt.sptid', 'pt.ptid', 'pt.term_name', 'pt.price', 'pt.frequency', 'pt.interval_count'])
@@ -217,6 +207,15 @@ class EditDealer extends Component
         $hasActiveRental = $this->dealer->activeRentals()->exists();
         $hasActiveExternal = $this->dealer->activeExternal()->exists();
 
+        // Pertahanan berlapis: dealer_condition tidak boleh berubah selagi ada kontrak aktif,
+        // walau state sempat dimanipulasi (updatedDealerCondition sudah menolak di sisi UI).
+        if ($this->dealer_condition !== $this->dealer->getOriginal('dealer_condition')
+            && ($hasActiveRental || $hasActiveExternal)) {
+            $this->addError('dealer_condition', 'Tidak bisa mengubah Jenis Pedagang selagi ada kontrak aktif. Akhiri dulu di halaman detail.');
+
+            return null;
+        }
+
         // Tidak bisa nonaktifkan kalau masih punya sewa/langganan aktif.
         if ($this->status === 'inactive' && ($hasActiveRental || $hasActiveExternal)) {
             $this->addError('status', 'Tidak bisa menonaktifkan pedagang yang masih menyewa / berlangganan aktif. Akhiri dulu.');
@@ -226,7 +225,7 @@ class EditDealer extends Component
 
         // Tambah penyewaan (regular/new). Boleh menambah lapak baru walau sudah punya rental aktif
         // (rental lama tetap readonly; yang ditambah di sini jadi rental baru + tagihannya).
-        $addingRental = ! $this->cond_external && ! empty($this->selected_stalls);
+        $addingRental = $this->dealer_condition !== 'external' && ! empty($this->selected_stalls);
         if ($addingRental) {
             $this->validate(['rent_start_date' => 'required|date']);
 
@@ -257,7 +256,7 @@ class EditDealer extends Component
         }
 
         // Tambah langganan eksternal hanya bila belum punya yang aktif.
-        $addingExternal = $this->cond_external && ! $hasActiveExternal && $this->selected_ptid;
+        $addingExternal = $this->dealer_condition === 'external' && ! $hasActiveExternal && $this->selected_ptid;
 
         // Guard premium: cegah penambahan langganan eksternal baru oleh akun non-premium.
         if ($addingExternal && ! auth()->user()->isPremium()) {
@@ -295,7 +294,7 @@ class EditDealer extends Component
                 'phone_number_2' => $this->phone_number_2,
                 'product_type' => $this->product_type,
                 'status' => $this->status,
-                'dealer_condition' => $this->dealerCondition(),
+                'dealer_condition' => $this->dealer_condition,
                 'letter_no' => $this->letter_no,
                 'scan_id' => $this->scan_id,
                 'modified_by' => Auth::id(),
@@ -344,9 +343,9 @@ class EditDealer extends Component
 
         // Daftar lapak untuk modal (untuk pedagang non-eksternal; boleh menambah lapak baru
         // walau sudah punya rental aktif — lapak yang sudah tersewa otomatis tidak bisa dipilih).
-        $cond = $this->dealerCondition();
+        $cond = $this->dealer_condition;
 
-        $stalls = $this->cond_external
+        $stalls = $this->dealer_condition === 'external'
             ? collect()
             : Stall::query()
                 ->where('is_active', true)
@@ -370,7 +369,7 @@ class EditDealer extends Component
                 ->with(['paymentTerms' => fn ($q) => $q->where('dealer_condition', $cond)])
                 ->orderBy('block')
                 ->get(),
-            'paymentTerms' => $this->cond_external
+            'paymentTerms' => $this->dealer_condition === 'external'
                 ? PaymentTerm::where('dealer_condition', $cond)->orderBy('term_name')->get()
                 : collect(),
         ]);

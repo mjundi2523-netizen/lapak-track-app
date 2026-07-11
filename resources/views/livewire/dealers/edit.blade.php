@@ -22,18 +22,29 @@
                 placeholder="mis. A-004 / PSR-N / VI / 2026"
                 hint="Untuk surat/kartu pedagang (opsional)" />
 
-            <div class="flex flex-wrap gap-6">
-                <x-checkbox label="Pedagang baru" wire:model.live="cond_new"
-                    hint="Memakai aturan bayar khusus pedagang baru." />
-                <div class="flex items-start gap-1.5">
-                    <x-checkbox label="Pedagang eksternal" wire:model.live="cond_external"
-                        hint="Tukang gerobak/keliling — tidak menyewa lapak." />
-                    @unless(auth()->user()->isPremium())
-                        <span class="inline-flex items-center gap-1 mt-0.5 px-2 py-0.5 rounded-full text-[11px] font-semibold" style="background:#fef3c7; color:#b45309;">
-                            <x-icon name="s-lock-closed" class="w-3 h-3" /> Premium
-                        </span>
-                    @endunless
+            <div class="flex items-start gap-3">
+                <div class="w-full max-w-xs">
+                    <x-select label="Jenis Pedagang" wire:model.live="dealer_condition" :options="[
+                        ['value' => 'regular', 'label' => 'Regular'],
+                        ['value' => 'new', 'label' => 'Baru'],
+                        ['value' => 'external', 'label' => 'Eksternal'],
+                    ]" option-value="value" option-label="label"
+                        hint="{{ ($hasActiveRental || $hasActiveExternal)
+                            ? 'Masih ada kontrak aktif — akhiri dulu di halaman detail untuk mengubah.'
+                            : match($dealer_condition) {
+                                'new' => 'Memakai aturan bayar khusus pedagang baru.',
+                                'external' => 'Tukang gerobak/keliling — tidak menyewa lapak.',
+                                default => 'Pedagang reguler yang menyewa lapak.',
+                            } }}" />
+                    @error('dealer_condition')
+                        <p class="text-error text-sm mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
+                @unless(auth()->user()->isPremium())
+                    <span class="inline-flex items-center gap-1 mt-7 px-2 py-0.5 rounded-full text-[11px] font-semibold shrink-0" style="background:#fef3c7; color:#b45309;">
+                        <x-icon name="s-lock-closed" class="w-3 h-3" /> Eksternal = Premium
+                    </span>
+                @endunless
             </div>
 
             <x-input label="Scan KTP" wire:model="scan_id_file" type="file" accept="image/*,.pdf" />
@@ -44,9 +55,9 @@
 
             {{-- Lapak yang disewa --}}
             <hr class="my-2" />
-            <h3 class="font-bold text-base text-[#1b2433]">{{ $cond_external ? 'Aturan Bayar (Eksternal)' : 'Lapak Disewa' }}</h3>
+            <h3 class="font-bold text-base text-[#1b2433]">{{ $dealer_condition === 'external' ? 'Aturan Bayar (Eksternal)' : 'Lapak Disewa' }}</h3>
 
-            @if($cond_external)
+            @if($dealer_condition === 'external')
                 @if($hasActiveExternal)
                     <div class="rounded-[10px] overflow-hidden" style="border:1px solid #f0f0f1;">
                         <table class="w-full border-collapse text-sm">
@@ -155,9 +166,10 @@
     @include('dealers._save-confirm-modal', [
         'confirmTitle' => 'Konfirmasi Penyewaan Baru',
         'confirmIntro' => 'Penyewaan/langganan baru akan dibuat untuk pedagang "' . $name . '".',
+        'cond_external' => $dealer_condition === 'external',
     ])
 
-    @unless($cond_external)
+    @unless($dealer_condition === 'external')
         {{-- Modal Pemilihan Lapak --}}
         <x-modal wire:model="showStallModal" title="Pilih Lapak" subtitle="Lapak yang sudah tersewa tidak dapat dipilih." box-class="max-w-2xl">
             <x-input placeholder="Cari blok lapak..." wire:model.live.debounce="stallSearch" clearable icon="o-magnifying-glass" class="mb-4" />

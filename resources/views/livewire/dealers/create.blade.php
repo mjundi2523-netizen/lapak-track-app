@@ -57,23 +57,29 @@
                     hint="Untuk surat/kartu pedagang (opsional)" />
             </div>
 
-            <div class="flex flex-wrap gap-6">
-                <x-checkbox label="Pedagang baru" wire:model.live="cond_new"
-                    hint="Memakai aturan bayar khusus pedagang baru." />
-                <div class="flex items-start gap-1.5">
-                    <x-checkbox label="Pedagang eksternal" wire:model.live="cond_external"
-                        hint="Tukang gerobak/keliling — tidak perlu memilih lapak." />
-                    @unless(auth()->user()->isPremium())
-                        <span class="inline-flex items-center gap-1 mt-0.5 px-2 py-0.5 rounded-full text-[11px] font-semibold" style="background:#fef3c7; color:#b45309;">
-                            <x-icon name="s-lock-closed" class="w-3 h-3" /> Premium
-                        </span>
-                    @endunless
+            <div class="flex items-start gap-3">
+                <div class="w-full max-w-xs">
+                    <x-select label="Jenis Pedagang" wire:model.live="dealer_condition" :options="[
+                        ['value' => 'regular', 'label' => 'Regular'],
+                        ['value' => 'new', 'label' => 'Baru'],
+                        ['value' => 'external', 'label' => 'Eksternal'],
+                    ]" option-value="value" option-label="label"
+                        hint="{{ match($dealer_condition) {
+                            'new' => 'Memakai aturan bayar khusus pedagang baru.',
+                            'external' => 'Tukang gerobak/keliling — tidak perlu memilih lapak.',
+                            default => 'Pedagang reguler yang menyewa lapak.',
+                        } }}" />
                 </div>
+                @unless(auth()->user()->isPremium())
+                    <span class="inline-flex items-center gap-1 mt-7 px-2 py-0.5 rounded-full text-[11px] font-semibold shrink-0" style="background:#fef3c7; color:#b45309;">
+                        <x-icon name="s-lock-closed" class="w-3 h-3" /> Eksternal = Premium
+                    </span>
+                @endunless
             </div>
 
             <x-input label="Scan KTP" wire:model="scan_id_file" type="file" accept="image/*,.pdf" />
 
-            @unless($cond_external)
+            @unless($dealer_condition === 'external')
             <hr class="my-4" />
 
             <h3 class="font-bold text-lg mb-2">Lapak</h3>
@@ -134,6 +140,7 @@
     @include('dealers._save-confirm-modal', [
         'confirmTitle' => 'Konfirmasi Registrasi Pedagang',
         'confirmIntro' => 'Pedagang "' . $name . '" akan didaftarkan.',
+        'cond_external' => $dealer_condition === 'external',
     ])
 
     {{-- Modal Pemilihan Lapak --}}
