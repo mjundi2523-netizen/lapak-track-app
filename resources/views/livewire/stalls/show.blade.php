@@ -1,5 +1,6 @@
 @php
     $rp = fn ($v) => 'Rp ' . number_format((float) $v, 0, ',', '.');
+    $freq = ['daily' => 'hari', 'weekly' => 'minggu', 'monthly' => 'bulan', 'annual' => 'tahun'];
     $statusMap = [
         'unpaid'      => ['Belum Bayar', '#fee2e2', '#b91c1c'],
         'installment' => ['Cicilan',     '#dbeafe', '#1d4ed8'],
@@ -49,7 +50,34 @@
                         @endif
                     </div>
                     <div class="text-sm"><span class="font-semibold">Ukuran:</span> {{ $stall->size ?: '-' }}</div>
-                    <div class="text-sm"><span class="font-semibold">Aturan Bayar Sewa:</span> {{ $stall->paymentTerms->pluck('term_name')->join(', ') ?: '-' }}</div>
+                    <div class="text-sm sm:col-span-2">
+                        <span class="font-semibold">Aturan Bayar Sewa:</span>
+                        @if($stall->paymentTerms->isNotEmpty())
+                            <div class="flex flex-wrap gap-1.5 mt-1.5">
+                                @foreach($stall->paymentTerms as $term)
+                                    <span class="inline-flex items-center gap-1 lt-pill" style="background:#cffafe; color:#0e7490;">
+                                        {{ $term->term_name }} · {{ $rp($term->price) }} / {{ $term->interval_count > 1 ? $term->interval_count . ' ' : '' }}{{ $freq[$term->frequency] ?? $term->frequency }}
+                                    </span>
+                                @endforeach
+                            </div>
+                        @else
+                            <span class="text-[#71717a]">—</span>
+                        @endif
+                    </div>
+                    <div class="text-sm sm:col-span-2">
+                        <span class="font-semibold">Biaya Tambahan:</span>
+                        @if($stall->addOns->isNotEmpty())
+                            <div class="flex flex-wrap gap-1.5 mt-1.5">
+                                @foreach($stall->addOns as $addOn)
+                                    <span class="inline-flex items-center gap-1 lt-pill" style="background:#fef3c7; color:#92400e;">
+                                        {{ $addOn->add_on }} · {{ $rp($addOn->price) }} / {{ $freq[$addOn->frequency] ?? $addOn->frequency }}
+                                    </span>
+                                @endforeach
+                            </div>
+                        @else
+                            <span class="text-[#71717a]">—</span>
+                        @endif
+                    </div>
                     @if($stall->description)
                         <div class="text-sm sm:col-span-2"><span class="font-semibold">Deskripsi:</span> {{ $stall->description }}</div>
                     @endif
