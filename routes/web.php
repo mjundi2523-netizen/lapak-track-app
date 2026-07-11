@@ -50,7 +50,7 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
     Route::get('/pembayaran/{payment}/void', App\Livewire\Payments\VoidPayment::class)->name('payments.void');
     Route::get('/pembayaran/{payment}', App\Livewire\Payments\ShowPayment::class)->name('payments.show');
 
-    // Fitur premium: Kategori Pengeluaran, Pengeluaran, Laporan.
+    // Fitur premium: Kategori Pengeluaran, Pengeluaran, Kategori Pemasukan, Pemasukan Tambahan, Laporan.
     Route::middleware('premium')->group(function () {
         // Kategori Pengeluaran (master)
         Route::get('/kategori-pengeluaran', App\Livewire\ExpenseCategories\IndexExpenseCategories::class)->name('expense-categories.index');
@@ -76,6 +76,16 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
 
         Route::get('/laporan/rekap-pengeluaran', App\Livewire\Reports\ExpenseSummary::class)->name('reports.expense-summary');
         Route::get('/laporan/rekap-pengeluaran-export', App\Http\Controllers\ExpenseSummaryExportController::class)->name('reports.expense-summary.export');
+
+        // Kategori Pemasukan (master)
+        Route::get('/kategori-pemasukan', App\Livewire\IncomeCategories\IndexIncomeCategories::class)->name('income-categories.index');
+        Route::get('/kategori-pemasukan/create', App\Livewire\IncomeCategories\CreateIncomeCategory::class)->name('income-categories.create');
+        Route::get('/kategori-pemasukan/{incomeCategory}/edit', App\Livewire\IncomeCategories\EditIncomeCategory::class)->name('income-categories.edit');
+
+        // Pemasukan Tambahan (lain-lain)
+        Route::get('/pemasukan-tambahan', App\Livewire\Incomes\IndexIncomes::class)->name('incomes.index');
+        Route::get('/pemasukan-tambahan/create', App\Livewire\Incomes\CreateIncome::class)->name('incomes.create');
+        Route::get('/pemasukan-tambahan/{income}/void', App\Livewire\Incomes\VoidIncome::class)->name('incomes.void');
     });
 });
 

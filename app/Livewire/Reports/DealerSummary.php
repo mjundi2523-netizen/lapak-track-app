@@ -114,8 +114,15 @@ class DealerSummary extends Component
             : $allDids;
 
         // --- Paginate dealers ---
+        $today = Carbon::today()->toDateString();
+
         $dealers = Dealer::query()
-            ->with(['dealerStalls' => fn ($q) => $q->where('deleted', false)->with('stall:sid,block')])
+            ->with([
+                'dealerStalls' => fn ($q) => $q->where('deleted', false)
+                    ->where(fn ($w) => $w->whereNull('rent_end_date')->orWhereDate('rent_end_date', '>', $today))
+                    ->with(['stall:sid,block,number', 'stallPaymentTerm.paymentTerm']),
+                'activeExternal.paymentTerm',
+            ])
             ->whereIn('did', $activeDids)
             ->orderBy('name')
             ->paginate(20);

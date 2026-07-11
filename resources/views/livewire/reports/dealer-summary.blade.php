@@ -67,6 +67,7 @@
                     <th class="lt-th">NIK</th>
                     <th class="lt-th">Kondisi</th>
                     <th class="lt-th">Lokasi</th>
+                    <th class="lt-th">Aturan Bayar</th>
                     <th class="lt-th text-center">Tagihan</th>
                     <th class="lt-th text-right">Total</th>
                     <th class="lt-th text-right">Terbayar</th>
@@ -80,9 +81,15 @@
                     @php
                         $s = $summaries[$dealer->did] ?? ['bill_count' => 0, 'total_billed' => 0, 'total_paid' => 0, 'outstanding' => 0, 'last_payment' => null];
                         $cp = $condPill[$dealer->dealer_condition] ?? [$dealer->dealer_condition, '#f1f1f3', '#52525b'];
-                        $location = $dealer->dealerStalls->map(fn($ds) => $ds->stall?->code)->filter()->implode(', ')
-                            ?: ($dealer->dealer_condition === 'external' ? 'Eksternal' : '-');
+                        $stallCodes = $dealer->dealerStalls->map(fn($ds) => $ds->stall?->code)->filter()->values();
+                        $location = $stallCodes->take(2)->implode(', ');
+                        if ($stallCodes->count() > 2) $location .= ', …';
+                        if ($stallCodes->isEmpty()) $location = $dealer->dealer_condition === 'external' ? 'Eksternal' : '-';
                         $hasDebt = $s['outstanding'] > 0;
+                        $terms = $dealer->dealer_condition === 'external'
+                            ? $dealer->activeExternal->map(fn($e) => $e->paymentTerm)->filter()->values()
+                            : $dealer->dealerStalls->map(fn($ds) => $ds->stallPaymentTerm?->paymentTerm)->filter()->values();
+                        $freqShort = fn($f) => match($f) { 'daily'=>'hari','weekly'=>'minggu','monthly'=>'bulan','annual'=>'tahun', default=>$f };
                     @endphp
                     <tr class="lt-row {{ $hasDebt ? 'lt-row-danger' : '' }}">
                         <td class="lt-td font-semibold text-[#18181b]">{{ $dealer->name }}</td>
@@ -91,6 +98,19 @@
                             <span class="lt-pill" style="background:{{ $cp[1] }}; color:{{ $cp[2] }};">{{ $cp[0] }}</span>
                         </td>
                         <td class="lt-td">{{ $location }}</td>
+                        <td class="lt-td">
+                            @forelse($terms->take(2) as $t)
+                                <div class="text-[13px] text-[#3f3f46] whitespace-nowrap">
+                                    <span class="font-medium">{{ $t->term_name }}</span>
+                                    <span class="text-[#71717a]">· Rp {{ number_format($t->price, 0, ',', '.') }} / {{ $freqShort($t->frequency) }}</span>
+                                </div>
+                            @empty
+                                <span class="text-[#d4d4d8]">—</span>
+                            @endforelse
+                            @if($terms->count() > 2)
+                                <div class="text-[13px] text-[#a1a1aa]">…</div>
+                            @endif
+                        </td>
                         <td class="lt-td text-center">
                             @if($s['bill_count'] > 0)
                                 <span class="lt-pill" style="background:#f1f1f3; color:#52525b;">{{ $s['bill_count'] }}</span>
@@ -119,7 +139,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="10" class="lt-td text-center text-[#9aa3b2] py-8">Tidak ada data.</td></tr>
+                    <tr><td colspan="11" class="lt-td text-center text-[#9aa3b2] py-8">Tidak ada data.</td></tr>
                 @endforelse
             </tbody>
         </table>

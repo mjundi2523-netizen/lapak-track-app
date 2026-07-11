@@ -5,6 +5,7 @@ namespace App\Livewire\Reports;
 use App\Models\DealerPayment;
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
+use App\Models\Income;
 use Illuminate\Support\Carbon;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
@@ -44,13 +45,20 @@ class CashFlow extends Component
             ->selectRaw('MONTH(expense_date) m, SUM(amount) t')
             ->groupBy('m')->pluck('t', 'm');
 
+        // Pemasukan tambahan (lain-lain) — tidak punya status, hanya filter is_voided.
+        $incomeExtra = Income::where('is_voided', false)
+            ->whereYear('income_date', $year)
+            ->when($this->month, fn ($q) => $q->whereMonth('income_date', $this->month))
+            ->selectRaw('MONTH(income_date) m, SUM(amount) t')
+            ->groupBy('m')->pluck('t', 'm');
+
         // Bila satu bulan dipilih, tabel hanya menampilkan bulan itu.
         $loopMonths = $this->month ? [$this->month] : range(1, 12);
 
         $rows = [];
         $totalIncome = $totalExpense = 0;
         foreach ($loopMonths as $m) {
-            $in = (float) ($income[$m] ?? 0);
+            $in = (float) ($income[$m] ?? 0) + (float) ($incomeExtra[$m] ?? 0);
             $out = (float) ($expense[$m] ?? 0);
             $totalIncome += $in;
             $totalExpense += $out;
@@ -78,6 +86,7 @@ class CashFlow extends Component
         $years = collect([$year])
             ->merge(DealerPayment::selectRaw('DISTINCT YEAR(payment_date) y')->pluck('y'))
             ->merge(Expense::selectRaw('DISTINCT YEAR(expense_date) y')->pluck('y'))
+            ->merge(Income::selectRaw('DISTINCT YEAR(income_date) y')->pluck('y'))
             ->filter()->map(fn ($y) => (int) $y)->unique()->sortDesc()->values();
 
         // Opsi bulan untuk dropdown (0 = semua).

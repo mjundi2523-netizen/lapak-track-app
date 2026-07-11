@@ -17,10 +17,14 @@
             ['label' => 'Mapping Lapak',  'icon' => 'o-map',                'route' => 'stalls.map',           'active' => 'stalls.map', 'premium' => true],
             ['label' => 'Kategori Pengeluaran','icon' => 'o-tag',          'route' => 'expense-categories.index', 'active' => 'expense-categories.*', 'premium' => true],
             ['label' => 'Pengeluaran Rutin','icon' => 'o-arrow-path',       'route' => 'recurring-expenses.index','active' => 'recurring-expenses.*', 'premium' => true],
+            ['label' => 'Kategori Pemasukan','icon' => 'o-tag',            'route' => 'income-categories.index', 'active' => 'income-categories.*', 'premium' => true],
         ],
         'Transaksi' => [
             ['label' => 'Tagihan',        'icon' => 'o-document-text',      'route' => 'bills.index',          'active' => 'bills.*'],
-            ['label' => 'Pembayaran',     'icon' => 'o-credit-card',        'route' => 'payments.index',       'active' => 'payments.*'],
+            ['label' => 'Pemasukan',      'icon' => 'o-arrow-trending-up',  'children' => [
+                ['label' => 'Pedagang',   'route' => 'payments.index',       'active' => 'payments.*'],
+                ['label' => 'Lain-lain',  'route' => 'incomes.index',        'active' => 'incomes.*', 'premium' => true],
+            ]],
             ['label' => 'Pengeluaran',    'icon' => 'o-arrow-trending-down','route' => 'expenses.index',       'active' => 'expenses.*', 'premium' => true],
         ],
         'Laporan' => [
@@ -66,28 +70,69 @@
         <div x-show="collapsed" x-cloak class="lt-collapsed-divider mx-auto my-2.5 h-px w-8" style="background:#e5e7eb;"></div>
 
         @foreach($items as $item)
-            @php
-                $isActive = request()->routeIs($item['active']);
-                $locked = ($item['premium'] ?? false) && ! $isPremium;
-            @endphp
-            @if($locked)
-                {{-- Item premium terkunci: buka modal, bukan navigasi. --}}
-                <button type="button" @click="$dispatch('premium-required')"
-                   :class="collapsed ? 'justify-center !px-0 !mx-0' : ''"
-                   class="lt-nav-item lt-nav-locked flex items-center gap-[13px] w-full text-sm font-medium py-[11px] cursor-pointer transition-colors {{ $navShapeClass }} text-[#9aa3b2] hover:bg-[#f4f4f6] hover:text-[#71717a]">
-                    <x-icon name="{{ $item['icon'] }}" class="w-5 h-5 shrink-0" />
-                    <span x-show="!collapsed" x-cloak class="whitespace-nowrap flex-1 text-left">{{ $item['label'] }}</span>
-                    <x-icon name="s-lock-closed" x-show="!collapsed" x-cloak class="lt-lock-icon w-3.5 h-3.5 shrink-0 text-[#c4cad5]" />
-                </button>
+            @if(isset($item['children']))
+                @php
+                    $childActive = collect($item['children'])->contains(fn ($c) => request()->routeIs($c['active']));
+                @endphp
+                <div x-data="{ open: {{ $childActive ? 'true' : 'false' }} }">
+                    <button type="button" @click="open = !open"
+                       :class="collapsed ? 'justify-center !px-0 !mx-0' : ''"
+                       class="lt-nav-item flex items-center gap-[13px] w-full text-sm font-medium py-[11px] cursor-pointer transition-colors {{ $navShapeClass }}
+                              {{ $childActive ? 'lt-nav-active text-[var(--lt-p)] font-semibold' : 'text-[#71717a] hover:bg-[#f4f4f6] hover:text-[#18181b]' }}"
+                       style="{{ $childActive ? 'background:color-mix(in srgb, var(--lt-p) 8%, #fff); box-shadow:inset 3px 0 0 var(--lt-p);' : '' }}">
+                        <x-icon name="{{ $item['icon'] }}" class="w-5 h-5 shrink-0" />
+                        <span x-show="!collapsed" x-cloak class="whitespace-nowrap flex-1 text-left">{{ $item['label'] }}</span>
+                        <span x-show="!collapsed" x-cloak class="inline-flex shrink-0 transition-transform duration-200" :class="open && 'rotate-180'">
+                            <x-icon name="o-chevron-down" class="w-3.5 h-3.5" />
+                        </span>
+                    </button>
+                    <div x-show="open && !collapsed" x-cloak x-transition>
+                        @foreach($item['children'] as $child)
+                            @php
+                                $childIsActive = request()->routeIs($child['active']);
+                                $childLocked = ($child['premium'] ?? false) && ! $isPremium;
+                            @endphp
+                            @if($childLocked)
+                                <button type="button" @click="$dispatch('premium-required')"
+                                   class="lt-nav-item lt-nav-locked flex items-center gap-[13px] w-full text-sm font-medium py-[9px] pl-11 pr-6 cursor-pointer transition-colors text-[#9aa3b2] hover:bg-[#f4f4f6] hover:text-[#71717a]">
+                                    <span class="whitespace-nowrap flex-1 text-left">{{ $child['label'] }}</span>
+                                    <x-icon name="s-lock-closed" class="lt-lock-icon w-3.5 h-3.5 shrink-0 text-[#c4cad5]" />
+                                </button>
+                            @else
+                                <a href="{{ route($child['route']) }}" wire:navigate
+                                   class="lt-nav-item flex items-center gap-[13px] w-full text-sm font-medium py-[9px] pl-11 pr-6 cursor-pointer transition-colors
+                                          {{ $childIsActive ? 'lt-nav-active text-[var(--lt-p)] font-semibold' : 'text-[#71717a] hover:bg-[#f4f4f6] hover:text-[#18181b]' }}"
+                                   style="{{ $childIsActive ? 'background:color-mix(in srgb, var(--lt-p) 8%, #fff); box-shadow:inset 3px 0 0 var(--lt-p);' : '' }}">
+                                    <span class="whitespace-nowrap">{{ $child['label'] }}</span>
+                                </a>
+                            @endif
+                        @endforeach
+                    </div>
+                </div>
             @else
-                <a href="{{ route($item['route']) }}" wire:navigate
-                   :class="collapsed ? 'justify-center !px-0 !mx-0' : ''"
-                   class="lt-nav-item flex items-center gap-[13px] w-full text-sm font-medium py-[11px] cursor-pointer transition-colors {{ $navShapeClass }}
-                          {{ $isActive ? 'lt-nav-active text-[var(--lt-p)] font-semibold' : 'text-[#71717a] hover:bg-[#f4f4f6] hover:text-[#18181b]' }}"
-                   style="{{ $isActive ? 'background:color-mix(in srgb, var(--lt-p) 8%, #fff); box-shadow:inset 3px 0 0 var(--lt-p);' : '' }}">
-                    <x-icon name="{{ $item['icon'] }}" class="w-5 h-5 shrink-0" />
-                    <span x-show="!collapsed" x-cloak class="whitespace-nowrap">{{ $item['label'] }}</span>
-                </a>
+                @php
+                    $isActive = request()->routeIs($item['active']);
+                    $locked = ($item['premium'] ?? false) && ! $isPremium;
+                @endphp
+                @if($locked)
+                    {{-- Item premium terkunci: buka modal, bukan navigasi. --}}
+                    <button type="button" @click="$dispatch('premium-required')"
+                       :class="collapsed ? 'justify-center !px-0 !mx-0' : ''"
+                       class="lt-nav-item lt-nav-locked flex items-center gap-[13px] w-full text-sm font-medium py-[11px] cursor-pointer transition-colors {{ $navShapeClass }} text-[#9aa3b2] hover:bg-[#f4f4f6] hover:text-[#71717a]">
+                        <x-icon name="{{ $item['icon'] }}" class="w-5 h-5 shrink-0" />
+                        <span x-show="!collapsed" x-cloak class="whitespace-nowrap flex-1 text-left">{{ $item['label'] }}</span>
+                        <x-icon name="s-lock-closed" x-show="!collapsed" x-cloak class="lt-lock-icon w-3.5 h-3.5 shrink-0 text-[#c4cad5]" />
+                    </button>
+                @else
+                    <a href="{{ route($item['route']) }}" wire:navigate
+                       :class="collapsed ? 'justify-center !px-0 !mx-0' : ''"
+                       class="lt-nav-item flex items-center gap-[13px] w-full text-sm font-medium py-[11px] cursor-pointer transition-colors {{ $navShapeClass }}
+                              {{ $isActive ? 'lt-nav-active text-[var(--lt-p)] font-semibold' : 'text-[#71717a] hover:bg-[#f4f4f6] hover:text-[#18181b]' }}"
+                       style="{{ $isActive ? 'background:color-mix(in srgb, var(--lt-p) 8%, #fff); box-shadow:inset 3px 0 0 var(--lt-p);' : '' }}">
+                        <x-icon name="{{ $item['icon'] }}" class="w-5 h-5 shrink-0" />
+                        <span x-show="!collapsed" x-cloak class="whitespace-nowrap">{{ $item['label'] }}</span>
+                    </a>
+                @endif
             @endif
         @endforeach
     @endforeach

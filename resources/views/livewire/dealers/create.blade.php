@@ -177,7 +177,7 @@
                                 @forelse($stall->paymentTerms as $term)
                                     @php $picked = (int) ($stall_term_choice[$stall->sid] ?? 0) === (int) $term->pivot->sptid; @endphp
                                     <label class="flex items-start gap-2 py-0.5 cursor-pointer" wire:click.stop="setStallTerm({{ $stall->sid }}, {{ $term->pivot->sptid }})">
-                                        <input type="radio" class="radio radio-xs mt-0.5" @checked($picked) @disabled($occupied) />
+                                        <input type="radio" name="stall_term_{{ $stall->sid }}" class="radio radio-xs mt-0.5" @checked($picked) @disabled($occupied) />
                                         <span>
                                             <span class="font-medium text-[#18181b]">Rp {{ number_format($term->price, 0, ',', '.') }}</span>
                                             <span class="text-[#71717a]">/ {{ $term->interval_count > 1 ? $term->interval_count . ' ' : '' }}{{ match($term->frequency) {

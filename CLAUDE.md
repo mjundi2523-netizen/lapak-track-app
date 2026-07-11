@@ -11,17 +11,12 @@
 - **`vault/` di-gitignore** (basic memory Obsidian) — TIDAK ter-backup git; jangan pernah hapus/timpa isinya tanpa diminta.
 
 ## Dokumentasi detail → vault Obsidian (`vault/LapakTrack/`)
-Detail lengkap tiap subsistem dipindah ke vault (mulai `vault/LapakTrack/Index.md`). **Sebelum mengerjakan suatu area, baca note terkait; setelah perubahan besar, update note-nya** (dan tambah aturan baru yang wajib-selalu-dipatuhi ke bagian "Aturan inti" di bawah):
-- `Multi-Tenancy (Market).md` — scoping per-market, `BelongsToMarket`, onboarding/approval
-- `Konvensi Schema.md` — PK custom, enum, tabel domain, pedagang eksternal, format lokasi lapak
-- `Mesin Billing.md` — lazy roll-forward, tipe MTR/MAT/AAT/ATR/EXT, cursor stream, status MVP
-- `Occupancy & Akhiri Sewa.md` — definisi terisi/kosong, `deleted`, alur akhiri sewa
-- `Fitur Premium.md` — gerbang 3 lapis, modal premium
-- `Tema & Dark Mode.md` — cyan `#0891b2`, dark mode di DB, DaisyUI/MaryUI
-- `Cetak Dokumen.md` — kartu pedagang, kwitansi, invoice; pola langsung-print & print fix
-- `Pengeluaran & Laporan.md` — expenses/void, laporan, pengeluaran rutin auto-generate
-- `Pola Form & Konfirmasi.md` — ReturnsBack, `#[Url]`, konfirmasi 2 tahap, guard dirty-form
-- `Obfuscated ID (Sqids).md` — PK tidak pernah tampil di URL; trait `HasObfuscatedId`, titik decode manual
+@vault/LapakTrack/Index.md
+
+Detail lengkap tiap subsistem ada di note masing-masing (peta di atas). **Sebelum mengerjakan suatu area, baca note terkait; setelah perubahan besar, update note-nya** (dan tambah aturan baru yang wajib-selalu-dipatuhi ke bagian "Aturan inti" di bawah). Jangan buka seluruh isi folder `vault/` sekaligus — cukup note yang relevan dengan area yang sedang dikerjakan.
+
+## Status proyek (per 2026-07-11)
+- **Pemasukan Tambahan** (lain-lain, di luar tagihan pedagang) ditambahkan: model `Income`/`IncomeCategory` (tabel `incomes`/`income_categories`, mirror `expenses` tanpa `status`/`rxid`), rute `incomes.*`/`income-categories.*` (premium). Sidebar Transaksi → "Pemasukan" jadi accordion (Pedagang = `payments.*` lama, Lain-lain = `incomes.*` baru). Terintegrasi ke Arus Kas & Dashboard (lihat vault `Pengeluaran & Laporan.md`).
 
 ## Status proyek (per 2026-07-07)
 - Rebuild pasca-kehilangan source selesai (spec `.qoder/specs/Rebuild_Lost_Source_Files_task-61c.md`; Task 1–8, 10, 12; skip 9 Filament & 11 seeder). DB MySQL `lapak_track` utuh.
@@ -31,7 +26,7 @@ Detail lengkap tiap subsistem dipindah ke vault (mulai `vault/LapakTrack/Index.m
 
 ## Aturan inti (wajib dipatuhi lintas area — detail di vault)
 - **Multi-tenancy aktif**: JANGAN filter `market_id` manual di query Eloquent (global scope `BelongsToMarket` + auto-isi saat create). Query mentah `DB::table`/`DB::raw` TIDAK kena scope → WAJIB filter manual. Service generator set `market_id` eksplisit dari parent (aman di console tanpa Auth). Scope inert bila user null / `market_id` null (developer/console → lintas market).
-- **`billing_status` enum** `paid|installment|unpaid|pending|cancelled`; `cancelled` = terminal (tak disentuh `recalculateBillingStatus()`, dikecualikan dari hitungan/notifikasi/pemilih bayar). PK custom per tabel (`ptid`,`aoid`,`sid`,`did`,`dsid`,`dbid`,`dpid`,`edid`,`mid`,`saoid`,`sptid`…).
+- **`billing_status` enum** `paid|installment|unpaid|pending|cancelled`; `cancelled` = terminal (tak disentuh `recalculateBillingStatus()`, dikecualikan dari hitungan/notifikasi/pemilih bayar). PK custom per tabel (`ptid`,`aoid`,`sid`,`did`,`dsid`,`dbid`,`dpid`,`edid`,`mid`,`saoid`,`sptid`,`imid`,`icid`…).
 - **Form create/edit/void baru WAJIB**: `use ReturnsBack;` + `redirectBack('fallback')` + tombol Batal `backHref()`; filter index baru diberi `#[Url]`. Guard dirty-form global otomatis selama pakai `x-form wire:submit`.
 - **Aksi destruktif baru** → minimal `wire:confirm`; yang berdampak generate tagihan → pola modal konfirmasi 2 tahap (validasi ulang di `confirmSave()`).
 - **`CreatePayment` menolak over-payment** — belum ada konsep saldo, jangan diakali.

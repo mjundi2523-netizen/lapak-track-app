@@ -92,8 +92,15 @@ class DealerSummaryExport implements FromCollection, WithHeadings, WithMapping, 
             ]];
         });
 
+        $today = Carbon::today()->toDateString();
+
         $dealers = Dealer::query()
-            ->with(['dealerStalls' => fn ($q) => $q->where('deleted', false)->with('stall:sid,block')])
+            ->with([
+                'dealerStalls' => fn ($q) => $q->where('deleted', false)
+                    ->where(fn ($w) => $w->whereNull('rent_end_date')->orWhereDate('rent_end_date', '>', $today))
+                    ->with(['stall:sid,block,number', 'stallPaymentTerm.paymentTerm']),
+                'activeExternal.paymentTerm',
+            ])
             ->whereIn('did', $this->onlyActive
                 ? $allDids->filter(fn ($did) => $this->summaries[$did]['bill_count'] > 0)->values()
                 : $allDids)
@@ -105,7 +112,7 @@ class DealerSummaryExport implements FromCollection, WithHeadings, WithMapping, 
 
     public function headings(): array
     {
-        return ['Nama', 'NIK', 'Kondisi', 'Lokasi', 'Jml Tagihan', 'Total Tagihan (Rp)', 'Terbayar (Rp)', 'Tunggakan (Rp)', 'Terakhir Bayar'];
+        return ['Nama', 'NIK', 'Kondisi', 'Lokasi', 'Aturan Bayar', 'Jml Tagihan', 'Total Tagihan (Rp)', 'Terbayar (Rp)', 'Tunggakan (Rp)', 'Terakhir Bayar'];
     }
 
     public function map($row): array
@@ -113,12 +120,19 @@ class DealerSummaryExport implements FromCollection, WithHeadings, WithMapping, 
         $s = $this->summaries[$row->did] ?? ['bill_count' => 0, 'total_billed' => 0, 'total_paid' => 0, 'outstanding' => 0, 'last_payment' => null];
         $condLabel = ['regular' => 'Regular', 'new' => 'Baru', 'external' => 'Eksternal'];
         $location = $row->dealerStalls->map(fn ($ds) => $ds->stall?->code)->filter()->implode(', ') ?: ($row->dealer_condition === 'external' ? 'Eksternal' : '-');
+        $freqShort = fn ($f) => match ($f) { 'daily' => 'hari', 'weekly' => 'minggu', 'monthly' => 'bulan', 'annual' => 'tahun', default => $f };
+        $terms = $row->dealer_condition === 'external'
+            ? $row->activeExternal->map(fn ($e) => $e->paymentTerm)->filter()
+            : $row->dealerStalls->map(fn ($ds) => $ds->stallPaymentTerm?->paymentTerm)->filter();
+        $termsText = $terms->map(fn ($t) => "{$t->term_name} Rp " . number_format($t->price, 0, ',', '.') . "/{$freqShort($t->frequency)}")
+            ->implode('; ') ?: '-';
 
         return [
             $row->name,
             $row->nik,
             $condLabel[$row->dealer_condition] ?? $row->dealer_condition,
             $location,
+            $termsText,
             $s['bill_count'],
             (int) $s['total_billed'],
             (int) $s['total_paid'],

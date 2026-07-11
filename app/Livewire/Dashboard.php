@@ -6,6 +6,7 @@ use App\Models\Dealer;
 use App\Models\DealerBill;
 use App\Models\DealerPayment;
 use App\Models\Expense;
+use App\Models\Income;
 use App\Models\Stall;
 use App\Services\BillGenerationService;
 use App\Services\ExpenseGenerationService;
@@ -53,14 +54,18 @@ class Dashboard extends Component
             ->sum('paid_amount');
         $heroUnpaid = max($heroTotal - $heroPaid, 0);
 
-        $totalPemasukan = (float) DealerPayment::where('is_voided', false)->sum('paid_amount');
+        $totalPemasukan = (float) DealerPayment::where('is_voided', false)->sum('paid_amount')
+            + (float) Income::where('is_voided', false)->sum('amount');
 
         // Kas masuk bulan ini (basis payment_date) — sama dengan "Pemasukan" di Arus Kas.
         // Beda dari $heroPaid (yang berbasis due_date tagihan bulan ini) supaya Laba Bersih
         // konsisten dgn laporan Arus Kas & mencerminkan uang yang benar-benar diterima.
         $heroCashIn = (float) DealerPayment::where('is_voided', false)
             ->whereBetween('payment_date', [$monthStart, $monthEnd])
-            ->sum('paid_amount');
+            ->sum('paid_amount')
+            + (float) Income::where('is_voided', false)
+                ->whereBetween('income_date', [$monthStart, $monthEnd])
+                ->sum('amount');
 
         // Pengeluaran bulan ini & laba bersih (kas masuk - pengeluaran).
         $heroExpense = (float) Expense::where('is_voided', false)
@@ -171,6 +176,11 @@ class Dashboard extends Component
             ->whereBetween('payment_date', [$first, $rangeEnd])
             ->groupBy('ym')->pluck('t', 'ym');
 
+        $paidExtra = Income::where('is_voided', false)
+            ->selectRaw("DATE_FORMAT(income_date, '%Y-%m') ym, SUM(amount) t")
+            ->whereBetween('income_date', [$first, $rangeEnd])
+            ->groupBy('ym')->pluck('t', 'ym');
+
         $spent = Expense::where('is_voided', false)
             ->where('status', 'posted')
             ->selectRaw("DATE_FORMAT(expense_date, '%Y-%m') ym, SUM(amount) t")
@@ -182,7 +192,7 @@ class Dashboard extends Component
             $m = $first->copy()->addMonths($i);
             $ym = $m->format('Y-m');
             $a[] = (float) ($billed[$ym] ?? 0);
-            $b[] = (float) ($paid[$ym] ?? 0);
+            $b[] = (float) ($paid[$ym] ?? 0) + (float) ($paidExtra[$ym] ?? 0);
             $c[] = (float) ($spent[$ym] ?? 0);
             $labels[] = $m->format('M');
         }
